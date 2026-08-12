@@ -19,6 +19,7 @@ Start app:
 
 1. cd vào `/app` chạy `python -m pip install -r requirements.txt`
 2. chạy lệnh start app: `uvicorn app.main:app --reload`
+3. xem swagger docs tại `http://127.0.0.1:8000/docs` sau khi start
 
 Start web:
 
