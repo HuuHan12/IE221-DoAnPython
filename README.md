@@ -1,6 +1,7 @@
 # IE221-DoAnPython
 
 Yêu cầu app:
+
 ```
 (.venv) [harch@archlinux IE221-DoAnPython]$ npm -v
 11.11.0
@@ -10,11 +11,20 @@ v25.7.0
 Python 3.14.3
 ```
 
-Start app: 
-1. cd vào /app chạy `python -m pip install -r requirements.txt`
+Techstack:
+
+- Python, sqlite, fastapi, react, vitejs
+
+Start app:
+
+1. cd vào `/app` chạy `python -m pip install -r requirements.txt`
 2. chạy lệnh start app: `uvicorn app.main:app --reload`
-   
-Start web: `npm run dev`
+
+Start web:
+
+1. cd vào `/web`, chạy `npm install` trước
+2. start web `npm run dev`
 
 Web:
-<img width="800" height="600" alt="image" src="https://github.com/user-attachments/assets/f0e0a56f-597b-44ab-bebe-df985afe6cae" />
+
+![1786553259048](image/README/1786553259048.png)
