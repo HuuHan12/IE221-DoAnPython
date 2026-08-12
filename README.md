@@ -27,4 +27,5 @@ Start web:
 
 Web:
 
-![1786553259048](image/README/1786553259048.png)
+<img width="1356" height="1311" alt="image" src="https://github.com/user-attachments/assets/ea07e1b9-ae79-4d2e-bb4c-7de421e96af7" />
+
