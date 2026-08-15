@@ -6,8 +6,6 @@ html,
 body,
 #root {
     margin: 0;
-    padding: 0;
-    width: 100%;
     min-height: 100%;
 }
 
@@ -20,5 +18,10 @@ body {
         sans-serif;
 
     background: #ffffff;
-    color: #17164a;
+    color: #202020;
+}
+
+button,
+input {
+    font: inherit;
 }

@@ -1,0 +1,252 @@
+/* =========================
+   UPLOAD SECTION
+========================= */
+
+.upload-section {
+    width: min(950px, 100%);
+    margin: 0 auto;
+}
+
+/* =========================
+   UPLOAD BOX
+========================= */
+
+.upload-box {
+    min-height: 260px;
+
+    box-sizing: border-box;
+
+    border: 2px dashed #0d9488;
+    border-radius: 12px;
+
+    background: #ffffff;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+.upload-box:hover {
+    background: #f7fffe;
+}
+
+.upload-box.dragging {
+    background: #ecfdfb;
+    border-color: #087f75;
+    transform: scale(1.01);
+}
+
+/* =========================
+   ICON
+========================= */
+
+.upload-icon {
+    font-size: 42px;
+    line-height: 1;
+
+    color: #0d9488;
+
+    margin-bottom: 16px;
+}
+
+/* =========================
+   TEXT
+========================= */
+
+.upload-box h2 {
+    margin: 0;
+
+    color: #333333;
+
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.upload-box .or {
+    margin: 8px 0;
+
+    color: #aaaaaa;
+
+    font-size: 14px;
+}
+
+/* =========================
+   CHOOSE BUTTON
+========================= */
+
+.choose-button {
+    border: none;
+    border-radius: 7px;
+
+    padding: 11px 22px;
+
+    background: #0d9488;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.choose-button:hover {
+    background: #0b7f75;
+}
+
+/* =========================
+   SUPPORT TEXT
+========================= */
+
+.upload-box p {
+    margin: 14px 0 0;
+
+    color: #999999;
+
+    font-size: 13px;
+}
+
+/* =========================
+   SELECTED FILE
+========================= */
+
+.selected-file {
+    width: 100%;
+
+    margin-top: 12px;
+
+    padding: 14px 18px;
+
+    box-sizing: border-box;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    background: #ffffff;
+
+    border: 1px solid #eeeeee;
+    border-radius: 8px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.selected-file-info {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+}
+
+.file-icon {
+    color: #0d9488;
+
+    font-size: 18px;
+}
+
+.selected-file-info > div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 3px;
+}
+
+.selected-file-info strong {
+    color: #333333;
+
+    font-size: 14px;
+}
+
+.selected-file-info span {
+    color: #999999;
+
+    font-size: 12px;
+}
+
+/* =========================
+   REMOVE FILE
+========================= */
+
+.remove-file {
+    width: 28px;
+    height: 28px;
+
+    border: none;
+    background: transparent;
+
+    color: #999999;
+
+    font-size: 20px;
+
+    cursor: pointer;
+
+    border-radius: 50%;
+}
+
+.remove-file:hover {
+    background: #f5f5f5;
+    color: #555555;
+}
+
+/* =========================
+   RECOGNIZE BUTTON
+========================= */
+
+.recognize-button {
+    width: 100%;
+
+    margin-top: 12px;
+
+    padding: 13px;
+
+    border: none;
+    border-radius: 7px;
+
+    background: #0d9488;
+    color: white;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease;
+}
+
+.recognize-button:hover {
+    background: #0b7f75;
+}
+
+.recognize-button:disabled {
+    background: #8cc8c3;
+
+    cursor: not-allowed;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+
+    .upload-box {
+        min-height: 230px;
+    }
+
+    .upload-box h2 {
+        font-size: 18px;
+    }
+
+    .selected-file {
+        padding: 12px;
+    }
+}

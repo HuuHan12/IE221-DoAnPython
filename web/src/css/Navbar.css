@@ -1,0 +1,129 @@
+/* =========================================
+   NAVBAR
+========================================= */
+
+.site-navbar {
+    width: 100%;
+    height: 72px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 48px;
+
+    background: #ffffff;
+    border-bottom: 1px solid #eeeeee;
+
+    box-sizing: border-box;
+
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+
+/* =========================================
+   BRAND
+========================================= */
+
+.site-brand {
+    display: flex;
+    align-items: center;
+}
+
+.site-brand-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    text-decoration: none;
+    color: #202020;
+}
+
+.site-brand-icon {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #0d9488;
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.site-brand-name {
+    font-size: 22px;
+    font-weight: 700;
+
+    color: #202020;
+}
+
+.site-brand-name span {
+    color: #0d9488;
+}
+
+
+/* =========================================
+   NAV LINKS
+========================================= */
+
+.site-nav-links {
+    display: flex;
+    align-items: center;
+    gap: 42px;
+}
+
+.site-nav-links a {
+    color: #222222;
+
+    text-decoration: none;
+
+    font-size: 15px;
+    font-weight: 500;
+
+    transition: color 0.2s ease;
+}
+
+.site-nav-links a:hover {
+    color: #0d9488;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 768px) {
+    .site-navbar {
+        padding: 0 20px;
+    }
+
+    .site-nav-links {
+        gap: 18px;
+    }
+
+    .site-nav-links a {
+        font-size: 13px;
+    }
+
+    .site-brand-name {
+        font-size: 19px;
+    }
+}
+
+@media (max-width: 600px) {
+    .site-nav-links {
+        display: none;
+    }
+
+    .site-navbar {
+        justify-content: center;
+    }
+}

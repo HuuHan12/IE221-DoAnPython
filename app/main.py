@@ -3,13 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-
 from app.api import hello
 from app.api import predict
-# from app.api import history
+#from app.api import history
 from app.database.database import init_database
 
-from src import GeoCLIPService, calculate_geodesic_distance
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +27,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
+        "http://127.0.0.1:5173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
