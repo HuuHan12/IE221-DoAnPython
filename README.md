@@ -28,5 +28,6 @@ Start web:
 
 Web:
 
-<img width="1356" height="1311" alt="image" src="https://github.com/user-attachments/assets/ea07e1b9-ae79-4d2e-bb4c-7de421e96af7" />
+<img width="2560" height="1354" alt="image" src="https://github.com/user-attachments/assets/1f9f3a3c-b1c3-4630-a03d-7b7cf89decd5" />
+
 
