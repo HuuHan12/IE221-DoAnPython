@@ -1,0 +1,154 @@
+/* =========================================
+   NOT FOUND PAGE
+========================================= */
+
+.not-found-page {
+    min-height: calc(100vh - 72px);
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+
+    padding: 70px 20px 40px;
+
+    box-sizing: border-box;
+
+    background: #fafafa;
+}
+
+
+/* =========================================
+   CARD
+========================================= */
+
+.not-found-card {
+    width: 100%;
+    max-width: 520px;
+
+    padding: 48px 40px;
+
+    box-sizing: border-box;
+
+    text-align: center;
+
+    background: #ffffff;
+
+    border-radius: 22px;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+
+/* =========================================
+   404
+========================================= */
+
+.not-found-code {
+    margin-bottom: 8px;
+
+    color: #0d9488;
+
+    font-size: 72px;
+    line-height: 1;
+
+    font-weight: 800;
+
+    letter-spacing: -3px;
+}
+
+
+/* =========================================
+   TITLE
+========================================= */
+
+.not-found-card h1 {
+    margin: 0 0 12px;
+
+    color: #202020;
+
+    font-size: 28px;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   DESCRIPTION
+========================================= */
+
+.not-found-card p {
+    max-width: 400px;
+
+    margin: 0 auto 28px;
+
+    color: #6b7280;
+
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+
+/* =========================================
+   BUTTON
+========================================= */
+
+.back-home-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 180px;
+    height: 46px;
+
+    padding: 0 20px;
+
+    box-sizing: border-box;
+
+    border-radius: 9px;
+
+    background: #0d9488;
+    color: #ffffff;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    text-decoration: none;
+
+    transition:
+        background 0.2s ease,
+        transform 0.1s ease;
+}
+
+.back-home-button:hover {
+    background: #0f766e;
+}
+
+.back-home-button:active {
+    transform: scale(0.98);
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 600px) {
+
+    .not-found-page {
+        padding: 24px 14px;
+    }
+
+    .not-found-card {
+        padding: 40px 24px;
+
+        border-radius: 16px;
+    }
+
+    .not-found-code {
+        font-size: 60px;
+    }
+
+    .not-found-card h1 {
+        font-size: 24px;
+    }
+}

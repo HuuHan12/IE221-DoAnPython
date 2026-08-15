@@ -1,0 +1,327 @@
+/* =========================================
+   REGISTER PAGE
+========================================= */
+
+.register-page {
+    min-height: 100vh;
+
+    background: #fafafa;
+}
+
+
+/* =========================================
+   REGISTER MAIN
+========================================= */
+
+.register-main {
+    min-height: calc(100vh - 72px);
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    padding: 36px 20px 60px;
+
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   REGISTER CARD
+========================================= */
+
+.register-card {
+    width: 100%;
+    max-width: 508px;
+
+    padding: 32px 36px;
+
+    background: #ffffff;
+
+    border-radius: 22px;
+
+    box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.08);
+
+    box-sizing: border-box;
+
+    text-align: center;
+}
+
+
+/* =========================================
+   ILLUSTRATION
+========================================= */
+
+.register-illustration {
+    width: 180px;
+    height: 120px;
+
+    margin: 0 auto 10px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   ILLUSTRATION CIRCLE
+========================================= */
+
+.register-illustration::before {
+    content: "AI";
+
+    width: 58px;
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: #0d9488;
+    color: #ffffff;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   TITLE
+========================================= */
+
+.register-card h1 {
+    margin: 0 0 8px;
+
+    color: #202020;
+
+    font-size: 30px;
+    font-weight: 700;
+}
+
+.register-card > p {
+    margin: 0 0 26px;
+
+    color: #6b7280;
+
+    font-size: 15px;
+}
+
+
+/* =========================================
+   FORM
+========================================= */
+
+.register-card form {
+    text-align: left;
+}
+
+.register-field {
+    margin-bottom: 0;
+}
+
+.register-card label {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #303030;
+
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.register-card input {
+    width: 100%;
+    height: 46px;
+
+    margin-bottom: 16px;
+    padding: 0 14px;
+
+    border: 1px solid #d9d9d9;
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #222222;
+
+    font-size: 14px;
+
+    box-sizing: border-box;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.register-card input::placeholder {
+    color: #aaaaaa;
+}
+
+.register-card input:focus {
+    border-color: #0d9488;
+
+    box-shadow:
+        0 0 0 3px rgba(13, 148, 136, 0.1);
+}
+
+
+/* =========================================
+   REGISTER BUTTON
+========================================= */
+
+.register-button {
+    width: 100%;
+    height: 46px;
+
+    margin-top: 0;
+
+    border: none;
+    border-radius: 9px;
+
+    background: #0d9488;
+    color: #ffffff;
+
+    font-size: 16px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.1s ease;
+}
+
+.register-button:hover {
+    background: #0f766e;
+}
+
+.register-button:active {
+    transform: scale(0.99);
+}
+
+
+/* =========================================
+   DIVIDER
+========================================= */
+
+.register-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    margin: 24px 0 18px;
+
+    color: #888888;
+
+    font-size: 14px;
+}
+
+.register-divider::before,
+.register-divider::after {
+    content: "";
+
+    flex: 1;
+
+    height: 1px;
+
+    background: #dddddd;
+}
+
+
+/* =========================================
+   SOCIAL REGISTER
+========================================= */
+
+.social-register {
+    display: flex;
+    gap: 12px;
+}
+
+.social-register button {
+    flex: 1;
+
+    height: 46px;
+
+    border: 1px solid #dddddd;
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #222222;
+
+    font-size: 15px;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease;
+}
+
+.social-register button:hover {
+    background: #f8f8f8;
+
+    border-color: #cccccc;
+}
+
+
+/* =========================================
+   LOGIN LINK
+========================================= */
+
+.login-link {
+    margin-top: 26px;
+
+    color: #6b7280;
+
+    font-size: 14px;
+}
+
+.login-link a {
+    color: #0d9488;
+
+    font-weight: 600;
+
+    text-decoration: none;
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 600px) {
+
+    .register-main {
+        padding: 20px 14px 40px;
+    }
+
+    .register-card {
+        padding: 28px 20px;
+
+        border-radius: 16px;
+    }
+
+    .register-card h1 {
+        font-size: 26px;
+    }
+
+    .social-register {
+        flex-direction: column;
+    }
+}

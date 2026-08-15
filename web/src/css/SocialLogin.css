@@ -1,0 +1,62 @@
+.social-divider {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    margin: 24px 0 18px;
+}
+
+.social-divider span {
+    flex: 1;
+    height: 1px;
+    background: #dddddd;
+}
+
+.social-divider p {
+    margin: 0;
+
+    color: #777;
+    font-size: 14px;
+
+    white-space: nowrap;
+}
+
+.social-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.social-button {
+    height: 48px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+
+    background: white;
+
+    border: 1px solid #d8d8d8;
+    border-radius: 8px;
+
+    font-size: 15px;
+    color: #292929;
+
+    cursor: pointer;
+
+    transition: border-color 0.2s ease,
+                background 0.2s ease;
+}
+
+.social-button:hover {
+    background: #fafafa;
+    border-color: #079b91;
+}
+
+.google-icon {
+    font-size: 20px;
+    font-weight: 700;
+
+    color: #4285f4;
+}
