@@ -1,0 +1,270 @@
+/* =========================================
+   SIDEBAR CONFIGURATION COMPONENT
+========================================= */
+
+.sidebar-config {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    color: #0F172A;
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    height: fit-content;
+    box-sizing: border-box;
+    position: sticky;
+    top: 90px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #E2E8F0;
+}
+
+.sidebar-header-icon {
+    font-size: 1.25rem;
+    color: #009080;
+}
+
+.sidebar-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #0F172A;
+}
+
+.config-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.config-section-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #334155;
+    display: block;
+}
+
+/* Radio Group */
+.radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.radio-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    transition: all 0.2s ease;
+}
+
+.radio-label:hover {
+    background: rgba(0, 144, 128, 0.05);
+    border-color: rgba(0, 144, 128, 0.3);
+}
+
+.radio-label.active {
+    background: rgba(0, 144, 128, 0.08);
+    border-color: #009080;
+}
+
+.radio-label input[type="radio"] {
+    display: none;
+}
+
+.radio-custom {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #94A3B8;
+    margin-top: 2px;
+    flex-shrink: 0;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.radio-label.active .radio-custom {
+    border-color: #009080;
+}
+
+.radio-label.active .radio-custom::after {
+    content: "";
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #009080;
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.radio-text {
+    font-size: 0.84rem;
+    line-height: 1.4;
+    color: #334155;
+}
+
+.radio-text small {
+    display: block;
+    color: #64748B;
+    font-size: 0.75rem;
+}
+
+/* Top-K controls */
+.topk-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topk-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.topk-number-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: #F8FAFC;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #009080;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.topk-number-input:focus {
+    border-color: #009080;
+    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.15);
+}
+
+.topk-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #E2E8F0;
+    outline: none;
+    cursor: pointer;
+}
+
+.topk-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #009080;
+    box-shadow: 0 0 8px rgba(0, 144, 128, 0.4);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+
+.topk-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.topk-range-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #94A3B8;
+}
+
+/* Custom Select */
+.select-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select {
+    width: 100%;
+    box-sizing: border-box;
+    background: #F8FAFC;
+    color: #0F172A;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    outline: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-select:focus {
+    border-color: #009080;
+    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.15);
+}
+
+.custom-select option {
+    background: #FFFFFF;
+    color: #0F172A;
+}
+
+/* Team Footer */
+.sidebar-footer {
+    margin-top: auto;
+    padding-top: 14px;
+    border-top: 1px solid #E2E8F0;
+}
+
+.team-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #0F172A;
+    margin-bottom: 6px;
+}
+
+.team-icon {
+    font-size: 1rem;
+}
+
+.team-members {
+    margin: 0;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: #475569;
+}
+
+.team-members strong {
+    color: #0F172A;
+}
+
+/* Responsive Sidebar adjustments */
+@media (max-width: 1024px) {
+    .sidebar-config {
+        position: static;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .sidebar-config {
+        padding: 16px;
+        border-radius: 12px;
+        gap: 16px;
+    }
+}

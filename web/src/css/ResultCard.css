@@ -1,446 +1,320 @@
-/* =========================
-   RESULT CARD
-========================= */
+/* =========================================
+   MODERN VERCEL DESIGN - RANKED LIST & CARDS
+========================================= */
 
-.result-card {
-    width: min(950px, 100%);
-
-    margin: 20px auto 0;
-
-    padding: 22px;
-
-    box-sizing: border-box;
-
-    background: #ffffff;
-
-    border: 1px solid #eeeeee;
-    border-radius: 12px;
-
-    box-shadow:
-        0 4px 16px rgba(0, 0, 0, 0.06);
-}
-
-/* =========================
-   TITLE
-========================= */
-
-.result-title {
+.ranked-result-container {
     display: flex;
-    align-items: center;
-
-    gap: 8px;
-
-    margin-bottom: 18px;
-
-    color: #0d9488;
-
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.result-title span {
-    font-size: 20px;
-}
-
-/* =========================
-   MAIN CONTENT
-========================= */
-
-.result-content {
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 24px;
-}
-
-/* =========================
-   IMAGE
-========================= */
-
-.result-image-container {
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 10px;
     width: 100%;
 }
 
-.result-image {
-    display: block;
-
-    width: 100%;
-    height: 300px;
-
-    object-fit: cover;
-
-    border-radius: 8px;
-}
-
-/* =========================
-   INFO
-========================= */
-
-.result-info {
-    min-width: 0;
-}
-
-.result-header {
+.ranked-list-header {
     display: flex;
-    align-items: flex-start;
     justify-content: space-between;
-
-    gap: 20px;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #E2E8F0;
 }
 
-.location-info {
+.ranked-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0F172A;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ranked-badge-counter {
+    background: #E2E8F0;
+    color: #334155;
+    padding: 3px 10px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.ranked-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Từng thẻ hàng danh sách */
+.rank-row-card {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.rank-row-card:hover {
+    background: #FFFFFF;
+    border-color: #009080;
+    box-shadow: 0 4px 16px rgba(0, 144, 128, 0.08);
+    transform: translateY(-1px);
+}
+
+/* Viền phân loại Top 1, 2, 3 */
+.rank-1 {
+    border-left: 5px solid #009080;
+    background: #FFFFFF;
+}
+
+.rank-2 {
+    border-left: 5px solid #0284C7;
+    background: #FFFFFF;
+}
+
+.rank-3 {
+    border-left: 5px solid #D97706;
+    background: #FFFFFF;
+}
+
+.rank-other {
+    border-left: 5px solid #94A3B8;
+}
+
+.rank-row-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.rank-tag {
+    font-weight: 800;
+    font-size: 0.82rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.rank-tag-1 {
+    background: linear-gradient(135deg, #009080, #10A090);
+    color: #FFFFFF;
+}
+
+.rank-tag-2 {
+    background: linear-gradient(135deg, #0284C7, #38BDF8);
+    color: #FFFFFF;
+}
+
+.rank-tag-3 {
+    background: linear-gradient(135deg, #D97706, #FBBF24);
+    color: #FFFFFF;
+}
+
+.rank-tag-other {
+    background: #64748B;
+    color: #FFFFFF;
+}
+
+.rank-text-content {
+    flex: 1;
     min-width: 0;
 }
 
-.location-info .label {
-    display: block;
-
-    margin-bottom: 5px;
-
-    color: #999999;
-
-    font-size: 12px;
-}
-
-.location-info h2 {
-    margin: 0;
-
-    color: #0d9488;
-
-    font-size: 23px;
-    line-height: 1.2;
-}
-
-.location-info p {
-    margin: 5px 0 0;
-
-    color: #777777;
-
-    font-size: 13px;
-}
-
-/* =========================
-   CONFIDENCE
-========================= */
-
-.confidence-container {
+.rank-main-line {
+    font-size: 0.88rem;
+    color: #0F172A;
     display: flex;
     align-items: center;
-
-    gap: 10px;
-
-    flex-shrink: 0;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.confidence-text {
+.coord-val {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #009080;
+    font-weight: 700;
+    font-size: 0.92rem;
+}
+
+.divider-sep {
+    color: #CBD5E1;
+}
+
+.prob-chip {
+    color: #475569;
+    font-size: 0.84rem;
+}
+
+.prob-chip strong {
+    color: #16A34A;
+    font-weight: 800;
+}
+
+.rank-landmark-name {
+    font-size: 0.88rem;
+    color: #334155;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
+.rank-landmark-name strong {
+    color: #0F172A;
+}
+
+.landmark-sub {
+    color: #64748B;
+}
+
+.landmark-cat {
+    color: #94A3B8;
+    font-size: 0.8rem;
+}
+
+.rank-landmark-desc {
+    font-size: 0.82rem;
+    color: #64748B;
+    margin-top: 4px;
+    line-height: 1.45;
+}
+
+/* Thanh hành động phía dưới */
+.rank-row-bottom {
     display: flex;
-    flex-direction: column;
-
-    align-items: flex-end;
-}
-
-.confidence-text span {
-    color: #888888;
-
-    font-size: 12px;
-}
-
-.confidence-text strong {
-    margin-top: 3px;
-
-    color: #0d9488;
-
-    font-size: 24px;
-}
-
-/* =========================
-   CONFIDENCE CIRCLE
-========================= */
-
-.confidence-circle {
-    width: 48px;
-    height: 48px;
-
-    border-radius: 50%;
-
-    background:
-        conic-gradient(
-            #0d9488 var(--confidence),
-            #e5eeee var(--confidence)
-        );
-
-    display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-}
-
-.confidence-circle div {
-    width: 36px;
-    height: 36px;
-
-    border-radius: 50%;
-
-    background: white;
-}
-
-/* =========================
-   DIVIDER
-========================= */
-
-.divider {
-    height: 1px;
-
-    margin: 16px 0;
-
-    background: #eeeeee;
-}
-
-/* =========================
-   INFO ROW
-========================= */
-
-.info-row {
-    display: flex;
-
     gap: 10px;
-
-    margin-bottom: 15px;
+    padding-top: 8px;
+    border-top: 1px solid #F1F5F9;
+    flex-wrap: wrap;
 }
 
-.info-icon {
-    width: 18px;
-
-    flex-shrink: 0;
-
-    color: #0d9488;
-
-    font-size: 16px;
+.rank-row-card.selected-rank-row {
+    border-color: #009080;
+    background: #F0FDF4;
+    box-shadow: 0 0 0 2px rgba(0, 144, 128, 0.25), 0 4px 12px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
 }
 
-.info-row > div {
-    display: flex;
-    flex-direction: column;
-
-    gap: 4px;
-}
-
-.info-row span:not(.info-icon) {
-    color: #999999;
-
-    font-size: 12px;
-}
-
-.info-row strong {
-    color: #333333;
-
-    font-size: 13px;
-}
-
-/* =========================
-   DESCRIPTION
-========================= */
-
-.description {
-    margin: 12px 0;
-
-    padding: 11px 13px;
-
-    background: #f1f9f8;
-
+.select-rank-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #009080;
+    border: 1px solid #007A6D;
+    color: #FFFFFF;
+    padding: 6px 14px;
     border-radius: 6px;
-
-    color: #777777;
-
-    font-size: 12px;
-}
-
-/* =========================
-   MAP
-========================= */
-
-.map-section {
-    margin-top: 14px;
-}
-
-.map-title {
-    margin-bottom: 8px;
-
-    color: #333333;
-
-    font-size: 13px;
-    font-weight: 600;
-}
-
-.map-title span {
-    color: #0d9488;
-}
-
-.map-wrapper {
-    width: 100%;
-    height: 205px;
-
-    overflow: hidden;
-
-    border-radius: 7px;
-}
-
-.map {
-    width: 100%;
-    height: 100%;
-
-    border: 0;
-}
-
-.google-map-link {
-    display: inline-block;
-
-    margin-top: 6px;
-
-    color: #0d9488;
-
-    font-size: 11px;
-
-    text-decoration: none;
-}
-
-.google-map-link:hover {
-    text-decoration: underline;
-}
-
-/* =========================
-   EXTRA DETAILS
-========================= */
-
-.result-details {
-    display: grid;
-
-    grid-template-columns: repeat(3, 1fr);
-
-    gap: 16px;
-
-    margin-top: 20px;
-
-    padding-top: 18px;
-
-    border-top: 1px solid #eeeeee;
-}
-
-.result-details > div {
-    display: flex;
-
-    align-items: flex-start;
-
-    gap: 9px;
-}
-
-.result-details > div > span {
-    color: #0d9488;
-
-    font-size: 15px;
-}
-
-.result-details > div > div {
-    display: flex;
-    flex-direction: column;
-
-    gap: 3px;
-}
-
-.result-details small {
-    color: #999999;
-
-    font-size: 11px;
-}
-
-.result-details strong {
-    color: #333333;
-
-    font-size: 12px;
-}
-
-/* =========================
-   ACTIONS
-========================= */
-
-.result-actions {
-    display: grid;
-
-    grid-template-columns: 1fr 1fr;
-
-    gap: 12px;
-
-    margin-top: 20px;
-}
-
-.result-actions button {
-    height: 44px;
-
-    border-radius: 7px;
-
-    font-size: 14px;
-    font-weight: 600;
-
+    font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 144, 128, 0.2);
+}
 
+.select-rank-btn:hover:not(.is-active) {
+    background: #007A6D;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 144, 128, 0.3);
+}
+
+.select-rank-btn.is-active {
+    background: #15803D;
+    border-color: #166534;
+    color: #FFFFFF;
+    cursor: default;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+}
+
+.gmaps-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    background: rgba(0, 144, 128, 0.08);
+    border: 1px solid rgba(0, 144, 128, 0.25);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    color: #009080;
+    font-weight: 700;
     transition: all 0.2s ease;
 }
 
-.favorite-button {
-    background: white;
-
-    border: 1px solid #0d9488;
-
-    color: #0d9488;
+.gmaps-btn:hover {
+    background: #009080;
+    color: #FFFFFF;
 }
 
-.favorite-button:hover {
-    background: #f0fffd;
+.copy-coord-btn {
+    background: #F1F5F9;
+    border: 1px solid #CBD5E1;
+    color: #334155;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
 }
 
-.share-button {
-    background: #0d9488;
-
-    border: 1px solid #0d9488;
-
-    color: white;
+.copy-coord-btn:hover {
+    background: #E2E8F0;
+    color: #0F172A;
 }
 
-.share-button:hover {
-    background: #0b7f75;
+/* =========================================
+   BOTTOM ACTIONS BAR & SHARE BUTTON
+========================================= */
+
+.result-bottom-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid #E2E8F0;
+    width: 100%;
 }
 
-/* =========================
-   RESPONSIVE
-========================= */
+.action-btn.share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #009080 0%, #007A6D 100%);
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(0, 144, 128, 0.25);
+    transition: all 0.2s ease;
+    user-select: none;
+}
 
-@media (max-width: 768px) {
+.action-btn.share-btn:hover {
+    background: linear-gradient(135deg, #00A693 0%, #009080 100%);
+    box-shadow: 0 6px 18px rgba(0, 144, 128, 0.35);
+    transform: translateY(-1px);
+}
 
-    .result-card {
-        padding: 16px;
-    }
+.action-btn.share-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 144, 128, 0.2);
+}
 
-    .result-content {
-        grid-template-columns: 1fr;
-    }
+.action-btn.share-btn.copied {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 3px 12px rgba(5, 150, 105, 0.3);
+}
 
-    .result-image {
-        height: 250px;
-    }
-
-    .result-details {
-        grid-template-columns: 1fr;
-    }
-
-    .result-actions {
-        grid-template-columns: 1fr;
-    }
-
-    .result-header {
-        flex-direction: column;
-    }
-
-    .confidence-container {
-        align-self: flex-start;
-    }
+.share-btn-icon {
+    font-size: 1rem;
+    line-height: 1;
 }

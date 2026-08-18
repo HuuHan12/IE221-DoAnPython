@@ -1,0 +1,261 @@
+/* =========================================================
+   TOP RESULT HERO CARD - Chế độ hiển thị kết quả Top 1
+========================================================= */
+
+.top-result-hero-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-left: 5px solid #009080;
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+    transition: all 0.2s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.top-result-hero-card:hover {
+    box-shadow: 0 6px 20px rgba(0, 144, 128, 0.1);
+    border-color: #CBD5E1;
+    border-left-color: #009080;
+}
+
+/* HÀNG 1: TÊN ĐỊA DANH & BADGE ĐỘ CHÍNH XÁC */
+.hero-name-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hero-landmark-name {
+    margin: 0;
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: #1E293B;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.hero-confidence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #ECFDF5;
+    color: #065F46;
+    border: 1px solid #A7F3D0;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.hero-confidence-badge strong {
+    color: #047857;
+    font-weight: 800;
+}
+
+/* HÀNG 2: TỈNH/THÀNH & LOẠI HÌNH */
+.hero-meta-row {
+    font-size: 0.95rem;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.hero-meta-item strong {
+    color: #334155;
+    font-weight: 600;
+}
+
+.hero-meta-separator {
+    color: #CBD5E1;
+    user-select: none;
+}
+
+/* HÀNG 3: MÔ TẢ ĐỊA DANH */
+.hero-description-text {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #64748B;
+    line-height: 1.55;
+}
+
+/* HÀNG 4: KHỐI SO SÁNH TỌA ĐỘ AI & TỌA ĐỘ THỰC TẾ */
+.hero-coordinates-comparison-box {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 1px solid #F1F5F9;
+}
+
+.coord-compare-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    flex-wrap: wrap;
+    transition: all 0.15s ease;
+}
+
+.ai-coord-row {
+    background: rgba(0, 144, 128, 0.05);
+    border: 1px solid rgba(0, 144, 128, 0.15);
+}
+
+.gt-coord-row.has-gt {
+    background: rgba(220, 38, 38, 0.05);
+    border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.gt-coord-row.no-gt {
+    background: #F8FAFC;
+    border: 1px dashed #CBD5E1;
+}
+
+.coord-label-val {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+}
+
+.coord-bullet {
+    font-size: 1rem;
+}
+
+.coord-type-title {
+    color: #334155;
+    font-weight: 700;
+}
+
+.coord-numbers {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.ai-numbers {
+    color: #009080;
+}
+
+.gt-numbers {
+    color: #DC2626;
+}
+
+.coord-empty-notice {
+    color: #94A3B8;
+    font-style: italic;
+    font-size: 0.84rem;
+}
+
+/* NÚT THAO TÁC (COPY & GOOGLE MAPS) */
+.coord-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hero-copy-btn {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #334155;
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.hero-copy-btn:hover {
+    background: #F1F5F9;
+    color: #0F172A;
+    border-color: #94A3B8;
+}
+
+.hero-gmaps-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+    background: rgba(0, 144, 128, 0.08);
+    border: 1px solid rgba(0, 144, 128, 0.25);
+    padding: 4px 9px;
+    border-radius: 6px;
+    font-size: 0.76rem;
+    color: #009080;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.hero-gmaps-link:hover {
+    background: #009080;
+    color: #FFFFFF;
+}
+
+.hero-link-arrow {
+    font-size: 0.82rem;
+}
+
+/* HỘP HIỂN THỊ SAI SỐ KHOẢNG CÁCH */
+.coord-distance-error-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #FFFBEB;
+    border: 1px solid #FDE68A;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    color: #92400E;
+    flex-wrap: wrap;
+}
+
+.dist-icon {
+    font-size: 1rem;
+}
+
+.dist-label {
+    font-weight: 600;
+    color: #78350F;
+}
+
+.dist-value {
+    color: #B45309;
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+
+.dist-benchmark-tag {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #92400E;
+}
+
+.dist-excellent {
+    color: #047857;
+}
+
+.dist-good {
+    color: #0284C7;
+}
+
+.dist-far {
+    color: #DC2626;
+}

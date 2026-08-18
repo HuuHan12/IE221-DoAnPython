@@ -1,0 +1,38 @@
+/* =========================================================
+   LEAFLET INTERACTIVE MAP - Tự động hiển thị và đồng bộ kích thước
+========================================================= */
+
+.leaflet-map-wrapper {
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #CBD5E1;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    background: #F8FAFC;
+    position: relative;
+    margin-top: 4px;
+}
+
+.leaflet-map-container {
+    width: 100%;
+    height: 420px;
+    min-height: 380px;
+    z-index: 1;
+    background: #E2E8F0;
+}
+
+/* Custom Leaflet Map Tooltip */
+.distance-map-tooltip {
+    background: #0F172A !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 6px !important;
+    padding: 4px 8px !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.distance-map-tooltip::before {
+    border-top-color: #0F172A !important;
+}

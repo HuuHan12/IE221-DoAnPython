@@ -1,32 +1,24 @@
 /* =========================================
-   NAVBAR
+   NAVBAR (LandmarkAI)
 ========================================= */
 
 .site-navbar {
     width: 100%;
-    height: 72px;
-
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    padding: 0 48px;
-
-    background: #ffffff;
-    border-bottom: 1px solid #eeeeee;
-
+    padding: 0 28px;
+    background: #FFFFFF;
+    border-bottom: 1px solid #E2E8F0;
     box-sizing: border-box;
-
     position: sticky;
     top: 0;
     z-index: 1000;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
 }
 
-
-/* =========================================
-   BRAND
-========================================= */
-
+/* BRAND */
 .site-brand {
     display: flex;
     align-items: center;
@@ -36,94 +28,80 @@
     display: flex;
     align-items: center;
     gap: 10px;
-
     text-decoration: none;
-    color: #202020;
+    color: #0F172A;
 }
 
 .site-brand-icon {
-    width: 40px;
-    height: 40px;
-
+    width: 34px;
+    height: 34px;
     display: flex;
     align-items: center;
     justify-content: center;
-
-    border-radius: 50%;
-
-    background: #0d9488;
-    color: #ffffff;
-
-    font-size: 15px;
-    font-weight: 700;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #009080, #10A090);
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(0, 144, 128, 0.3);
 }
 
 .site-brand-name {
-    font-size: 22px;
-    font-weight: 700;
-
-    color: #202020;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: #0F172A;
 }
 
 .site-brand-name span {
-    color: #0d9488;
+    color: #009080;
 }
 
-
-/* =========================================
-   NAV LINKS
-========================================= */
-
+/* NAV LINKS */
 .site-nav-links {
     display: flex;
     align-items: center;
-    gap: 42px;
+    gap: 20px;
 }
 
 .site-nav-links a {
-    color: #222222;
-
+    color: #475569;
     text-decoration: none;
-
-    font-size: 15px;
-    font-weight: 500;
-
-    transition: color 0.2s ease;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    padding: 6px 12px;
+    border-radius: 8px;
 }
 
 .site-nav-links a:hover {
-    color: #0d9488;
+    color: #009080;
+    background: rgba(0, 144, 128, 0.08);
 }
 
-
-/* =========================================
-   RESPONSIVE
-========================================= */
-
+/* RESPONSIVE */
 @media (max-width: 768px) {
     .site-navbar {
-        padding: 0 20px;
+        padding: 0 16px;
+        height: 58px;
     }
 
     .site-nav-links {
-        gap: 18px;
+        gap: 8px;
     }
 
     .site-nav-links a {
-        font-size: 13px;
+        font-size: 12px;
+        padding: 4px 8px;
     }
 
     .site-brand-name {
-        font-size: 19px;
+        font-size: 16px;
     }
 }
 
-@media (max-width: 600px) {
-    .site-nav-links {
+@media (max-width: 520px) {
+    .site-nav-links a:not(:first-child) {
         display: none;
-    }
-
-    .site-navbar {
-        justify-content: center;
     }
 }

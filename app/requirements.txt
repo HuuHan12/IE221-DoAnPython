@@ -19,4 +19,4 @@ watchfiles==1.2.0
 websockets==17.0.1
 fastapi>=0.100.0
 uvicorn>=0.20.0
-geoclip-vietnam==1.0.1
+geoclip-vietnam==1.0.2
