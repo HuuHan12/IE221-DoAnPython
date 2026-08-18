@@ -22,8 +22,8 @@ function Sidebar({ activeMenu }) {
     const menuItems = [
         { id: "overview", label: "Tổng quan", icon: LayoutDashboard, path: "/" },
         { id: "scan", label: "Quét & Khám phá", icon: QrCode, path: "/" },
-        { id: "history", label: "Lịch sử quét", icon: Clock, path: "/" },
-        { id: "favorites", label: "Địa điểm yêu thích", icon: Heart, path: "/" },
+        { id: "history", label: "Lịch sử Tìm kiếm", icon: Clock, path: "/history" },
+        { id: "favorites", label: "Địa điểm yêu thích", icon: Heart, path: "/favorites" },
         { id: "journey", label: "Hành trình của tôi", icon: Compass, path: "/" },
         { id: "gallery", label: "Kho ảnh", icon: ImageIcon, path: "/gallery" },
         { id: "statistics", label: "Bảng Thống kê", icon: BarChart3, path: "/statistics" },
