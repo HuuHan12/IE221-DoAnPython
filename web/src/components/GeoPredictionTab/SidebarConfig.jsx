@@ -1,4 +1,5 @@
 import React from "react";
+import { SlidersIcon, LayersIcon, SparklesIcon, GlobeIcon, MapPinIcon } from "../common/Icons";
 import "../../css/SidebarConfig.css";
 
 function SidebarConfig({
@@ -26,16 +27,19 @@ function SidebarConfig({
     };
 
     return (
-        <aside className="sidebar-config" aria-label="Cấu Hình Hệ Thống">
+        <aside className="sidebar-config" aria-label="Cấu hình hệ thống định vị">
             <div className="sidebar-header">
-                <span className="sidebar-header-icon">⚙️</span>
+                <div className="sidebar-header-icon-box">
+                    <SlidersIcon size={18} className="sidebar-svg-icon" />
+                </div>
                 <h3>Cấu Hình Hệ Thống</h3>
             </div>
 
             {/* Dữ liệu Dataset GPS (3 lựa chọn) */}
             <div className="config-section">
                 <label className="config-section-title">
-                    🗺️ Cơ Sở Dữ Liệu GPS:
+                    <LayersIcon size={16} className="section-title-icon" />
+                    <span>Cơ Sở Dữ Liệu GPS</span>
                 </label>
                 <div className="radio-group" role="radiogroup" aria-label="Chọn tập dữ liệu tọa độ">
                     <label
@@ -50,8 +54,11 @@ function SidebarConfig({
                         />
                         <div className="radio-custom" />
                         <div className="radio-text">
-                            <strong>vietnam_landmarks.csv</strong>
-                            <small>26,353 Tọa độ POIs (Toàn quốc)</small>
+                            <div className="radio-title-row">
+                                <strong>vietnam_landmarks.csv</strong>
+                                <span className="dataset-count-badge">26.3K POIs</span>
+                            </div>
+                            <small>Địa danh & POIs trên toàn quốc</small>
                         </div>
                     </label>
 
@@ -67,8 +74,11 @@ function SidebarConfig({
                         />
                         <div className="radio-custom" />
                         <div className="radio-text">
-                            <strong>vietnam_landmarks_iconic.csv</strong>
-                            <small>68 Danh lam biểu tượng Việt Nam</small>
+                            <div className="radio-title-row">
+                                <strong>vietnam_landmarks_iconic.csv</strong>
+                                <span className="dataset-count-badge">68 Biểu Tượng</span>
+                            </div>
+                            <small>Danh lam thắng cảnh tiêu biểu</small>
                         </div>
                     </label>
 
@@ -84,8 +94,11 @@ function SidebarConfig({
                         />
                         <div className="radio-custom" />
                         <div className="radio-text">
-                            <strong>coordinates_100K.csv</strong>
-                            <small>100,000 Tọa độ toàn cầu (Global GPS)</small>
+                            <div className="radio-title-row">
+                                <strong>coordinates_100K.csv</strong>
+                                <span className="dataset-count-badge">100K GPS</span>
+                            </div>
+                            <small>Tọa độ toàn cầu (GeoCLIP Global)</small>
                         </div>
                     </label>
                 </div>
@@ -95,8 +108,10 @@ function SidebarConfig({
             <div className="config-section">
                 <div className="topk-label-row">
                     <label htmlFor="topk-input" className="config-section-title">
-                        Số lượng vị trí dự đoán (Top-K):
+                        <MapPinIcon size={16} className="section-title-icon" />
+                        <span>Vị Trí Dự Đoán (Top-K)</span>
                     </label>
+                    <span className="topk-current-pill">{topK || 5} kết quả</span>
                 </div>
 
                 <div className="topk-controls">
@@ -131,7 +146,8 @@ function SidebarConfig({
             {/* Sample Image Selector */}
             <div className="config-section">
                 <label htmlFor="sample-select" className="config-section-title">
-                    🖼️ Hoặc chọn ảnh mẫu có sẵn:
+                    <SparklesIcon size={16} className="section-title-icon" />
+                    <span>Chọn Ảnh Mẫu Thử Nghiệm</span>
                 </label>
                 <div className="select-wrapper">
                     <select

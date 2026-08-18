@@ -1,127 +1,144 @@
 /* =========================================================
-   TOP RESULT HERO CARD - Chế độ hiển thị kết quả Top 1
+   TOP RESULT HERO CARD STYLING (DEVELOPER TOOL STANDARD)
+   Palette: Background #F0F0F0 | Accent #009080 - #10A090
 ========================================================= */
 
 .top-result-hero-card {
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
-    border-left: 5px solid #009080;
     border-radius: 12px;
-    padding: 18px 20px;
+    padding: 20px 22px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-    transition: all 0.2s ease;
-    width: 100%;
-    box-sizing: border-box;
+    gap: 14px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
-.top-result-hero-card:hover {
-    box-shadow: 0 6px 20px rgba(0, 144, 128, 0.1);
-    border-color: #CBD5E1;
-    border-left-color: #009080;
-}
-
-/* HÀNG 1: TÊN ĐỊA DANH & BADGE ĐỘ CHÍNH XÁC */
+/* HÀNG 1: TÊN ĐỊA DANH & CONFIDENCE */
 .hero-name-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     flex-wrap: wrap;
 }
 
+.hero-title-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.hero-rank-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #009080;
+    color: #FFFFFF;
+    font-size: 0.8rem;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 .hero-landmark-name {
     margin: 0;
-    font-size: 1.55rem;
+    font-size: 1.25rem;
     font-weight: 800;
-    color: #1E293B;
+    color: #0F172A;
     letter-spacing: -0.02em;
-    line-height: 1.25;
+    line-height: 1.3;
 }
 
 .hero-confidence-badge {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
-    background: #ECFDF5;
-    color: #065F46;
-    border: 1px solid #A7F3D0;
-    padding: 5px 12px;
+    gap: 6px;
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
+    border: 1px solid rgba(0, 144, 128, 0.25);
+    padding: 4px 10px;
     border-radius: 9999px;
-    font-size: 0.84rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    white-space: nowrap;
 }
 
-.hero-confidence-badge strong {
-    color: #047857;
-    font-weight: 800;
+.badge-sparkle-icon {
+    color: #009080;
 }
 
-/* HÀNG 2: TỈNH/THÀNH & LOẠI HÌNH */
+/* HÀNG 2: TỈNH THÀNH & LOẠI HÌNH */
 .hero-meta-row {
-    font-size: 0.95rem;
-    color: #475569;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: #64748B;
     flex-wrap: wrap;
 }
 
-.hero-meta-item strong {
-    color: #334155;
+.hero-meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.meta-label {
+    color: #64748B;
+}
+
+.meta-value {
+    color: #0F172A;
     font-weight: 600;
 }
 
 .hero-meta-separator {
     color: #CBD5E1;
-    user-select: none;
 }
 
-/* HÀNG 3: MÔ TẢ ĐỊA DANH */
+/* HÀNG 3: MÔ TẢ */
 .hero-description-text {
     margin: 0;
-    font-size: 0.92rem;
-    color: #64748B;
-    line-height: 1.55;
+    font-size: 0.88rem;
+    color: #475569;
+    line-height: 1.5;
+    background: #F8FAFC;
+    border-left: 3px solid #009080;
+    padding: 8px 12px;
+    border-radius: 0 6px 6px 0;
 }
 
-/* HÀNG 4: KHỐI SO SÁNH TỌA ĐỘ AI & TỌA ĐỘ THỰC TẾ */
+/* HÀNG 4: SO SÁNH TỌA ĐỘ */
 .hero-coordinates-comparison-box {
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-top: 4px;
-    padding-top: 12px;
-    border-top: 1px solid #F1F5F9;
+    gap: 10px;
+    margin-top: 2px;
 }
 
 .coord-compare-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    padding: 8px 12px;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
     border-radius: 8px;
-    flex-wrap: wrap;
-    transition: all 0.15s ease;
-}
-
-.ai-coord-row {
-    background: rgba(0, 144, 128, 0.05);
-    border: 1px solid rgba(0, 144, 128, 0.15);
-}
-
-.gt-coord-row.has-gt {
-    background: rgba(220, 38, 38, 0.05);
-    border: 1px solid rgba(220, 38, 38, 0.15);
-}
-
-.gt-coord-row.no-gt {
     background: #F8FAFC;
-    border: 1px dashed #CBD5E1;
+    border: 1px solid #E2E8F0;
+    flex-wrap: wrap;
+}
+
+.coord-compare-row.ai-coord-row {
+    border-left: 3px solid #009080;
+}
+
+.coord-compare-row.gt-coord-row.has-gt {
+    border-left: 3px solid #DC2626;
+}
+
+.coord-compare-row.gt-coord-row.no-gt {
+    border-left: 3px solid #CBD5E1;
 }
 
 .coord-label-val {
@@ -129,58 +146,78 @@
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    font-size: 0.88rem;
 }
 
-.coord-bullet {
-    font-size: 1rem;
+.coord-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.ai-icon-box {
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
+}
+
+.gt-icon-box {
+    background: rgba(220, 38, 38, 0.1);
+    color: #DC2626;
 }
 
 .coord-type-title {
-    color: #334155;
+    font-size: 0.82rem;
     font-weight: 700;
+    color: #334155;
 }
 
 .coord-numbers {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
-.ai-numbers {
+.coord-numbers.ai-numbers {
     color: #009080;
 }
 
-.gt-numbers {
+.coord-numbers.gt-numbers {
     color: #DC2626;
 }
 
 .coord-empty-notice {
+    font-size: 0.8rem;
     color: #94A3B8;
     font-style: italic;
-    font-size: 0.84rem;
 }
 
-/* NÚT THAO TÁC (COPY & GOOGLE MAPS) */
 .coord-row-actions {
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.hero-copy-btn {
-    background: #FFFFFF;
-    border: 1px solid #CBD5E1;
-    color: #334155;
-    padding: 4px 9px;
+.hero-copy-btn,
+.hero-gmaps-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
     border-radius: 6px;
     font-size: 0.76rem;
     font-weight: 700;
     cursor: pointer;
+    text-decoration: none;
     transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+}
+
+.hero-copy-btn {
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    color: #334155;
 }
 
 .hero-copy-btn:hover {
@@ -190,18 +227,9 @@
 }
 
 .hero-gmaps-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    text-decoration: none;
     background: rgba(0, 144, 128, 0.08);
     border: 1px solid rgba(0, 144, 128, 0.25);
-    padding: 4px 9px;
-    border-radius: 6px;
-    font-size: 0.76rem;
     color: #009080;
-    font-weight: 700;
-    transition: all 0.2s ease;
 }
 
 .hero-gmaps-link:hover {
@@ -209,53 +237,72 @@
     color: #FFFFFF;
 }
 
-.hero-link-arrow {
-    font-size: 0.82rem;
+.btn-svg {
+    flex-shrink: 0;
 }
 
-/* HỘP HIỂN THỊ SAI SỐ KHOẢNG CÁCH */
+/* SAI SỐ KHOẢNG CÁCH */
 .coord-distance-error-box {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 8px 12px;
-    background: #FFFBEB;
-    border: 1px solid #FDE68A;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    padding: 10px 14px;
     border-radius: 8px;
     font-size: 0.84rem;
-    color: #92400E;
+    color: #166534;
     flex-wrap: wrap;
 }
 
-.dist-icon {
-    font-size: 1rem;
+.dist-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #16A34A;
 }
 
 .dist-label {
+    color: #334155;
     font-weight: 600;
-    color: #78350F;
 }
 
 .dist-value {
-    color: #B45309;
+    color: #0F172A;
     font-weight: 800;
     font-size: 0.9rem;
 }
 
 .dist-benchmark-tag {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: #92400E;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: #DCFCE7;
+    color: #15803D;
 }
 
-.dist-excellent {
-    color: #047857;
-}
+/* RESPONSIVE */
+@media (max-width: 640px) {
+    .top-result-hero-card {
+        padding: 16px;
+        gap: 12px;
+    }
 
-.dist-good {
-    color: #0284C7;
-}
+    .hero-name-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
 
-.dist-far {
-    color: #DC2626;
+    .coord-compare-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .coord-row-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }

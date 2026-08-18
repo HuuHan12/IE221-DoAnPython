@@ -1,4 +1,11 @@
 import React, { useState } from "react";
+import {
+    CheckIcon,
+    TargetIcon,
+    ExternalLinkIcon,
+    CopyIcon,
+    MapPinIcon,
+} from "../common/Icons";
 import "../../css/ResultCard.css";
 
 function RankedResultList({
@@ -18,11 +25,12 @@ function RankedResultList({
     const displayList = predictions.slice(0, topK);
 
     return (
-        <div className="ranked-result-container">
+        <div className="ranked-result-container" aria-label="Bảng xếp hạng Top-K dự đoán">
             <div className="ranked-list-header">
-                <h4 className="ranked-title">
-                    📋 Bảng Xếp Hạng Top-K Dự Đoán
-                </h4>
+                <div className="ranked-list-title-group">
+                    <MapPinIcon size={18} className="ranked-title-icon" />
+                    <h4 className="ranked-title">Bảng Xếp Hạng Top-K Dự Đoán</h4>
+                </div>
                 <span className="ranked-badge-counter">
                     {displayList.length} vị trí
                 </span>
@@ -37,7 +45,7 @@ function RankedResultList({
                     const isSelected = selectedIndex === index;
                     const gmapsUrl =
                         item.gmaps_url ||
-                        `https://www.google.com/maps?q=${lat},${lon}`;
+                        `https://www.google.com/maps?q=${lat.toFixed(6)},${lon.toFixed(6)}`;
 
                     return (
                         <div
@@ -61,32 +69,41 @@ function RankedResultList({
                                     </div>
 
                                     <div className="rank-landmark-name">
-                                        <span className="landmark-pin">📍</span>
                                         <strong>{item.name || "Địa danh không xác định"}</strong>
-                                        {item.province ? <span className="landmark-sub"> — {item.province}</span> : ""}
-                                        {item.category ? <span className="landmark-cat"> ({item.category})</span> : ""}
+                                        {item.province ? <span className="landmark-sub"> — {item.province}</span> : null}
+                                        {item.category ? <span className="landmark-cat"> ({item.category})</span> : null}
                                     </div>
 
-                                    {item.description && (
+                                    {item.description ? (
                                         <div className="rank-landmark-desc">
                                             {item.description}
                                         </div>
-                                    )}
+                                    ) : null}
                                 </div>
                             </div>
 
                             <div className="rank-row-bottom">
                                 {/* NÚT CHỌN VỊ TRÍ NÀY (XỬ LÝ 100% QUA PYTHON BACKEND) */}
-                                {onSelectPrediction && (
+                                {onSelectPrediction ? (
                                     <button
                                         type="button"
                                         className={`select-rank-btn ${isSelected ? "is-active" : ""}`}
                                         onClick={() => onSelectPrediction(index)}
                                         title="Chọn địa điểm này để hiển thị trên thẻ chi tiết và bản đồ"
                                     >
-                                        {isSelected ? "✓ Đang xem vị trí này" : "🎯 Chọn vị trí này"}
+                                        {isSelected ? (
+                                            <>
+                                                <CheckIcon size={14} />
+                                                <span>Đang xem vị trí này</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <TargetIcon size={14} />
+                                                <span>Chọn vị trí này</span>
+                                            </>
+                                        )}
                                     </button>
-                                )}
+                                ) : null}
 
                                 <a
                                     href={gmapsUrl}
@@ -95,9 +112,8 @@ function RankedResultList({
                                     className="gmaps-btn"
                                     title="Mở trên Google Maps"
                                 >
-                                    <span>🗺️</span>
+                                    <ExternalLinkIcon size={14} />
                                     <span className="gmaps-url-text">Xem trên Maps</span>
-                                    <span className="open-arrow">↗</span>
                                 </a>
 
                                 <button
@@ -106,7 +122,17 @@ function RankedResultList({
                                     onClick={() => handleCopy(`${lat.toFixed(6)}, ${lon.toFixed(6)}`, index)}
                                     title="Sao chép tọa độ GPS"
                                 >
-                                    {copiedIndex === index ? "✓ Đã chép" : "📋 Copy Tọa độ"}
+                                    {copiedIndex === index ? (
+                                        <>
+                                            <CheckIcon size={13} />
+                                            <span>Đã chép</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CopyIcon size={13} />
+                                            <span>Copy Tọa độ</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>

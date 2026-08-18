@@ -3,6 +3,16 @@ import GisErrorBanner from "./GisErrorBanner";
 import LeafletMap from "../GeoPredictionTab/LeafletMap";
 import RankedResultList from "../GeoPredictionTab/RankedResultList";
 import { calculateGisErrorApi } from "../../service/predictService";
+import {
+    SlidersIcon,
+    RulerIcon,
+    TargetIcon,
+    MapPinIcon,
+    CompassIcon,
+    AlertTriangleIcon,
+    CheckIcon,
+    SparklesIcon,
+} from "../common/Icons";
 import "../../css/GisErrorBanner.css";
 
 function GisErrorTab({
@@ -115,9 +125,12 @@ function GisErrorTab({
             <div className="gis-control-panel-card">
                 <div className="gis-panel-header">
                     <div className="panel-header-title">
-                        <span className="panel-icon">⚙️</span>
-                        <h4>Công Cụ Đo Đạc & Thẩm Định Sai Số GIS (Task 2.3)</h4>
+                        <div className="gis-title-icon-box">
+                            <RulerIcon size={20} className="gis-header-svg" />
+                        </div>
+                        <h4>Công Cụ Đo Đạc & Thẩm Định Sai Số GIS</h4>
                     </div>
+                    <span className="python-badge">Python WGS-84 Geodesic</span>
                 </div>
 
                 <p className="gis-panel-desc">
@@ -129,7 +142,9 @@ function GisErrorTab({
                     {/* CỘT 1: TỌA ĐỘ THỰC TẾ */}
                     <div className="gis-input-card gt-card">
                         <div className="card-sub-header">
-                            <span>🎯</span>
+                            <div className="sub-icon-box gt-sub-icon">
+                                <TargetIcon size={16} />
+                            </div>
                             <strong>Tọa Độ Thực Tế (Ground Truth)</strong>
                         </div>
                         <div className="inputs-pair">
@@ -161,7 +176,9 @@ function GisErrorTab({
                     {/* CỘT 2: TỌA ĐỘ AI DỰ ĐOÁN */}
                     <div className="gis-input-card ai-card">
                         <div className="card-sub-header">
-                            <span>📍</span>
+                            <div className="sub-icon-box ai-sub-icon">
+                                <MapPinIcon size={16} />
+                            </div>
                             <strong>Tọa Độ AI Dự Đoán (Predicted Location)</strong>
                         </div>
                         <div className="inputs-pair">
@@ -192,12 +209,12 @@ function GisErrorTab({
                 </div>
 
                 {/* THÔNG BÁO VALIDATE LỖI NẾU CÓ */}
-                {validationError && (
-                    <div className="gis-validate-alert">
-                        <span>⚠️</span>
+                {validationError ? (
+                    <div className="gis-validate-alert" role="alert">
+                        <AlertTriangleIcon size={16} />
                         <p>{validationError}</p>
                     </div>
-                )}
+                ) : null}
 
                 {/* NÚT TÍNH TOÁN */}
                 <div className="gis-action-row">
@@ -207,12 +224,22 @@ function GisErrorTab({
                         onClick={handleCalculate}
                         disabled={loading}
                     >
-                        {loading ? "ĐANG TÍNH TOÁN BẰNG PYTHON..." : "📐 ĐO ĐẠC SAI SỐ GIS NGAY"}
+                        {loading ? (
+                            <>
+                                <span className="spinner-icon" />
+                                <span>ĐANG TÍNH TOÁN BẰNG PYTHON...</span>
+                            </>
+                        ) : (
+                            <>
+                                <RulerIcon size={16} />
+                                <span>ĐO ĐẠC SAI SỐ GIS NGAY</span>
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
 
-            {/* 1. TOP BANNER ĐO ĐẠC SAI SỐ GIS (CHUẨN THEO ẢNH MẪU) */}
+            {/* 1. TOP BANNER ĐO ĐẠC SAI SỐ GIS */}
             <GisErrorBanner
                 groundTruth={effectiveGt}
                 prediction={effectivePred}
@@ -230,9 +257,12 @@ function GisErrorTab({
             </div>
 
             {/* 3. BẢNG CHI TIẾT CÁC CHỈ SỐ TRẮC ĐỊA GIS (PYTHON CALCULATED METRICS) */}
-            {gisResult && (
+            {gisResult ? (
                 <div className="gis-deep-metrics-card">
-                    <h4>📊 Chi Tiết Thông Số Trắc Địa Không Gian (GIS Detailed Metrics)</h4>
+                    <div className="deep-metrics-title-row">
+                        <CompassIcon size={18} className="deep-title-svg" />
+                        <h4>Chi Tiết Thông Số Trắc Địa Không Gian (GIS Detailed Metrics)</h4>
+                    </div>
                     <div className="metrics-stats-grid">
                         <div className="metric-chip">
                             <span className="m-title">Khoảng cách Geodesic (WGS-84)</span>
@@ -255,23 +285,23 @@ function GisErrorTab({
                         <div className="metric-chip">
                             <span className="m-title">Phân Cấp Đạt Chuẩn (Benchmark)</span>
                             <strong className="m-val badge-text">
-                                {gisResult.accuracy_icon} {gisResult.accuracy_short_label}
+                                {gisResult.accuracy_short_label || "Đang thẩm định"}
                             </strong>
                             <small>Chuẩn GeoCLIP ICCV 2023</small>
                         </div>
                     </div>
                 </div>
-            )}
+            ) : null}
 
             {/* 4. BẢNG XẾP HẠNG TOP-K DỰ ĐOÁN */}
-            {activePredictions.length > 0 && (
+            {activePredictions.length > 0 ? (
                 <div className="gis-rankings-section">
                     <RankedResultList
                         predictions={activePredictions}
                         topK={5}
                     />
                 </div>
-            )}
+            ) : null}
         </div>
     );
 }

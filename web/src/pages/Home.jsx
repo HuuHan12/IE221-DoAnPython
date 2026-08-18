@@ -2,6 +2,7 @@ import { usePredict } from "../hooks/usePredict";
 import GeoPredictionTab from "../components/GeoPredictionTab/GeoPredictionTab";
 import DataExplorerTab from "../components/DataExplorerTab/DataExplorerTab";
 import GisErrorTab from "../components/GisErrorTab/GisErrorTab";
+import { GlobeIcon, SparklesIcon, LayersIcon, RulerIcon } from "../components/common/Icons";
 import "../css/Home.css";
 
 function Home() {
@@ -43,7 +44,9 @@ function Home() {
             {/* TOP DASHBOARD HERO HEADER */}
             <header className="dashboard-hero-header">
                 <div className="title-row">
-                    <span className="hero-globe-icon">🌐</span>
+                    <div className="header-logo-icon-box">
+                        <GlobeIcon size={22} className="header-svg-logo" />
+                    </div>
                     <h1 className="hero-title">
                         GeoCLIP Vietnam: <span className="highlight-text">Visual Geo-localization Dashboard</span>
                     </h1>
@@ -56,21 +59,24 @@ function Home() {
                         className={`tab-item ${activeTab === "predict" ? "active" : ""}`}
                         onClick={() => setActiveTab("predict")}
                     >
-                        🚀 Dự Đoán Vị Trí Ảnh
+                        <SparklesIcon size={16} />
+                        <span>Dự Đoán Vị Trí Ảnh</span>
                     </button>
                     <button
                         type="button"
                         className={`tab-item ${activeTab === "explorer" ? "active" : ""}`}
                         onClick={() => setActiveTab("explorer")}
                     >
-                        📊 Khám Phá Dữ Liệu <small>(Data Explorer)</small>
+                        <LayersIcon size={16} />
+                        <span>Khám Phá Dữ Liệu <small>(Data Explorer)</small></span>
                     </button>
                     <button
                         type="button"
                         className={`tab-item ${activeTab === "gis_error" ? "active" : ""}`}
                         onClick={() => setActiveTab("gis_error")}
                     >
-                        📐 Đo Đạc Sai Số
+                        <RulerIcon size={16} />
+                        <span>Đo Đạc Sai Số</span>
                     </button>
                 </nav>
             </header>

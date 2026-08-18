@@ -1,4 +1,14 @@
 import React, { useState, useEffect } from "react";
+import {
+    UploadIcon,
+    TrashIcon,
+    CrosshairIcon,
+    ChevronDownIcon,
+    SparklesIcon,
+    CheckIcon,
+    RefreshIcon,
+    ImageIcon,
+} from "../common/Icons";
 import "../../css/UploadSection.css";
 
 function UploadSection({
@@ -18,24 +28,29 @@ function UploadSection({
 }) {
     const [gtOpen, setGtOpen] = useState(true);
 
-
     useEffect(() => {
         if (groundTruth.lat || groundTruth.lon) {
             setGtOpen(true);
         }
     }, [groundTruth.lat, groundTruth.lon]);
 
+    const hasGroundTruth = Boolean(groundTruth.lat || groundTruth.lon);
+
     return (
         <section className="upload-column-card" aria-label="Tải lên ảnh định vị">
             <div className="card-header-bar">
-                <h3 className="column-title">1. Tải lên Ảnh Cần Định Vị</h3>
-                <span className="step-badge">Bước 1</span>
+                <div className="card-title-group">
+                    <span className="step-indicator-pill">01</span>
+                    <h3 className="column-title">Tải Lên Ảnh Cần Định Vị</h3>
+                </div>
+                <span className="file-format-badge">JPG, PNG, WEBP</span>
             </div>
+
             <p className="column-subtitle">
-                Kéo thả hoặc chọn file ảnh (JPG, PNG, WEBP tối đa 10MB):
+                Hệ thống AI sẽ trích xuất vector đặc trưng thị giác để đối soát không gian GPS.
             </p>
 
-            {/* khu kéo thả*/}
+            {/* KHU VỰC KÉO THẢ ẢNH */}
             <div
                 className={`upload-dropzone ${dragging ? "dragging" : ""} ${preview ? "has-preview" : ""}`}
                 onDragOver={onDragOver}
@@ -59,19 +74,20 @@ function UploadSection({
                                     fileInputRef.current?.click();
                                 }}
                             >
-                                🔄 Đổi ảnh khác
+                                <RefreshIcon size={15} />
+                                <span>Đổi ảnh khác</span>
                             </button>
                         </div>
                     </div>
                 ) : (
                     <div className="empty-dropzone-content">
                         <div className="upload-icon-circle">
-                            <span className="upload-arrow">⭡</span>
+                            <UploadIcon size={24} className="dropzone-svg-icon" />
                         </div>
                         <h4 className="upload-heading">
                             {dragging ? "Thả file ảnh vào đây" : "Kéo & thả file ảnh vào đây"}
                         </h4>
-                        <p className="upload-hint">hoặc</p>
+                        <p className="upload-hint">hoặc bấm vào để duyệt file từ thiết bị</p>
                         <button
                             type="button"
                             className="browse-button"
@@ -80,9 +96,9 @@ function UploadSection({
                                 fileInputRef.current?.click();
                             }}
                         >
-                            📁 Chọn ảnh từ thiết bị
+                            <span>Chọn tệp ảnh</span>
                         </button>
-                        <span className="upload-specs">Hỗ trợ JPG, PNG, WEBP (Tối đa 10MB)</span>
+                        <span className="upload-specs">Kích thước tối đa: 10 MB</span>
                     </div>
                 )}
 
@@ -96,15 +112,17 @@ function UploadSection({
                 />
             </div>
 
-            {/* chọn file thông tin bên dưới */}
-            {file && (
+            {/* FILE CHIP THÔNG TIN */}
+            {file ? (
                 <div className="file-info-chip">
                     <div className="file-info-left">
-                        <span className="file-icon">🖼️</span>
+                        <div className="file-icon-box">
+                            <ImageIcon size={16} />
+                        </div>
                         <div className="file-texts">
                             <span className="file-name">{file.name || "sample_image.jpg"}</span>
                             <span className="file-size">
-                                {file.size ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "Ảnh mẫu có sẵn"}
+                                {file.size ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "Ảnh mẫu kiểm thử"}
                             </span>
                         </div>
                     </div>
@@ -115,12 +133,12 @@ function UploadSection({
                         title="Xoá ảnh này"
                         aria-label="Xoá ảnh"
                     >
-                        ✕
+                        <TrashIcon size={15} />
                     </button>
                 </div>
-            )}
+            ) : null}
 
-            {/* vĩ độ và kinh độ thực tế*/}
+            {/* GROUND TRUTH ACCORDION */}
             <div className="gt-accordion">
                 <button
                     type="button"
@@ -128,18 +146,21 @@ function UploadSection({
                     onClick={() => setGtOpen((prev) => !prev)}
                     aria-expanded={gtOpen}
                 >
-                    <span className="gt-header-left">
-                        <span className="gt-icon">📍</span>
+                    <div className="gt-header-left">
+                        <CrosshairIcon size={16} className="gt-svg-icon" />
                         <strong>So Sánh Với Tọa Độ Thực Tế</strong>
-                        <small>(Ground Truth Validation)</small>
-                    </span>
-                    <span className={`accordion-chevron ${gtOpen ? "open" : ""}`}>▾</span>
+                        <span className="gt-optional-badge">Tùy chọn</span>
+                    </div>
+                    <ChevronDownIcon
+                        size={16}
+                        className={`accordion-chevron-icon ${gtOpen ? "open" : ""}`}
+                    />
                 </button>
 
-                {gtOpen && (
+                {gtOpen ? (
                     <div className="gt-accordion-body">
                         <p className="gt-description">
-                            Nhập <strong>Vĩ độ (Latitude)</strong> và <strong>Kinh độ (Longitude)</strong> thực tế để hệ thống tự động tính sai số không gian (Haversine Error km):
+                            Nhập <strong>Vĩ độ (Lat)</strong> và <strong>Kinh độ (Lon)</strong> thực tế để đo đạc sai số trắc địa Geodesic WGS-84 tự động.
                         </p>
                         <div className="gt-inputs-grid">
                             <div className="gt-input-group">
@@ -148,7 +169,7 @@ function UploadSection({
                                     id="gt-lat"
                                     type="number"
                                     step="any"
-                                    placeholder="VD: 20.91005"
+                                    placeholder="VD: 10.795000"
                                     value={groundTruth.lat}
                                     onChange={(e) =>
                                         setGroundTruth((prev) => ({ ...prev, lat: e.target.value }))
@@ -162,7 +183,7 @@ function UploadSection({
                                     id="gt-lon"
                                     type="number"
                                     step="any"
-                                    placeholder="VD: 107.18390"
+                                    placeholder="VD: 106.721500"
                                     value={groundTruth.lon}
                                     onChange={(e) =>
                                         setGroundTruth((prev) => ({ ...prev, lon: e.target.value }))
@@ -171,25 +192,27 @@ function UploadSection({
                                 />
                             </div>
                         </div>
-                        {(groundTruth.lat || groundTruth.lon) && (
+
+                        {hasGroundTruth ? (
                             <div className="gt-quick-actions">
                                 <span className="gt-current-tag">
-                                    ✓ Đã nạp tọa độ thực tế: <strong>{groundTruth.lat || 0}°, {groundTruth.lon || 0}°</strong>
+                                    <CheckIcon size={14} className="check-svg" />
+                                    <span>Tọa độ thực tế: <strong>{groundTruth.lat || 0}°, {groundTruth.lon || 0}°</strong></span>
                                 </span>
                                 <button
                                     type="button"
                                     className="gt-clear-btn"
                                     onClick={() => setGroundTruth({ lat: "", lon: "" })}
                                 >
-                                    Xoá tọa độ
+                                    Xóa
                                 </button>
                             </div>
-                        )}
+                        ) : null}
                     </div>
-                )}
+                ) : null}
             </div>
 
-            {/* nut dự đoán */}
+            {/* NÚT BẮT ĐẦU ĐỊNH VỊ */}
             <div className="predict-action-container">
                 <button
                     type="button"
@@ -200,12 +223,12 @@ function UploadSection({
                     {loading ? (
                         <>
                             <span className="spinner-icon" />
-                            ĐANG ĐỊNH VỊ VỊ TRÍ AI...
+                            <span>Đang định vị vị trí AI...</span>
                         </>
                     ) : (
                         <>
-                            <span className="search-icon">🔍</span>
-                            BẮT ĐẦU ĐỊNH VỊ VỊ TRÍ
+                            <SparklesIcon size={18} />
+                            <span>BẮT ĐẦU ĐỊNH VỊ VỊ TRÍ</span>
                         </>
                     )}
                 </button>

@@ -1,4 +1,13 @@
 import React, { useState } from "react";
+import {
+    MapPinIcon,
+    TargetIcon,
+    CopyIcon,
+    CheckIcon,
+    ExternalLinkIcon,
+    RulerIcon,
+    SparklesIcon,
+} from "../common/Icons";
 import "../../css/TopResultHero.css";
 
 function TopResultHero({
@@ -63,41 +72,52 @@ function TopResultHero({
         setTimeout(() => setCopiedGt(false), 2000);
     };
 
+    const rank = prediction.rank || 1;
+
     return (
         <div className="top-result-hero-card" aria-label="Kết Quả Dự Đoán Tốt Nhất">
-            {/*tên địa danh và độ chính xác */}
+            {/* HÀNG 1: TÊN ĐỊA DANH & BADGE ĐỘ CHÍNH XÁC */}
             <div className="hero-name-row">
-                <h2 className="hero-landmark-name">{name}</h2>
-                {probPercent > 0 && (
-                    <span className="hero-confidence-badge" title="Mức độ tin cậy của AI">
-                        ⭐ Độ chính xác: <strong>{probPercent.toFixed(1)}%</strong>
+                <div className="hero-title-group">
+                    <span className="hero-rank-pill">#{rank}</span>
+                    <h2 className="hero-landmark-name">{name}</h2>
+                </div>
+
+                {probPercent > 0 ? (
+                    <span className="hero-confidence-badge" title="Độ tin cậy của mô hình AI">
+                        <SparklesIcon size={14} className="badge-sparkle-icon" />
+                        <span>Độ chính xác: <strong>{probPercent.toFixed(1)}%</strong></span>
                     </span>
-                )}
+                ) : null}
             </div>
 
-            {/* tỉnh thành ngoại hình */}
+            {/* HÀNG 2: TỈNH THÀNH & LOẠI HÌNH */}
             <div className="hero-meta-row">
                 <span className="hero-meta-item">
-                    <strong>Tỉnh/Thành:</strong> {province}
+                    <span className="meta-label">Tỉnh/Thành:</span>
+                    <span className="meta-value">{province}</span>
                 </span>
-                <span className="hero-meta-separator">|</span>
+                <span className="hero-meta-separator">•</span>
                 <span className="hero-meta-item">
-                    <strong>Loại hình:</strong> {category}
+                    <span className="meta-label">Loại hình:</span>
+                    <span className="meta-value">{category}</span>
                 </span>
             </div>
 
-            {/* mô tả địa danh */}
-            {description && (
+            {/* HÀNG 3: MÔ TẢ ĐỊA DANH */}
+            {description ? (
                 <p className="hero-description-text">{description}</p>
-            )}
+            ) : null}
 
-            {/* so sánh tọa độ do AI tạo*/}
+            {/* HÀNG 4: SO SÁNH TỌA ĐỘ AI & TỌA ĐỘ THỰC TẾ */}
             <div className="hero-coordinates-comparison-box">
                 {/* 4.1. TỌA ĐỘ DO AI TẠO */}
                 <div className="coord-compare-row ai-coord-row">
                     <div className="coord-label-val">
-                        <span className="coord-bullet">📍</span>
-                        <strong className="coord-type-title">Tọa độ AI:</strong>
+                        <div className="coord-icon-box ai-icon-box">
+                            <MapPinIcon size={16} />
+                        </div>
+                        <span className="coord-type-title">Tọa độ AI:</span>
                         <span className="coord-numbers ai-numbers">
                             Lat {predLat.toFixed(6)}, Lon {predLon.toFixed(6)}
                         </span>
@@ -110,7 +130,17 @@ function TopResultHero({
                             onClick={handleCopyAi}
                             title="Sao chép tọa độ AI"
                         >
-                            {copiedAi ? "✓ Đã chép" : "📋 Sao chép"}
+                            {copiedAi ? (
+                                <>
+                                    <CheckIcon size={13} className="btn-svg" />
+                                    <span>Đã chép</span>
+                                </>
+                            ) : (
+                                <>
+                                    <CopyIcon size={13} className="btn-svg" />
+                                    <span>Sao chép</span>
+                                </>
+                            )}
                         </button>
                         <a
                             href={gmapsUrl}
@@ -119,18 +149,19 @@ function TopResultHero({
                             className="hero-gmaps-link"
                             title="Xem vị trí AI trên Google Maps"
                         >
-                            <span>🗺️</span>
+                            <ExternalLinkIcon size={13} className="btn-svg" />
                             <span>Maps</span>
-                            <span className="hero-link-arrow">↗</span>
                         </a>
                     </div>
                 </div>
 
-                {/* tọa độ người dùng nhập*/}
+                {/* 4.2. TỌA ĐỘ THỰC TẾ DO NGƯỜI DÙNG NHẬP */}
                 <div className={`coord-compare-row gt-coord-row ${hasGt ? "has-gt" : "no-gt"}`}>
                     <div className="coord-label-val">
-                        <span className="coord-bullet">🎯</span>
-                        <strong className="coord-type-title">Tọa độ thực tế:</strong>
+                        <div className="coord-icon-box gt-icon-box">
+                            <TargetIcon size={16} />
+                        </div>
+                        <span className="coord-type-title">Tọa độ thực tế:</span>
                         {hasGt && gtLat !== null && gtLon !== null ? (
                             <span className="coord-numbers gt-numbers">
                                 Lat {gtLat.toFixed(6)}, Lon {gtLon.toFixed(6)}
@@ -142,7 +173,7 @@ function TopResultHero({
                         )}
                     </div>
 
-                    {hasGt && gtLat !== null && gtLon !== null && (
+                    {hasGt && gtLat !== null && gtLon !== null ? (
                         <div className="coord-row-actions">
                             <button
                                 type="button"
@@ -150,27 +181,39 @@ function TopResultHero({
                                 onClick={handleCopyGt}
                                 title="Sao chép tọa độ thực tế"
                             >
-                                {copiedGt ? "✓ Đã chép" : "📋 Sao chép"}
+                                {copiedGt ? (
+                                    <>
+                                        <CheckIcon size={13} className="btn-svg" />
+                                        <span>Đã chép</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <CopyIcon size={13} className="btn-svg" />
+                                        <span>Sao chép</span>
+                                    </>
+                                )}
                             </button>
                         </div>
-                    )}
+                    ) : null}
                 </div>
 
-                {/* đánh giá sai số */}
-                {gisError && formattedDistance && (
+                {/* 4.3. ĐÁNH GIÁ SAI SỐ KHOẢNG CÁCH */}
+                {gisError && formattedDistance ? (
                     <div className="coord-distance-error-box">
-                        <span className="dist-icon">📏</span>
+                        <div className="dist-icon-box">
+                            <RulerIcon size={16} />
+                        </div>
                         <span className="dist-label">Sai số khoảng cách (Đường chim bay):</span>
                         <strong className="dist-value">
                             {formattedDistance}
                         </strong>
-                        {accuracyLabel && (
+                        {accuracyLabel ? (
                             <span className={`dist-benchmark-tag ${accuracyLevelClass}`}>
-                                ({accuracyLabel})
+                                {accuracyLabel}
                             </span>
-                        )}
+                        ) : null}
                     </div>
-                )}
+                ) : null}
             </div>
         </div>
     );

@@ -1,5 +1,6 @@
 /* =========================================================
    GIS ERROR TAB & BANNER (TASK 2.3) STYLING
+   Palette: Background #F0F0F0 | Accent #009080 - #10A090
 ========================================================= */
 
 .gis-error-tab-layout {
@@ -16,9 +17,9 @@
 .gis-control-panel-card {
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
-    border-radius: 14px;
-    padding: 20px 24px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -38,72 +39,52 @@
     gap: 10px;
 }
 
+.gis-title-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
+    flex-shrink: 0;
+}
+
+.gis-header-svg {
+    color: #009080;
+}
+
 .panel-header-title h4 {
     margin: 0;
-    font-size: 1.15rem;
+    font-size: 1.12rem;
     font-weight: 800;
     color: #0F172A;
+    letter-spacing: -0.01em;
 }
 
 .python-badge {
-    background: #0284C7;
-    color: #FFFFFF;
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
+    border: 1px solid rgba(0, 144, 128, 0.25);
     font-size: 0.76rem;
     font-weight: 700;
-    padding: 4px 10px;
+    padding: 3px 10px;
     border-radius: 9999px;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
 }
 
 .gis-panel-desc {
     margin: 0;
-    font-size: 0.88rem;
+    font-size: 0.86rem;
     color: #64748B;
-    line-height: 1.5;
-}
-
-/* PRESET ROW */
-.gis-preset-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #F8FAFC;
-    border: 1px solid #E2E8F0;
-    padding: 10px 16px;
-    border-radius: 10px;
-    flex-wrap: wrap;
-}
-
-.preset-label {
-    font-size: 0.86rem;
-    font-weight: 700;
-    color: #334155;
-}
-
-.gis-preset-select {
-    flex: 1;
-    min-width: 260px;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid #CBD5E1;
-    background: #FFFFFF;
-    font-size: 0.86rem;
-    font-weight: 600;
-    color: #0F172A;
-    outline: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.gis-preset-select:focus {
-    border-color: #009080;
-    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.1);
+    line-height: 1.45;
 }
 
 /* INPUTS GRID */
 .gis-inputs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 16px;
 }
 
@@ -111,26 +92,46 @@
     background: #F8FAFC;
     border: 1px solid #E2E8F0;
     border-radius: 10px;
-    padding: 14px 16px;
+    padding: 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
 }
 
 .gis-input-card.gt-card {
-    border-left: 4px solid #DC2626;
+    border-left: 3px solid #DC2626;
 }
 
 .gis-input-card.ai-card {
-    border-left: 4px solid #009080;
+    border-left: 3px solid #009080;
 }
 
 .card-sub-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: #0F172A;
+}
+
+.sub-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.gt-sub-icon {
+    background: rgba(220, 38, 38, 0.1);
+    color: #DC2626;
+}
+
+.ai-sub-icon {
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
 }
 
 .inputs-pair {
@@ -146,9 +147,9 @@
 }
 
 .field-item label {
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     font-weight: 700;
-    color: #64748B;
+    color: #475569;
 }
 
 .coord-num-input {
@@ -158,11 +159,11 @@
     border: 1px solid #CBD5E1;
     background: #FFFFFF;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.85rem;
+    font-size: 0.84rem;
     font-weight: 600;
     color: #0F172A;
     outline: none;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
     box-sizing: border-box;
 }
 
@@ -181,7 +182,11 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 0.86rem;
+    font-size: 0.84rem;
+}
+
+.gis-validate-alert p {
+    margin: 0;
 }
 
 /* CALC ACTION BUTTON */
@@ -198,19 +203,19 @@
     background: linear-gradient(135deg, #009080 0%, #007A6D 100%);
     color: #FFFFFF;
     border: none;
-    padding: 10px 24px;
+    padding: 10px 22px;
     border-radius: 8px;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0, 144, 128, 0.25);
+    box-shadow: 0 3px 10px rgba(0, 144, 128, 0.25);
     transition: all 0.2s ease;
     letter-spacing: 0.02em;
 }
 
 .gis-calc-btn:hover:not(:disabled) {
     background: linear-gradient(135deg, #00A693 0%, #009080 100%);
-    box-shadow: 0 6px 18px rgba(0, 144, 128, 0.35);
+    box-shadow: 0 5px 16px rgba(0, 144, 128, 0.35);
     transform: translateY(-1px);
 }
 
@@ -220,36 +225,36 @@
 }
 
 /* =========================================================
-   2. GIS ERROR BANNER (TASK 2.3) - CHUẨN HÌNH ẢNH MẪU
+   2. GIS ERROR BANNER (TASK 2.3)
 ========================================================= */
 
 .gis-error-banner-container {
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    padding: 14px 18px;
+    border-radius: 12px;
+    padding: 18px 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    gap: 12px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 }
 
 .gis-badge-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #16A34A;
+    background: linear-gradient(135deg, #009080, #007A6D);
     color: #FFFFFF;
     padding: 4px 10px;
     border-radius: 6px;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 800;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
     width: fit-content;
 }
 
 .gis-badge-icon {
-    font-size: 0.85rem;
+    color: #FFFFFF;
 }
 
 .gis-badge-title {
@@ -259,35 +264,69 @@
 .gis-metric-rows {
     display: flex;
     flex-direction: column;
-    gap: 7px;
+    gap: 8px;
 }
 
 .gis-metric-item {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.88rem;
+    gap: 10px;
+    font-size: 0.86rem;
     color: #1E293B;
     flex-wrap: wrap;
     line-height: 1.4;
+    padding: 6px 10px;
+    background: #F8FAFC;
+    border-radius: 8px;
+    border: 1px solid #E2E8F0;
 }
 
-.gis-icon-bullet {
-    font-size: 0.95rem;
-    display: inline-flex;
+.metric-item-icon-box {
+    display: flex;
     align-items: center;
     justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    flex-shrink: 0;
+}
+
+.gt-icon-box {
+    background: rgba(220, 38, 38, 0.1);
+    color: #DC2626;
+}
+
+.ai-icon-box {
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
+}
+
+.dist-icon-box {
+    background: rgba(22, 163, 74, 0.1);
+    color: #16A34A;
+}
+
+.eval-icon-box {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366F1;
 }
 
 .gis-item-label {
-    color: #334155;
+    color: #475569;
     font-weight: 600;
 }
 
 .gis-item-val {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    color: #0F172A;
     font-weight: 600;
+}
+
+.gt-val-color {
+    color: #DC2626;
+}
+
+.ai-val-color {
+    color: #009080;
 }
 
 .gis-dist-bold {
@@ -299,17 +338,27 @@
 .gis-level-content {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.88rem;
 }
 
-.gis-dot-indicator {
-    font-size: 0.85rem;
-}
-
-.gis-level-text {
-    color: #15803D;
+.gis-benchmark-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.78rem;
     font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+}
+
+.gis-benchmark-badge.active {
+    background: #DCFCE7;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
+}
+
+.gis-benchmark-badge.pending {
+    background: #F1F5F9;
+    color: #64748B;
 }
 
 /* =========================================================
@@ -320,16 +369,26 @@
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
     border-radius: 12px;
-    padding: 18px 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    padding: 20px;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     display: flex;
     flex-direction: column;
     gap: 14px;
 }
 
-.gis-deep-metrics-card h4 {
+.deep-metrics-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.deep-title-svg {
+    color: #009080;
+}
+
+.deep-metrics-title-row h4 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.98rem;
     font-weight: 800;
     color: #0F172A;
 }
@@ -344,7 +403,7 @@
     background: #F8FAFC;
     border: 1px solid #E2E8F0;
     border-radius: 10px;
-    padding: 12px 16px;
+    padding: 14px 16px;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -357,7 +416,7 @@
 }
 
 .m-val {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     font-weight: 800;
     color: #0F172A;
 }
@@ -367,7 +426,7 @@
 }
 
 .m-val.badge-text {
-    font-size: 0.92rem;
+    font-size: 0.95rem;
     color: #15803D;
 }
 
@@ -386,4 +445,26 @@
 
 .gis-rankings-section {
     width: 100%;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .gis-inputs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .gis-control-panel-card {
+        padding: 16px;
+        gap: 14px;
+    }
+
+    .inputs-pair {
+        grid-template-columns: 1fr;
+    }
+
+    .gis-calc-btn {
+        width: 100%;
+    }
 }

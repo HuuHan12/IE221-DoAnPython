@@ -29,9 +29,20 @@
     flex-wrap: wrap;
 }
 
-.hero-globe-icon {
-    font-size: clamp(1.4rem, 2.5vw, 1.8rem);
-    line-height: 1;
+.header-logo-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
+    flex-shrink: 0;
+}
+
+.header-svg-logo {
+    color: #009080;
 }
 
 .hero-title {

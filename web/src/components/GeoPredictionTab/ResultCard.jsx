@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import TopResultHero from "./TopResultHero";
 import LeafletMap from "./LeafletMap";
 import RankedResultList from "./RankedResultList";
+import { ShareIcon, CheckIcon, GlobeIcon, SparklesIcon } from "../common/Icons";
 import { calculateHaversineDistance } from "../../libs/geoUtils";
 import "../../css/ResultCard.css";
 
@@ -56,13 +57,25 @@ function ResultCard({
         <section className="result-column-card" aria-label="Kết Quả Dự Đoán & Bản Đồ">
             {/* TIÊU ĐỀ CỘT */}
             <div className="card-header-bar">
-                <h3 className="column-title">2. Kết Quả Dự Đoán & Bản Đồ Không Gian</h3>
+                <div className="card-title-group">
+                    <span className="step-indicator-pill">02</span>
+                    <h3 className="column-title">Kết Quả Dự Đoán & Bản Đồ Không Gian</h3>
+                </div>
                 {loading ? (
-                    <span className="step-badge processing">Đang xử lý AI...</span>
+                    <span className="step-badge processing">
+                        <span className="badge-pulse-dot" />
+                        <span>Đang xử lý AI...</span>
+                    </span>
                 ) : result ? (
-                    <span className="step-badge success">Đã định vị</span>
+                    <span className="step-badge success">
+                        <CheckIcon size={13} />
+                        <span>Đã định vị</span>
+                    </span>
                 ) : (
-                    <span className="step-badge ready">Bản đồ sẵn sàng</span>
+                    <span className="step-badge ready">
+                        <GlobeIcon size={13} />
+                        <span>Bản đồ sẵn sàng</span>
+                    </span>
                 )}
             </div>
 
@@ -81,7 +94,9 @@ function ResultCard({
                 />
             ) : (
                 <div className="idle-notice-box">
-                    <span className="notice-icon">🗺️</span>
+                    <div className="idle-icon-box">
+                        <GlobeIcon size={24} />
+                    </div>
                     <p>
                         Bản đồ tương tác GIS đã sẵn sàng. Hãy chọn hoặc tải ảnh lên ở cột bên trái và bấm{" "}
                         <strong>'Bắt đầu Định vị'</strong> để xem vị trí dự đoán trên bản đồ.
@@ -98,7 +113,7 @@ function ResultCard({
             />
 
             {/* BẢNG XẾP HẠNG TOP-K (HIỆN RA KHI CÓ KẾT QUẢ DỰ ĐOÁN) */}
-            {result && predictions.length > 0 && (
+            {result && predictions.length > 0 ? (
                 <>
                     <RankedResultList
                         predictions={predictions}
@@ -114,12 +129,21 @@ function ResultCard({
                             onClick={handleShareClick}
                             title="Chia sẻ thông tin và liên kết Google Maps của địa danh"
                         >
-                            <span className="share-btn-icon">{copiedShare ? "✓" : "📤"}</span>
-                            <span>{copiedShare ? "Đã sao chép liên kết!" : "Chia sẻ kết quả"}</span>
+                            {copiedShare ? (
+                                <>
+                                    <CheckIcon size={16} />
+                                    <span>Đã sao chép liên kết!</span>
+                                </>
+                            ) : (
+                                <>
+                                    <ShareIcon size={16} />
+                                    <span>Chia sẻ kết quả</span>
+                                </>
+                            )}
                         </button>
                     </div>
                 </>
-            )}
+            ) : null}
         </section>
     );
 }

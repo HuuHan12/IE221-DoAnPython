@@ -1,23 +1,21 @@
-/* =========================================
-   SIDEBAR CONFIGURATION COMPONENT
-========================================= */
+/* =========================================================
+   SIDEBAR CONFIGURATION STYLING (DEVELOPER TOOL STANDARD)
+   Palette: Background #F0F0F0 | Accent #009080 - #10A090
+========================================================= */
 
 .sidebar-config {
     background: #FFFFFF;
     border: 1px solid #E2E8F0;
-    border-radius: 16px;
+    border-radius: 12px;
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    color: #0F172A;
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     height: fit-content;
-    box-sizing: border-box;
-    position: sticky;
-    top: 90px;
 }
 
+/* HEADER */
 .sidebar-header {
     display: flex;
     align-items: center;
@@ -26,19 +24,30 @@
     border-bottom: 1px solid #E2E8F0;
 }
 
-.sidebar-header-icon {
-    font-size: 1.25rem;
+.sidebar-header-icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
+}
+
+.sidebar-svg-icon {
     color: #009080;
 }
 
 .sidebar-header h3 {
     margin: 0;
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
-    letter-spacing: -0.02em;
     color: #0F172A;
+    letter-spacing: -0.01em;
 }
 
+/* SECTION */
 .config-section {
     display: flex;
     flex-direction: column;
@@ -46,53 +55,68 @@
 }
 
 .config-section-title {
-    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.84rem;
     font-weight: 700;
     color: #334155;
-    display: block;
+    margin: 0;
 }
 
-/* Radio Group */
+.section-title-icon {
+    color: #009080;
+}
+
+/* RADIO CARDS GROUP */
 .radio-group {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 .radio-label {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
-    cursor: pointer;
-    padding: 10px 12px;
-    border-radius: 10px;
-    background: #F8FAFC;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #FAFAFA;
     border: 1px solid #E2E8F0;
-    transition: all 0.2s ease;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
 }
 
 .radio-label:hover {
-    background: rgba(0, 144, 128, 0.05);
-    border-color: rgba(0, 144, 128, 0.3);
+    border-color: #CBD5E1;
+    background: #F8FAFC;
 }
 
 .radio-label.active {
-    background: rgba(0, 144, 128, 0.08);
     border-color: #009080;
+    background: rgba(0, 144, 128, 0.04);
+    box-shadow: 0 0 0 1px #009080;
 }
 
 .radio-label input[type="radio"] {
-    display: none;
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
 }
 
 .radio-custom {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    border: 2px solid #94A3B8;
+    border: 2px solid #CBD5E1;
+    background: #FFFFFF;
     margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
-    position: relative;
     transition: all 0.2s ease;
 }
 
@@ -102,69 +126,102 @@
 
 .radio-label.active .radio-custom::after {
     content: "";
-    position: absolute;
     width: 8px;
     height: 8px;
-    background: #009080;
     border-radius: 50%;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #009080, #10A090);
 }
 
 .radio-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+}
+
+.radio-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.radio-text strong {
     font-size: 0.84rem;
-    line-height: 1.4;
-    color: #334155;
+    font-weight: 700;
+    color: #0F172A;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    word-break: break-all;
+}
+
+.dataset-count-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    background: rgba(0, 144, 128, 0.1);
+    color: #009080;
+    letter-spacing: 0.01em;
 }
 
 .radio-text small {
-    display: block;
+    font-size: 0.76rem;
     color: #64748B;
-    font-size: 0.75rem;
+    line-height: 1.35;
 }
 
-/* Top-K controls */
+/* TOP-K SLIDER & INPUT CONTROLS */
 .topk-label-row {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.topk-current-pill {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: #009080;
+    background: rgba(0, 144, 128, 0.1);
+    padding: 2px 8px;
+    border-radius: 6px;
 }
 
 .topk-controls {
     display: flex;
-    flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    gap: 12px;
 }
 
 .topk-number-input {
-    width: 100%;
-    box-sizing: border-box;
-    background: #F8FAFC;
+    width: 52px;
+    height: 38px;
+    text-align: center;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0F172A;
+    background: #FFFFFF;
     border: 1px solid #CBD5E1;
     border-radius: 8px;
-    padding: 8px 14px;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #009080;
-    text-align: center;
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: all 0.2s ease;
 }
 
 .topk-number-input:focus {
     border-color: #009080;
-    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.15);
+    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.12);
 }
 
 .topk-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
+    flex: 1;
     height: 6px;
-    border-radius: 3px;
+    border-radius: 9999px;
     background: #E2E8F0;
     outline: none;
+    -webkit-appearance: none;
+    appearance: none;
     cursor: pointer;
 }
 
@@ -175,38 +232,39 @@
     height: 18px;
     border-radius: 50%;
     background: #009080;
-    box-shadow: 0 0 8px rgba(0, 144, 128, 0.4);
+    box-shadow: 0 2px 6px rgba(0, 144, 128, 0.4);
     cursor: pointer;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
 .topk-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.2);
+    transform: scale(1.15);
+    background: #10A090;
 }
 
 .topk-range-labels {
     display: flex;
     justify-content: space-between;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     color: #94A3B8;
+    font-weight: 600;
+    margin-top: -4px;
 }
 
-/* Custom Select */
+/* CUSTOM SELECT */
 .select-wrapper {
     position: relative;
-    width: 100%;
 }
 
 .custom-select {
     width: 100%;
-    box-sizing: border-box;
-    background: #F8FAFC;
-    color: #0F172A;
-    border: 1px solid #CBD5E1;
-    border-radius: 10px;
     padding: 10px 14px;
-    font-size: 0.88rem;
-    font-weight: 500;
+    background: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #0F172A;
     outline: none;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -214,57 +272,13 @@
 
 .custom-select:focus {
     border-color: #009080;
-    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.15);
+    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.12);
 }
 
-.custom-select option {
-    background: #FFFFFF;
-    color: #0F172A;
-}
-
-/* Team Footer */
-.sidebar-footer {
-    margin-top: auto;
-    padding-top: 14px;
-    border-top: 1px solid #E2E8F0;
-}
-
-.team-badge {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.85rem;
-    color: #0F172A;
-    margin-bottom: 6px;
-}
-
-.team-icon {
-    font-size: 1rem;
-}
-
-.team-members {
-    margin: 0;
-    font-size: 0.78rem;
-    line-height: 1.5;
-    color: #475569;
-}
-
-.team-members strong {
-    color: #0F172A;
-}
-
-/* Responsive Sidebar adjustments */
+/* RESPONSIVE */
 @media (max-width: 1024px) {
     .sidebar-config {
-        position: static;
-        width: 100%;
-    }
-}
-
-@media (max-width: 768px) {
-    .sidebar-config {
         padding: 16px;
-        border-radius: 12px;
         gap: 16px;
     }
 }
