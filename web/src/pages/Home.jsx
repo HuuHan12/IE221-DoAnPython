@@ -1,3 +1,4 @@
+import React from "react";
 import { usePredict } from "../hooks/usePredict";
 import GeoPredictionTab from "../components/GeoPredictionTab/GeoPredictionTab";
 import DataExplorerTab from "../components/DataExplorerTab/DataExplorerTab";
@@ -41,7 +42,7 @@ function Home() {
 
     return (
         <main className="dashboard-page-container">
-            {/* TOP DASHBOARD HERO HEADER */}
+            {/* Tiêu đề */}
             <header className="dashboard-hero-header">
                 <div className="title-row">
                     <div className="header-logo-icon-box">
@@ -52,7 +53,7 @@ function Home() {
                     </h1>
                 </div>
 
-                {/* TABS NAVIGATION */}
+                {/* Thanh điều hướng*/}
                 <nav className="dashboard-tabs-nav" aria-label="Tabs điều hướng">
                     <button
                         type="button"
@@ -81,17 +82,17 @@ function Home() {
                 </nav>
             </header>
 
-            {/* ERROR ALERT */}
-            {error && (
+            {/* Thông báo lỗi */}
+            {error ? (
                 <div className="dashboard-error-banner" role="alert">
                     <span>⚠️</span>
                     <p>{error}</p>
                     <button type="button" onClick={() => setError(null)}>✕</button>
                 </div>
-            )}
+            ) : null}
 
-            {/* TAB 1: PREDICTION VIEW (TÁCH THÀNH COMPONENT RIÊNG GeoPredictionTab) */}
-            {activeTab === "predict" && (
+            {/* Dự đoán vị trí ảnh  */}
+            {activeTab === "predict" ? (
                 <GeoPredictionTab
                     dataSource={dataSource}
                     setDataSource={setDataSource}
@@ -120,28 +121,29 @@ function Home() {
                     onSelectPrediction={handleSelectPrediction}
                     onShare={handleShare}
                 />
-            )}
+            ) : null}
 
-            {/* TAB 2: DATA EXPLORER (TÁCH THÀNH COMPONENT RIÊNG DataExplorerTab) */}
-            {activeTab === "explorer" && (
+            {/* Khám phá dữ liệu */}
+            {activeTab === "explorer" ? (
                 <DataExplorerTab
                     dataSource={dataSource}
                     setDataSource={setDataSource}
                 />
-            )}
+            ) : null}
 
-            {/* TAB 3: ĐO ĐẠC SAI SỐ GIS (TÁCH THÀNH COMPONENT RIÊNG GisErrorTab) */}
-            {activeTab === "gis_error" && (
+            {/* Đo đạc sai số */}
+            {activeTab === "gis_error" ? (
                 <GisErrorTab
                     groundTruth={groundTruth}
                     prediction={selectedPrediction || result?.prediction}
                     predictions={result?.predictions}
-                    distanceError={selectedGisError?.distance_km ?? result?.gis_error?.distance_km}
-                    accuracyLevel={selectedGisError?.accuracy_label ?? result?.gis_error?.accuracy_label}
+                    gisError={selectedGisError ?? result?.gis_error}
+                    selectedIndex={selectedPredictionIndex}
+                    onSelectPrediction={handleSelectPrediction}
                 />
-            )}
+            ) : null}
         </main>
     );
 }
 
-export default Home;
+export default React.memo(Home);

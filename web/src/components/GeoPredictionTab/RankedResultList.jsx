@@ -54,7 +54,7 @@ function RankedResultList({
                         >
                             <div className="rank-row-top">
                                 <span className={`rank-tag rank-tag-${rank <= 3 ? rank : "other"}`}>
-                                    #{rank}
+                                    {rank}
                                 </span>
 
                                 <div className="rank-text-content">
@@ -83,7 +83,7 @@ function RankedResultList({
                             </div>
 
                             <div className="rank-row-bottom">
-                                {/* NÚT CHỌN VỊ TRÍ NÀY (XỬ LÝ 100% QUA PYTHON BACKEND) */}
+                                {/* Chọn vị trí*/}
                                 {onSelectPrediction ? (
                                     <button
                                         type="button"

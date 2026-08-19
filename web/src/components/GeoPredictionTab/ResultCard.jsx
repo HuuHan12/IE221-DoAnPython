@@ -55,7 +55,7 @@ function ResultCard({
 
     return (
         <section className="result-column-card" aria-label="Kết Quả Dự Đoán & Bản Đồ">
-            {/* TIÊU ĐỀ CỘT */}
+            {/* Tiêu đề cột */}
             <div className="card-header-bar">
                 <div className="card-title-group">
                     <span className="step-indicator-pill">02</span>
@@ -79,7 +79,7 @@ function ResultCard({
                 )}
             </div>
 
-            {/* HIỂN THỊ TRẠNG THÁI LOADING / KẾT QUẢ TOP 1 / HOẶC THÔNG BÁO CHỜ */}
+            {/* hiển thị trạng thái loading */}
             {loading ? (
                 <div className="loading-radar-box">
                     <div className="ai-loader-ring" />
@@ -104,7 +104,7 @@ function ResultCard({
                 </div>
             )}
 
-            {/* BẢN ĐỒ LEAFLET LUÔN HIỂN THỊ TRỰC TIẾP TẠI ĐÂY */}
+            {/* Bản đồ leafmap*/}
             <LeafletMap
                 predictions={predictions}
                 groundTruth={groundTruth}
@@ -112,7 +112,7 @@ function ResultCard({
                 selectedPrediction={activePrediction}
             />
 
-            {/* BẢNG XẾP HẠNG TOP-K (HIỆN RA KHI CÓ KẾT QUẢ DỰ ĐOÁN) */}
+            {/* Bảng xếp hạng */}
             {result && predictions.length > 0 ? (
                 <>
                     <RankedResultList

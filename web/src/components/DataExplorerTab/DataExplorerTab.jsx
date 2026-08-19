@@ -15,26 +15,14 @@ import "../../css/DataExplorerTab.css";
 
 const DATASET_OPTIONS = [
     {
-        id: "expanded",
-        name: "vietnam_landmarks.csv",
-        label: "Toàn quốc",
-        count: "26.3K POIs",
-    },
-    {
         id: "iconic",
         name: "vietnam_landmarks_iconic.csv",
         label: "Biểu tượng",
         count: "68 Địa Danh",
     },
-    {
-        id: "global",
-        name: "coordinates_100K.csv",
-        label: "Toàn cầu",
-        count: "100K GPS",
-    },
 ];
 
-function DataExplorerTab({ dataSource = "expanded", setDataSource }) {
+function DataExplorerTab({ dataSource = "iconic", setDataSource }) {
     const [summary, setSummary] = useState(null);
     const [recordsData, setRecordsData] = useState(null);
     const [loadingSummary, setLoadingSummary] = useState(false);
@@ -106,21 +94,21 @@ function DataExplorerTab({ dataSource = "expanded", setDataSource }) {
 
     return (
         <div className="tab-pane-content" aria-label="Khám Phá Dữ Liệu GPS">
-            {/* TIÊU ĐỀ & THANH CHỌN DATASET */}
+            {/* Tiêu đề và thanh chọn */}
             <div className="tab-pane-header">
                 <div className="header-text-group">
                     <div className="explorer-title-row">
                         <div className="explorer-icon-box">
                             <LayersIcon size={20} className="explorer-header-svg" />
                         </div>
-                        <h3>Khám Phá Dữ Liệu GPS (Data Explorer)</h3>
+                        <h3>Khám Phá Dữ Liệu GPS</h3>
                     </div>
                     <p>
                         Xem cấu trúc, phân bố địa lý và xem trước nội dung chi tiết của tệp CSV được chọn.
                     </p>
                 </div>
 
-                {/* THANH CHỌN DATASET DẠNG PILLS */}
+                {/* Thanh chọn dataset */}
                 <div className="dataset-pills-bar" role="tablist" aria-label="Chọn cơ sở dữ liệu GPS">
                     {DATASET_OPTIONS.map((opt) => {
                         const isActive =
@@ -143,7 +131,7 @@ function DataExplorerTab({ dataSource = "expanded", setDataSource }) {
                 </div>
             </div>
 
-            {/* ALERT BÁO LỖI NẾU CÓ */}
+            {/* Thông báo lỗi  */}
             {error ? (
                 <div className="explorer-error-alert" role="alert">
                     <AlertTriangleIcon size={18} />
@@ -151,7 +139,7 @@ function DataExplorerTab({ dataSource = "expanded", setDataSource }) {
                 </div>
             ) : null}
 
-            {/* THỐNG KÊ TỔNG QUAN (STATS CARDS) */}
+            {/* Thống kê tổng quan */}
             <div className="stats-grid">
                 <div className="stat-card">
                     <div className="stat-card-header">
@@ -201,7 +189,7 @@ function DataExplorerTab({ dataSource = "expanded", setDataSource }) {
                 </div>
             </div>
 
-            {/* PHÂN BỐ KHU VỰC VÀ HẠNG MỤC */}
+            {/* Phân bố khu vực*/}
             <div className="explorer-sections-grid">
                 {/* 1. Phân bố không gian / Tỉnh thành */}
                 <div className="explorer-card">
@@ -272,7 +260,7 @@ function DataExplorerTab({ dataSource = "expanded", setDataSource }) {
                 </div>
             </div>
 
-            {/* BẢNG DỮ LIỆU TRỰC TIẾP (LIVE DATA TABLE) */}
+            {/* Bảng dữ liệu */}
             <div className="explorer-table-card">
                 <div className="table-header-row">
                     <div className="table-title-group">
@@ -309,7 +297,7 @@ function DataExplorerTab({ dataSource = "expanded", setDataSource }) {
                     {loadingRecords ? (
                         <div className="table-loading-box">
                             <div className="ai-loader-ring" />
-                            <p>Đang tải dữ liệu từ máy chủ Python...</p>
+                            <p>Đang tải dữ liệu...</p>
                         </div>
                     ) : recordsData?.records && recordsData.records.length > 0 ? (
                         <table className="explorer-data-table">

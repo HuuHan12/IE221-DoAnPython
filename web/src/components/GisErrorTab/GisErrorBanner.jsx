@@ -41,13 +41,13 @@ function GisErrorBanner({
 
     return (
         <div className="gis-error-banner-container" aria-label="Bảng Đo Đạc Sai Số GIS">
-            {/* TIÊU ĐỀ BANNER */}
+            {/* Tiêu đề */}
             <div className="gis-badge-pill">
                 <RulerIcon size={15} className="gis-badge-icon" />
                 <span className="gis-badge-title">Đo Đạc Sai Số GIS</span>
             </div>
 
-            {/* DANH SÁCH THÔNG SỐ TOÁN HỌC */}
+            {/* Thông số toán */}
             <div className="gis-metric-rows">
                 {/* 1. Tọa độ thực tế */}
                 <div className="gis-metric-item">

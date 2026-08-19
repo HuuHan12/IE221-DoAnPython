@@ -155,7 +155,7 @@ function TopResultHero({
                     </div>
                 </div>
 
-                {/* 4.2. TỌA ĐỘ THỰC TẾ DO NGƯỜI DÙNG NHẬP */}
+                {/*Tọa độ người dùng nhập */}
                 <div className={`coord-compare-row gt-coord-row ${hasGt ? "has-gt" : "no-gt"}`}>
                     <div className="coord-label-val">
                         <div className="coord-icon-box gt-icon-box">
@@ -168,7 +168,7 @@ function TopResultHero({
                             </span>
                         ) : (
                             <span className="coord-empty-notice">
-                                Chưa nhập (nhập ở Cột 1 để đối soát)
+                                Chưa nhập
                             </span>
                         )}
                     </div>
@@ -197,13 +197,13 @@ function TopResultHero({
                     ) : null}
                 </div>
 
-                {/* 4.3. ĐÁNH GIÁ SAI SỐ KHOẢNG CÁCH */}
+                {/* Đánh giá sai số */}
                 {gisError && formattedDistance ? (
                     <div className="coord-distance-error-box">
                         <div className="dist-icon-box">
                             <RulerIcon size={16} />
                         </div>
-                        <span className="dist-label">Sai số khoảng cách (Đường chim bay):</span>
+                        <span className="dist-label">Sai số khoảng cách:</span>
                         <strong className="dist-value">
                             {formattedDistance}
                         </strong>

@@ -24,52 +24,16 @@ DATASET_CONFIG = {
         "accuracy_target": "Độ chính xác nhận diện > 92%",
         "badge_icon": "🏛️",
     },
-    "expanded": {
-        "file_name": "vietnam_landmarks.csv",
-        "title": "Toàn Bộ Địa Danh & POIs Việt Nam (HOTOSM Dataset)",
-        "subtitle": "Cơ sở dữ liệu không gian GIS mở rộng phủ khắp 63 tỉnh thành Việt Nam",
-        "accuracy_target": "Độ bao phủ toàn diện 63 Tỉnh Thành",
-        "badge_icon": "📍",
-    },
-    "vietnam_all": {
-        "file_name": "vietnam_landmarks.csv",
-        "title": "Toàn Bộ Địa Danh & POIs Việt Nam (HOTOSM Dataset)",
-        "subtitle": "Cơ sở dữ liệu không gian GIS mở rộng phủ khắp 63 tỉnh thành Việt Nam",
-        "accuracy_target": "Độ bao phủ toàn diện 63 Tỉnh Thành",
-        "badge_icon": "📍",
-    },
-    "global": {
-        "file_name": "coordinates_100K.csv",
-        "title": "Tọa Độ Toàn Cầu (Global GPS 100K)",
-        "subtitle": "Tập dữ liệu 100,000 tọa độ phân bố đều trên bề mặt Trái Đất theo chuẩn GeoCLIP",
-        "accuracy_target": "Định vị toàn cầu đa lục địa",
-        "badge_icon": "🌐",
-    },
-    "coordinates_100k": {
-        "file_name": "coordinates_100K.csv",
-        "title": "Tọa Độ Toàn Cầu (Global GPS 100K)",
-        "subtitle": "Tập dữ liệu 100,000 tọa độ phân bố đều trên bề mặt Trái Đất theo chuẩn GeoCLIP",
-        "accuracy_target": "Định vị toàn cầu đa lục địa",
-        "badge_icon": "🌐",
-    },
 }
 
 
 def normalize_scope(scope: str) -> str:
-    s = scope.lower().strip()
-    if s in ["iconic", "vietnam_iconic"]:
-        return "iconic"
-    if s in ["expanded", "vietnam", "vietnam_all", "all"]:
-        return "expanded"
-    if s in ["global", "coordinates_100k", "100k"]:
-        return "global"
-    return "expanded"
+    return "iconic"
 
 
-@lru_cache(maxsize=4)
-def load_dataset_df(scope: str) -> pd.DataFrame:
-    normalized = normalize_scope(scope)
-    cfg = DATASET_CONFIG.get(normalized, DATASET_CONFIG["expanded"])
+@lru_cache(maxsize=2)
+def load_dataset_df(scope: str = "iconic") -> pd.DataFrame:
+    cfg = DATASET_CONFIG["iconic"]
     csv_path = os.path.join(BASE_DATA_DIR, cfg["file_name"])
 
     if not os.path.exists(csv_path):
@@ -86,16 +50,15 @@ def load_dataset_df(scope: str) -> pd.DataFrame:
 
 
 @router.get("/explorer")
-def get_data_explorer_summary(scope: str = Query("expanded")) -> Dict[str, Any]:
+def get_data_explorer_summary(scope: str = Query("iconic")) -> Dict[str, Any]:
     """
     API tính toán 100% bằng Python trả về thông tin tổng quan,
-    phân bố địa lý và phân loại theo dataset được chọn.
+    phân bố địa lý và phân loại theo dataset vietnam_landmarks_iconic.csv.
     """
-    normalized = normalize_scope(scope)
-    cfg = DATASET_CONFIG.get(normalized, DATASET_CONFIG["expanded"])
+    cfg = DATASET_CONFIG["iconic"]
 
     try:
-        df = load_dataset_df(normalized)
+        df = load_dataset_df("iconic")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -105,7 +68,7 @@ def get_data_explorer_summary(scope: str = Query("expanded")) -> Dict[str, Any]:
     regions_dist = []
     categories_dist = []
 
-    # 1. Xử lý phân bố địa lý theo Tỉnh / Thành hoặc Bán cầu
+    # 1. Xử lý phân bố địa lý theo Tỉnh / Thành
     if "PROVINCE" in df.columns:
         prov_counts = df["PROVINCE"].value_counts().head(8)
         for prov_name, count in prov_counts.items():
@@ -116,19 +79,6 @@ def get_data_explorer_summary(scope: str = Query("expanded")) -> Dict[str, Any]:
                     "count": int(count),
                     "percentage": f"{pct}%",
                 })
-    elif "LAT" in df.columns and "LON" in df.columns:
-        # Thống kê bán cầu cho tập tọa độ toàn cầu
-        north_count = int((df["LAT"] >= 0).sum())
-        south_count = int((df["LAT"] < 0).sum())
-        east_count = int((df["LON"] >= 0).sum())
-        west_count = int((df["LON"] < 0).sum())
-
-        regions_dist = [
-            {"name": "Bán cầu Bắc (Lat ≥ 0°)", "count": north_count, "percentage": f"{round(north_count / total_records * 100, 1)}%"},
-            {"name": "Bán cầu Nam (Lat < 0°)", "count": south_count, "percentage": f"{round(south_count / total_records * 100, 1)}%"},
-            {"name": "Bán cầu Đông (Lon ≥ 0°)", "count": east_count, "percentage": f"{round(east_count / total_records * 100, 1)}%"},
-            {"name": "Bán cầu Tây (Lon < 0°)", "count": west_count, "percentage": f"{round(west_count / total_records * 100, 1)}%"},
-        ]
 
     # 2. Xử lý phân loại hạng mục
     if "CATEGORY" in df.columns:
@@ -141,14 +91,9 @@ def get_data_explorer_summary(scope: str = Query("expanded")) -> Dict[str, Any]:
                     "count": int(count),
                     "percentage": f"{pct}%",
                 })
-    else:
-        categories_dist = [
-            {"name": "Điểm Tọa độ Lục địa & Hải đảo", "count": total_records, "percentage": "100%"},
-            {"name": "Không gian RFF Gaussian 3 Tần số", "count": total_records, "percentage": "100%"},
-        ]
 
     return {
-        "scope": normalized,
+        "scope": "iconic",
         "file_name": cfg["file_name"],
         "title": cfg["title"],
         "subtitle": cfg["subtitle"],
@@ -163,7 +108,7 @@ def get_data_explorer_summary(scope: str = Query("expanded")) -> Dict[str, Any]:
 
 @router.get("/records")
 def get_data_records(
-    scope: str = Query("expanded"),
+    scope: str = Query("iconic"),
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     search: Optional[str] = Query(None),
@@ -171,10 +116,8 @@ def get_data_records(
     """
     API phân trang, tìm kiếm và định dạng dữ liệu bảng CSV bằng Python.
     """
-    normalized = normalize_scope(scope)
-
     try:
-        df = load_dataset_df(normalized)
+        df = load_dataset_df("iconic")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -215,7 +158,7 @@ def get_data_records(
         records.append(item)
 
     return {
-        "scope": normalized,
+        "scope": "iconic",
         "page": current_page,
         "page_size": page_size,
         "total_records": total_matches,

@@ -1,4 +1,15 @@
-export const SAMPLE_PRESETS = [
+export interface LandmarkPreset {
+    id: string;
+    name: string;
+    province: string;
+    category: string;
+    image: string;
+    lat: number;
+    lon: number;
+    description: string;
+}
+
+export const SAMPLE_PRESETS: LandmarkPreset[] = [
     {
         id: "halong",
         name: "Vịnh Hạ Long",

@@ -19,8 +19,9 @@ function GisErrorTab({
     groundTruth = null,
     prediction = null,
     predictions = null,
-    distanceError = null,
-    accuracyLevel = null,
+    gisError = null,
+    selectedIndex = 0,
+    onSelectPrediction = null,
 }) {
     // Inputs state (nhập trực tiếp hoặc tự động đồng bộ từ Tab Dự Đoán)
     const [gtLatInput, setGtLatInput] = useState(groundTruth?.lat ? String(groundTruth.lat) : "");
@@ -29,14 +30,14 @@ function GisErrorTab({
     const [predLonInput, setPredLonInput] = useState(prediction?.lon ? String(prediction.lon) : "");
 
     // Kết quả tính toán từ Python Backend
-    const [gisResult, setGisResult] = useState(null);
+    const [gisResult, setGisResult] = useState(gisError || null);
     const [loading, setLoading] = useState(false);
     const [validationError, setValidationError] = useState("");
 
     // Danh sách dự đoán Top-K
     const activePredictions = Array.isArray(predictions) && predictions.length > 0 ? predictions : (prediction ? [prediction] : []);
 
-    // Tự động đồng bộ khi Tab Dự Đoán có kết quả mới
+    // Tự động đồng bộ ngay lập tức khi vị trí được chọn (hoặc Ground Truth / gisError) từ Tab 1 thay đổi
     useEffect(() => {
         if (groundTruth?.lat && groundTruth?.lon) {
             setGtLatInput(String(groundTruth.lat));
@@ -46,7 +47,10 @@ function GisErrorTab({
             setPredLatInput(String(prediction.lat));
             setPredLonInput(String(prediction.lon));
         }
-    }, [groundTruth, prediction]);
+        if (gisError) {
+            setGisResult(gisError);
+        }
+    }, [groundTruth, prediction, gisError]);
 
     // Gọi Python Backend tính toán sai số GIS & Validate phía client
     const handleCalculate = useCallback(async () => {
@@ -98,30 +102,26 @@ function GisErrorTab({
         }
     }, [gtLatInput, gtLonInput, predLatInput, predLonInput, activePredictions]);
 
-    // Tự động tính toán khi có đủ dữ liệu từ Tab 1
-    useEffect(() => {
-        if (gtLatInput && gtLonInput && predLatInput && predLonInput) {
-            handleCalculate();
-        }
-    }, [handleCalculate]);
+    // Giá trị hiển thị đồng bộ từ vị trí đã chọn
+    const activeGis = gisResult || gisError;
 
-    // Giá trị hiển thị
-    const effectiveGt = gisResult?.ground_truth ? {
-        lat: gisResult.ground_truth.lat,
-        lon: gisResult.ground_truth.lon,
+    const effectiveGt = groundTruth?.lat && groundTruth?.lon ? {
+        lat: Number(groundTruth.lat),
+        lon: Number(groundTruth.lon),
     } : (gtLatInput && gtLonInput ? { lat: parseFloat(gtLatInput), lon: parseFloat(gtLonInput) } : null);
 
-    const effectivePred = gisResult?.prediction ? {
-        lat: gisResult.prediction.lat,
-        lon: gisResult.prediction.lon,
+    const effectivePred = prediction ? {
+        ...prediction,
+        lat: Number(prediction.lat || predLatInput || 0),
+        lon: Number(prediction.lon || predLonInput || 0),
     } : (predLatInput && predLonInput ? { lat: parseFloat(predLatInput), lon: parseFloat(predLonInput) } : null);
 
-    const effectiveDistance = gisResult?.distance_km ?? distanceError;
-    const effectiveAccuracy = gisResult?.accuracy_label || accuracyLevel;
+    const effectiveDistance = activeGis?.distance_km ?? null;
+    const effectiveAccuracy = activeGis?.accuracy_label ?? null;
 
     return (
         <div className="gis-error-tab-layout" aria-label="Giao Diện Đo Đạc Sai Số GIS">
-            {/* KHUNG CẤU HÌNH & NHẬP TỌA ĐỘ ĐỐI SOÁT */}
+            {/* Khung cấu hình và nhập tọa độ */}
             <div className="gis-control-panel-card">
                 <div className="gis-panel-header">
                     <div className="panel-header-title">
@@ -134,12 +134,12 @@ function GisErrorTab({
                 </div>
 
                 <p className="gis-panel-desc">
-                    Tính toán khoảng cách trắc địa trên elipsoid WGS-84 (Geodesic km), công thức Haversine mặt cầu, góc phương vị không gian (Bearing) và phân loại cấp độ chính xác theo chuẩn GeoCLIP ICCV.
+                    Tính toán khoảng cách trắc địa trên elipsoid WGS-84, công thức Haversine mặt cầu, góc phương vị không gian và phân loại cấp độ chính xác theo chuẩn GeoCLIP ICCV.
                 </p>
 
-                {/* FORM NHẬP TỌA ĐỘ THỰC TẾ & DỰ ĐOÁN */}
+                {/*Nhập tọa độ và dự đoán */}
                 <div className="gis-inputs-grid">
-                    {/* CỘT 1: TỌA ĐỘ THỰC TẾ */}
+                    {/* Tọa độ thực tế*/}
                     <div className="gis-input-card gt-card">
                         <div className="card-sub-header">
                             <div className="sub-icon-box gt-sub-icon">
@@ -173,7 +173,7 @@ function GisErrorTab({
                         </div>
                     </div>
 
-                    {/* CỘT 2: TỌA ĐỘ AI DỰ ĐOÁN */}
+                    {/* Tọa độ AI dự đoán */}
                     <div className="gis-input-card ai-card">
                         <div className="card-sub-header">
                             <div className="sub-icon-box ai-sub-icon">
@@ -208,7 +208,7 @@ function GisErrorTab({
                     </div>
                 </div>
 
-                {/* THÔNG BÁO VALIDATE LỖI NẾU CÓ */}
+                {/* Thông báo lỗi  */}
                 {validationError ? (
                     <div className="gis-validate-alert" role="alert">
                         <AlertTriangleIcon size={16} />
@@ -216,7 +216,7 @@ function GisErrorTab({
                     </div>
                 ) : null}
 
-                {/* NÚT TÍNH TOÁN */}
+                {/* Nút tính toán */}
                 <div className="gis-action-row">
                     <button
                         type="button"
@@ -227,7 +227,7 @@ function GisErrorTab({
                         {loading ? (
                             <>
                                 <span className="spinner-icon" />
-                                <span>ĐANG TÍNH TOÁN BẰNG PYTHON...</span>
+                                <span>ĐANG TÍNH TOÁN...</span>
                             </>
                         ) : (
                             <>
@@ -239,7 +239,7 @@ function GisErrorTab({
                 </div>
             </div>
 
-            {/* 1. TOP BANNER ĐO ĐẠC SAI SỐ GIS */}
+            {/* Đo đạc sai số gis */}
             <GisErrorBanner
                 groundTruth={effectiveGt}
                 prediction={effectivePred}
@@ -247,58 +247,67 @@ function GisErrorTab({
                 accuracyLevel={effectiveAccuracy}
             />
 
-            {/* 2. BẢN ĐỒ KHÔNG GIAN LEAFLET TƯƠNG TÁC */}
+            {/* Bản đồ leafmap tương tác */}
             <div className="gis-map-section">
                 <LeafletMap
                     predictions={activePredictions}
                     groundTruth={effectiveGt}
                     distanceKm={effectiveDistance}
+                    selectedPrediction={effectivePred}
                 />
             </div>
 
-            {/* 3. BẢNG CHI TIẾT CÁC CHỈ SỐ TRẮC ĐỊA GIS (PYTHON CALCULATED METRICS) */}
-            {gisResult ? (
+            {/* Chi tiết chỉ số */}
+            {activeGis ? (
                 <div className="gis-deep-metrics-card">
                     <div className="deep-metrics-title-row">
                         <CompassIcon size={18} className="deep-title-svg" />
-                        <h4>Chi Tiết Thông Số Trắc Địa Không Gian (GIS Detailed Metrics)</h4>
+                        <h4>Chi Tiết Thông Số Trắc Địa Không Gian</h4>
                     </div>
                     <div className="metrics-stats-grid">
                         <div className="metric-chip">
-                            <span className="m-title">Khoảng cách Geodesic (WGS-84)</span>
-                            <strong className="m-val highlight-green">{gisResult.formatted_distance}</strong>
+                            <span className="m-title">Khoảng cách Geodesic</span>
+                            <strong className="m-val highlight-green">
+                                {activeGis.formatted_distance || (activeGis.distance_km < 1 ? `${(activeGis.distance_km * 1000).toFixed(0)} mét` : `${activeGis.distance_km.toFixed(2)} km`)}
+                            </strong>
                             <small>Chuẩn elipsoid Trái Đất</small>
                         </div>
 
                         <div className="metric-chip">
                             <span className="m-title">Khoảng cách Haversine (Mặt cầu)</span>
-                            <strong className="m-val">{gisResult.haversine_km} km</strong>
+                            <strong className="m-val">
+                                {activeGis.haversine_km ? `${activeGis.haversine_km} km` : `${activeGis.distance_km?.toFixed(2)} km`}
+                            </strong>
                             <small>Bán kính R = 6,371 km</small>
                         </div>
 
                         <div className="metric-chip">
-                            <span className="m-title">Góc Phương Vị Không Gian (Bearing)</span>
-                            <strong className="m-val">{gisResult.bearing_degrees}° ({gisResult.bearing_compass})</strong>
+                            <span className="m-title">Góc Phương Vị Không Gian </span>
+                            <strong className="m-val">
+                                {activeGis.bearing_degrees !== undefined ? `${activeGis.bearing_degrees}° (${activeGis.bearing_compass || ""})` : "—"}
+                            </strong>
                             <small>Hướng lệch từ Thực tế → AI</small>
                         </div>
 
                         <div className="metric-chip">
-                            <span className="m-title">Phân Cấp Đạt Chuẩn (Benchmark)</span>
+                            <span className="m-title">Phân Cấp Đạt Chuẩn</span>
                             <strong className="m-val badge-text">
-                                {gisResult.accuracy_short_label || "Đang thẩm định"}
+                                {activeGis.accuracy_short_label || activeGis.accuracy_label || "Đang thẩm định"}
                             </strong>
-                            <small>Chuẩn GeoCLIP ICCV 2023</small>
+                            <small>Chuẩn GeoCLIP ICCV</small>
                         </div>
                     </div>
                 </div>
             ) : null}
 
-            {/* 4. BẢNG XẾP HẠNG TOP-K DỰ ĐOÁN */}
+            {/* Bảng xếp hạng dự đoán*/}
             {activePredictions.length > 0 ? (
                 <div className="gis-rankings-section">
                     <RankedResultList
                         predictions={activePredictions}
                         topK={5}
+                        selectedIndex={selectedIndex}
+                        onSelectPrediction={onSelectPrediction}
                     />
                 </div>
             ) : null}

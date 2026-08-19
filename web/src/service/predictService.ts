@@ -1,14 +1,55 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
 
+export interface GroundTruthCoords {
+    lat: number | string;
+    lon: number | string;
+}
+
+export interface PredictionItem {
+    rank?: number;
+    name?: string;
+    province?: string;
+    category?: string;
+    description?: string;
+    lat: number;
+    lon: number;
+    prob_percent?: number;
+    gmaps_url?: string;
+}
+
+export interface GisErrorData {
+    ground_truth?: { lat: number; lon: number };
+    distance_km?: number;
+    distance_meters?: number;
+    haversine_km?: number;
+    formatted_distance?: string;
+    bearing_degrees?: number;
+    bearing_compass?: string;
+    accuracy_label?: string;
+    accuracy_short_label?: string;
+    accuracy_icon?: string;
+    accuracy_level?: string;
+}
+
+export interface PredictResponse {
+    status?: string;
+    landmark?: string;
+    prediction?: PredictionItem;
+    predictions?: PredictionItem[];
+    gis_error?: GisErrorData;
+    time_ms?: number;
+    [key: string]: any;
+}
+
 /**
  * Send image file to FastAPI backend /predict endpoint
- * @param {File} file - Image file object
- * @param {number} topK - Number of predictions (1 - 10)
- * @param {string} scope - Dataset scope ('iconic' or 'expanded')
- * @param {Object} groundTruth - Optional ground truth coordinates {lat, lon}
- * @returns {Promise<Object>} API JSON response from GeoCLIP AI model with GIS distance errors
  */
-export async function predictLandmarkApi(file, topK = 5, scope = "iconic", groundTruth = null) {
+export async function predictLandmarkApi(
+    file: File | Blob | any,
+    topK: number = 5,
+    scope: string = "iconic",
+    groundTruth: GroundTruthCoords | null = null
+): Promise<PredictResponse> {
     if (!file) {
         throw new Error("Vui lòng chọn một file ảnh hợp lệ.");
     }
@@ -44,7 +85,10 @@ export async function predictLandmarkApi(file, topK = 5, scope = "iconic", groun
 /**
  * Call Python backend when user clicks 'Chọn vị trí này' on Top-K to recompute metrics
  */
-export async function selectLocationApi(selectedItem, groundTruth = null) {
+export async function selectLocationApi(
+    selectedItem: PredictionItem,
+    groundTruth: GroundTruthCoords | null = null
+): Promise<{ prediction: PredictionItem; gis_error: GisErrorData | null }> {
     const response = await fetch(`${API_BASE_URL}/gis/select-location`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -62,10 +106,18 @@ export async function selectLocationApi(selectedItem, groundTruth = null) {
     return await response.json();
 }
 
+export interface GisErrorCalculationPayload {
+    ground_truth_lat: number;
+    ground_truth_lon: number;
+    predicted_lat: number;
+    predicted_lon: number;
+    predictions?: PredictionItem[];
+}
+
 /**
- * Call Python backend to calculate full Task 2.3 GIS Geodesic Error & Benchmarks
+ * Gọi phần phụ trợ Python để tính toán đầy đủ Lỗi trắc địa & điểm chuẩn
  */
-export async function calculateGisErrorApi(payload) {
+export async function calculateGisErrorApi(payload: GisErrorCalculationPayload): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/gis/calculate-error`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,9 +133,14 @@ export async function calculateGisErrorApi(payload) {
 }
 
 /**
- * Call Python backend to calculate Geodesic distance using src.gis.distance_metrics
+ * Gọi chương trình phụ trợ Python để tính khoảng cách trắc địa
  */
-export async function calculateGisDistanceApi(lat1, lon1, lat2, lon2) {
+export async function calculateGisDistanceApi(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number
+): Promise<{ distance_km: number; distance_meters: number }> {
     const response = await fetch(`${API_BASE_URL}/gis/distance`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -98,9 +155,9 @@ export async function calculateGisDistanceApi(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Fetch dataset explorer overview & distribution statistics calculated by Python backend
+ * Tìm nạp tổng quan về trình khám phá tập dữ liệu và số liệu thống kê phân phối
  */
-export async function fetchDataExplorerApi(scope = "expanded") {
+export async function fetchDataExplorerApi(scope: string = "iconic"): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/data/explorer?scope=${encodeURIComponent(scope)}`);
     if (!response.ok) {
         const err = await response.json().catch(() => ({}));
@@ -110,9 +167,14 @@ export async function fetchDataExplorerApi(scope = "expanded") {
 }
 
 /**
- * Fetch paginated & filtered records calculated by Python backend
+ * Tìm nạp các bản ghi được phân trang và lọc được tính toán
  */
-export async function fetchDataRecordsApi(scope = "expanded", page = 1, pageSize = 10, search = "") {
+export async function fetchDataRecordsApi(
+    scope: string = "iconic",
+    page: number = 1,
+    pageSize: number = 10,
+    search: string = ""
+): Promise<any> {
     let url = `${API_BASE_URL}/data/records?scope=${encodeURIComponent(scope)}&page=${page}&page_size=${pageSize}`;
     if (search && search.trim()) {
         url += `&search=${encodeURIComponent(search.trim())}`;

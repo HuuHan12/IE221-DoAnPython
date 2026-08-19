@@ -50,7 +50,7 @@ function UploadSection({
                 Hệ thống AI sẽ trích xuất vector đặc trưng thị giác để đối soát không gian GPS.
             </p>
 
-            {/* KHU VỰC KÉO THẢ ẢNH */}
+            {/* Khu vực kéo thả ảnh */}
             <div
                 className={`upload-dropzone ${dragging ? "dragging" : ""} ${preview ? "has-preview" : ""}`}
                 onDragOver={onDragOver}
@@ -112,7 +112,7 @@ function UploadSection({
                 />
             </div>
 
-            {/* FILE CHIP THÔNG TIN */}
+            {/* File chip thông tin */}
             {file ? (
                 <div className="file-info-chip">
                     <div className="file-info-left">
@@ -138,7 +138,7 @@ function UploadSection({
                 </div>
             ) : null}
 
-            {/* GROUND TRUTH ACCORDION */}
+
             <div className="gt-accordion">
                 <button
                     type="button"
@@ -212,7 +212,7 @@ function UploadSection({
                 ) : null}
             </div>
 
-            {/* NÚT BẮT ĐẦU ĐỊNH VỊ */}
+            {/* Nút bắt đầu định vị*/}
             <div className="predict-action-container">
                 <button
                     type="button"

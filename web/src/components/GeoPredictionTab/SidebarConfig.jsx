@@ -1,10 +1,9 @@
 import React from "react";
-import { SlidersIcon, LayersIcon, SparklesIcon, GlobeIcon, MapPinIcon } from "../common/Icons";
+import { SlidersIcon, LayersIcon, SparklesIcon, MapPinIcon, DatabaseIcon } from "../common/Icons";
 import "../../css/SidebarConfig.css";
 
 function SidebarConfig({
-    dataSource = "expanded",
-    setDataSource,
+    dataSource = "iconic",
     topK,
     setTopK,
     selectedSample,
@@ -35,76 +34,29 @@ function SidebarConfig({
                 <h3>Cấu Hình Hệ Thống</h3>
             </div>
 
-            {/* Dữ liệu Dataset GPS (3 lựa chọn) */}
+            {/* CƠ SỞ DỮ LIỆU GPS CỐ ĐỊNH (ICONIC LANDMARKS) */}
             <div className="config-section">
                 <label className="config-section-title">
                     <LayersIcon size={16} className="section-title-icon" />
                     <span>Cơ Sở Dữ Liệu GPS</span>
                 </label>
-                <div className="radio-group" role="radiogroup" aria-label="Chọn tập dữ liệu tọa độ">
-                    <label
-                        className={`radio-label ${dataSource === "expanded" ? "active" : ""}`}
-                    >
-                        <input
-                            type="radio"
-                            name="dataSource"
-                            value="expanded"
-                            checked={dataSource === "expanded"}
-                            onChange={(e) => setDataSource(e.target.value)}
-                        />
-                        <div className="radio-custom" />
-                        <div className="radio-text">
-                            <div className="radio-title-row">
-                                <strong>vietnam_landmarks.csv</strong>
-                                <span className="dataset-count-badge">26.3K POIs</span>
-                            </div>
-                            <small>Địa danh & POIs trên toàn quốc</small>
+                <div className="active-dataset-card">
+                    <div className="dataset-card-header">
+                        <div className="dataset-icon-circle">
+                            <DatabaseIcon size={16} />
                         </div>
-                    </label>
-
-                    <label
-                        className={`radio-label ${dataSource === "iconic" ? "active" : ""}`}
-                    >
-                        <input
-                            type="radio"
-                            name="dataSource"
-                            value="iconic"
-                            checked={dataSource === "iconic"}
-                            onChange={(e) => setDataSource(e.target.value)}
-                        />
-                        <div className="radio-custom" />
-                        <div className="radio-text">
+                        <div className="dataset-info-text">
                             <div className="radio-title-row">
-                                <strong>vietnam_landmarks_iconic.csv</strong>
+                                <strong className="dataset-file-title">vietnam_landmarks_iconic.csv</strong>
                                 <span className="dataset-count-badge">68 Biểu Tượng</span>
                             </div>
-                            <small>Danh lam thắng cảnh tiêu biểu</small>
+                            <small>Danh lam thắng cảnh tiêu biểu Việt Nam</small>
                         </div>
-                    </label>
-
-                    <label
-                        className={`radio-label ${dataSource === "global" ? "active" : ""}`}
-                    >
-                        <input
-                            type="radio"
-                            name="dataSource"
-                            value="global"
-                            checked={dataSource === "global"}
-                            onChange={(e) => setDataSource(e.target.value)}
-                        />
-                        <div className="radio-custom" />
-                        <div className="radio-text">
-                            <div className="radio-title-row">
-                                <strong>coordinates_100K.csv</strong>
-                                <span className="dataset-count-badge">100K GPS</span>
-                            </div>
-                            <small>Tọa độ toàn cầu (GeoCLIP Global)</small>
-                        </div>
-                    </label>
+                    </div>
                 </div>
             </div>
 
-            {/* Top-K Predictions */}
+            {/* VỊ TRÍ DỰ ĐOÁN (TOP-K) */}
             <div className="config-section">
                 <div className="topk-label-row">
                     <label htmlFor="topk-input" className="config-section-title">
@@ -143,7 +95,7 @@ function SidebarConfig({
                 </div>
             </div>
 
-            {/* Sample Image Selector */}
+            {/* CHỌN ẢNH MẪU CÓ SẴN */}
             <div className="config-section">
                 <label htmlFor="sample-select" className="config-section-title">
                     <SparklesIcon size={16} className="section-title-icon" />

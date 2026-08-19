@@ -68,68 +68,47 @@
     color: #009080;
 }
 
-/* RADIO CARDS GROUP */
-.radio-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+/* ACTIVE DATASET CARD */
+.active-dataset-card {
+    background: rgba(0, 144, 128, 0.04);
+    border: 1px solid #009080;
+    border-radius: 10px;
+    padding: 12px 14px;
+    box-shadow: 0 1px 3px rgba(0, 144, 128, 0.08);
 }
 
-.radio-label {
+.dataset-card-header {
     display: flex;
     align-items: flex-start;
-    gap: 12px;
-    padding: 12px 14px;
-    background: #FAFAFA;
-    border: 1px solid #E2E8F0;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
+    gap: 10px;
 }
 
-.radio-label:hover {
-    border-color: #CBD5E1;
-    background: #F8FAFC;
-}
-
-.radio-label.active {
-    border-color: #009080;
-    background: rgba(0, 144, 128, 0.04);
-    box-shadow: 0 0 0 1px #009080;
-}
-
-.radio-label input[type="radio"] {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.radio-custom {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 2px solid #CBD5E1;
-    background: #FFFFFF;
-    margin-top: 2px;
+.dataset-icon-circle {
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: rgba(0, 144, 128, 0.12);
+    color: #009080;
     flex-shrink: 0;
-    transition: all 0.2s ease;
+    margin-top: 2px;
 }
 
-.radio-label.active .radio-custom {
-    border-color: #009080;
+.dataset-info-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
 }
 
-.radio-label.active .radio-custom::after {
-    content: "";
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #009080, #10A090);
+.dataset-file-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #0F172A;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 .radio-text {

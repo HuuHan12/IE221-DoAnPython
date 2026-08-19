@@ -1,30 +1,37 @@
-import { useState, useRef, useCallback } from "react";
-import { SAMPLE_PRESETS } from "../mocks/mockLandmarks";
-import { predictLandmarkApi, selectLocationApi } from "../service/predictService";
+import { useState, useRef, useCallback, ChangeEvent, DragEvent } from "react";
+import { SAMPLE_PRESETS, LandmarkPreset } from "../mocks/mockLandmarks";
+import {
+    predictLandmarkApi,
+    selectLocationApi,
+    PredictionItem,
+    GisErrorData,
+    GroundTruthCoords,
+    PredictResponse,
+} from "../service/predictService";
 
 export function usePredict() {
-    const fileInputRef = useRef(null);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     // Navigation & Configuration States
-    const [activeTab, setActiveTab] = useState("predict");
-    const [dataSource, setDataSource] = useState("expanded");
-    const [topK, setTopK] = useState(5);
-    const [selectedSample, setSelectedSample] = useState("");
+    const [activeTab, setActiveTab] = useState<string>("predict");
+    const [dataSource, setDataSource] = useState<string>("iconic");
+    const [topK, setTopK] = useState<number | string>(5);
+    const [selectedSample, setSelectedSample] = useState<string>("");
 
     // File & Prediction States
-    const [file, setFile] = useState(null);
-    const [preview, setPreview] = useState(null);
-    const [result, setResult] = useState(null);
-    const [selectedPredictionIndex, setSelectedPredictionIndex] = useState(0);
-    const [selectedPrediction, setSelectedPrediction] = useState(null);
-    const [selectedGisError, setSelectedGisError] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [dragging, setDragging] = useState(false);
-    const [groundTruth, setGroundTruth] = useState({ lat: "", lon: "" });
+    const [file, setFile] = useState<File | any | null>(null);
+    const [preview, setPreview] = useState<string | null>(null);
+    const [result, setResult] = useState<PredictResponse | null>(null);
+    const [selectedPredictionIndex, setSelectedPredictionIndex] = useState<number>(0);
+    const [selectedPrediction, setSelectedPrediction] = useState<PredictionItem | null>(null);
+    const [selectedGisError, setSelectedGisError] = useState<GisErrorData | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const [dragging, setDragging] = useState<boolean>(false);
+    const [groundTruth, setGroundTruth] = useState<GroundTruthCoords>({ lat: "", lon: "" });
 
     // Handle File Selection
-    const handleFile = useCallback((selectedFile) => {
+    const handleFile = useCallback((selectedFile: File) => {
         if (!selectedFile) return;
 
         const allowed = ["image/jpeg", "image/png", "image/webp"];
@@ -49,24 +56,24 @@ export function usePredict() {
         setSelectedSample("");
     }, []);
 
-    const handleFileChange = useCallback((e) => {
+    const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
         const selected = e.target.files?.[0];
         if (selected) handleFile(selected);
         e.target.value = "";
     }, [handleFile]);
 
     // Drag and Drop
-    const handleDragOver = useCallback((e) => {
+    const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setDragging(true);
     }, []);
 
-    const handleDragLeave = useCallback((e) => {
+    const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setDragging(false);
     }, []);
 
-    const handleDrop = useCallback((e) => {
+    const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setDragging(false);
         const droppedFile = e.dataTransfer.files?.[0];
@@ -74,7 +81,7 @@ export function usePredict() {
     }, [handleFile]);
 
     // Sample Preset Selection
-    const handleSelectSample = useCallback(async (presetId) => {
+    const handleSelectSample = useCallback(async (presetId: string) => {
         if (!presetId) {
             setFile(null);
             setPreview(null);
@@ -135,14 +142,16 @@ export function usePredict() {
                 fileToSend = new File([blob], "input_image.jpg", { type: blob.type || "image/jpeg" });
             }
 
+            const parsedTopK = typeof topK === "number" ? topK : parseInt(topK, 10) || 5;
+
             // Real AI Prediction & Geodesic Distance Error Call from Python
-            const data = await predictLandmarkApi(fileToSend, topK, dataSource, groundTruth);
+            const data = await predictLandmarkApi(fileToSend, parsedTopK, dataSource, groundTruth);
             setResult(data);
             setSelectedPredictionIndex(0);
-            setSelectedPrediction(data.prediction);
-            setSelectedGisError(data.gis_error);
+            setSelectedPrediction(data.prediction || null);
+            setSelectedGisError(data.gis_error || null);
 
-        } catch (err) {
+        } catch (err: any) {
             console.error("[GeoCLIP AI Prediction Error]", err);
             setError(err.message || "Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra backend.");
         } finally {
@@ -151,7 +160,7 @@ export function usePredict() {
     }, [file, preview, topK, dataSource, groundTruth]);
 
     // Handle Selection of any Item from Top-K via Python Backend API
-    const handleSelectPrediction = useCallback(async (index) => {
+    const handleSelectPrediction = useCallback(async (index: number) => {
         if (!result?.predictions || !result.predictions[index]) return;
         const item = result.predictions[index];
         setSelectedPredictionIndex(index);
@@ -161,7 +170,7 @@ export function usePredict() {
             const data = await selectLocationApi(item, groundTruth);
             setSelectedPrediction(data.prediction);
             setSelectedGisError(data.gis_error);
-        } catch (err) {
+        } catch (err: any) {
             console.error("[Select Location Error]", err);
             // Fallback to client item if server fails
             setSelectedPrediction(item);
@@ -233,6 +242,6 @@ export function usePredict() {
         handlePredict,
         handleRemove,
         handleShare,
-        samplePresets: SAMPLE_PRESETS,
+        samplePresets: SAMPLE_PRESETS as LandmarkPreset[],
     };
 }

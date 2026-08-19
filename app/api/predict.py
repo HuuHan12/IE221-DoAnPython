@@ -34,7 +34,7 @@ class DistanceRequest(BaseModel):
 async def predict(
     image: UploadFile = File(...),
     top_k: int = Form(5),
-    scope: str = Form("expanded"),
+    scope: str = Form("iconic"),
     ground_truth_lat: Optional[str] = Form(None),
     ground_truth_lon: Optional[str] = Form(None),
 ):

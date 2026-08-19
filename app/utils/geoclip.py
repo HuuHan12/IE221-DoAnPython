@@ -20,25 +20,17 @@ except ImportError:
 SCOPE_MAPPING = {
     "iconic": "vietnam_iconic",
     "vietnam_iconic": "vietnam_iconic",
-    "expanded": "vietnam_all",
-    "vietnam_all": "vietnam_all",
-    "vietnam": "vietnam_all",
-    "global": "global",
-    "coordinates_100k": "global",
-    "100k": "global",
 }
 
 
-@lru_cache(maxsize=6)
-def get_geoclip_service(scope: str = "expanded") -> GeoCLIPService:
+@lru_cache(maxsize=2)
+def get_geoclip_service(scope: str = "iconic") -> GeoCLIPService:
     """
-    Khởi tạo và cache GeoCLIPService trong RAM cho 3 phạm vi dữ liệu:
-    - iconic: vietnam_landmarks_iconic.csv (68 địa danh biểu tượng)
-    - expanded: vietnam_landmarks.csv (26,353 điểm POI toàn quốc)
-    - global: coordinates_100K.csv (100,000 tọa độ toàn cầu)
+    Khởi tạo và cache GeoCLIPService trong RAM cho tập dữ liệu:
+    - iconic: vietnam_landmarks_iconic.csv (68 danh lam biểu tượng Việt Nam)
     """
-    mapped_scope = SCOPE_MAPPING.get(scope.lower(), "vietnam_all")
-    print(f"[GeoCLIP] Initializing service for scope='{mapped_scope}'...")
+    mapped_scope = "vietnam_iconic"
+    print(f"[GeoCLIP] Initializing service for scope='{mapped_scope}' (vietnam_landmarks_iconic.csv)...")
 
     current_dir = os.path.dirname(os.path.abspath(__file__))
     app_data_dir = os.path.abspath(os.path.join(current_dir, "..", "data"))
