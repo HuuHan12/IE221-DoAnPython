@@ -1,0 +1,470 @@
+.gallery-page-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-main);
+}
+
+.gallery-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.gallery-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px 32px 16px 32px;
+}
+
+.btn-upload-cloud {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--accent-color);
+    color: #FFFFFF;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 144, 128, 0.2);
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-upload-cloud:hover {
+    background-color: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.gallery-body-padding {
+    padding: 0 32px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Storage Progress Bar Card */
+.storage-card-section {
+    background-color: #FFFFFF;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: 20px 28px;
+    box-shadow: var(--shadow-sm);
+    display: grid;
+    grid-template-columns: 260px 1fr 160px;
+    align-items: center;
+    gap: 24px;
+}
+
+.storage-left-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cloud-icon-circle {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    background-color: var(--accent-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.storage-text-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.storage-title-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-main);
+}
+
+.storage-sub-text {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.storage-bar-middle {
+    width: 100%;
+}
+
+.storage-bar-track {
+    width: 100%;
+    height: 8px;
+    background-color: #E5E7EB;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.storage-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #009080 0%, #10A090 100%);
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+
+.storage-right-percentage {
+    text-align: right;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.storage-right-percentage strong {
+    color: var(--accent-color);
+    font-weight: 700;
+}
+
+/* 4-column Photo Grid (8 items per page) */
+.photo-grid-4cols {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.photo-card-item {
+    background-color: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.photo-card-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.photo-image-wrapper {
+    width: 100%;
+    height: 190px;
+    overflow: hidden;
+    background-color: #F3F4F6;
+    position: relative;
+}
+
+.photo-img-element {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.photo-card-item:hover .photo-img-element {
+    transform: scale(1.04);
+}
+
+.photo-card-body {
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background-color: #FFFFFF;
+}
+
+.photo-note-label {
+    font-size: 11px;
+    color: #9CA3AF;
+    font-weight: 500;
+}
+
+.photo-note-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.photo-note-input {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: #FAFAFA;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+    outline: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.photo-note-input.editing {
+    border-color: var(--accent-color);
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 2px rgba(0, 144, 128, 0.15);
+}
+
+.photo-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.action-icon-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.action-icon-btn.edit-btn:hover,
+.action-icon-btn.save-btn:hover {
+    background-color: var(--accent-light);
+}
+
+.action-icon-btn.delete-btn:hover {
+    background-color: #FEE2E2;
+}
+
+/* Empty State */
+.gallery-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 0;
+    color: var(--text-muted);
+    gap: 12px;
+}
+
+/* Pagination Footer */
+.gallery-pagination-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.pagination-buttons-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.page-num-btn,
+.page-nav-btn {
+    min-width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: #FFFFFF;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0 8px;
+}
+
+.page-num-btn:hover:not(.active),
+.page-nav-btn:hover:not(:disabled) {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background-color: var(--accent-lighter);
+}
+
+.page-num-btn.active {
+    background-color: var(--accent-color);
+    color: #FFFFFF;
+    border-color: var(--accent-color);
+    box-shadow: 0 2px 6px rgba(0, 144, 128, 0.3);
+}
+
+.page-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.pagination-counter-info {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Custom Confirm Delete Modal */
+.modal-backdrop-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.confirm-modal-card {
+    background-color: #FFFFFF;
+    width: 420px;
+    max-width: 90vw;
+    border-radius: 20px;
+    padding: 28px 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    animation: scaleUp 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-close-corner-btn {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #F3F4F6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.modal-close-corner-btn:hover {
+    background-color: #E5E7EB;
+}
+
+.modal-icon-badge {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background-color: #FEE2E2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.modal-title-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 8px 0;
+}
+
+.modal-description-text {
+    font-size: 13px;
+    color: #6B7280;
+    margin: 0 0 24px 0;
+    line-height: 1.5;
+}
+
+.modal-actions-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.btn-modal-cancel {
+    flex: 1;
+    padding: 11px 18px;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    background-color: #F3F4F6;
+    color: #374151;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.btn-modal-cancel:hover {
+    background-color: #E5E7EB;
+}
+
+.btn-modal-delete {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: 10px;
+    border: none;
+    background-color: #EF4444;
+    color: #FFFFFF;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    transition: background-color 0.15s ease, transform 0.1s;
+}
+
+.btn-modal-delete:hover {
+    background-color: #DC2626;
+    transform: translateY(-1px);
+}
+
+@media (max-width: 1280px) {
+    .photo-grid-4cols {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .storage-card-section {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    .storage-right-percentage {
+        text-align: left;
+    }
+}
+
+@media (max-width: 768px) {
+    .photo-grid-4cols {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .photo-grid-4cols {
+        grid-template-columns: 1fr;
+    }
+}

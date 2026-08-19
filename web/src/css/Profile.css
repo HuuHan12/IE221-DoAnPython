@@ -1,0 +1,349 @@
+.profile-page-container {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--bg-main);
+}
+
+.profile-main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+.profile-body-padding {
+    padding: 0 32px 32px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Card Section */
+.profile-card-section {
+    background-color: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid #E5E7EB;
+    padding: 24px 28px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.card-header-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.card-header-title.space-between {
+    justify-content: space-between;
+}
+
+.left-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.card-header-title h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+}
+
+.title-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #E6F4F1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.title-icon-wrapper.star-icon-circle {
+    border: 1.5px stroke #009080;
+}
+
+/* Personal Info Section */
+.personal-info-body {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 36px;
+    align-items: center;
+}
+
+.avatar-upload-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar-container {
+    position: relative;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #CCFBF1 0%, #99F6E4 100%);
+    padding: 4px;
+    box-shadow: 0 4px 14px rgba(0, 144, 128, 0.15);
+}
+
+.avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #FFFFFF;
+}
+
+.avatar-camera-btn {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-color: #FFFFFF;
+    border: 1.5px solid #E5E7EB;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s;
+}
+
+.avatar-camera-btn:hover {
+    transform: scale(1.08);
+}
+
+.btn-upload-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background-color: #FFFFFF;
+    border: 1.5px solid #009080;
+    color: #009080;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.btn-upload-avatar:hover {
+    background-color: #E6F4F1;
+}
+
+.upload-hint {
+    font-size: 11px;
+    color: #9CA3AF;
+}
+
+.personal-info-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 620px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 10px;
+    border: 1px solid #E5E7EB;
+    background-color: #FAFAFA;
+    font-size: 14px;
+    color: #111827;
+    outline: none;
+    transition: border-color 0.2s, background-color 0.2s;
+}
+
+.form-input:focus {
+    border-color: #009080;
+    background-color: #FFFFFF;
+    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.12);
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
+}
+
+.btn-primary-teal {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #009080;
+    color: #FFFFFF;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0, 144, 128, 0.25);
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-primary-teal:hover {
+    background-color: #10A090;
+    transform: translateY(-1px);
+}
+
+.success-msg {
+    font-size: 13px;
+    font-weight: 600;
+    color: #10B981;
+}
+
+/* Password Form */
+.password-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr) auto;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: #9CA3AF;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px;
+}
+
+.password-toggle-btn:hover {
+    color: #4B5563;
+}
+
+.password-action-container {
+    display: flex;
+    align-items: flex-end;
+}
+
+.form-feedback-alert {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.form-feedback-alert.error {
+    background-color: #FEE2E2;
+    color: #DC2626;
+}
+
+.form-feedback-alert.success {
+    background-color: #D1FAE5;
+    color: #059669;
+}
+
+/* Achievements Badges Section */
+.link-view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: #009080;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.link-view-all:hover {
+    color: #10A090;
+}
+
+.badges-flex-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.badge-wrapper-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    min-width: 0;
+}
+
+.badge-svg-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    transition: transform 0.2s ease;
+    cursor: pointer;
+}
+
+.badge-svg-container:hover {
+    transform: translateY(-4px) scale(1.04);
+}
+
+.badge-main-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1F2937;
+    line-height: 1.3;
+    text-align: center;
+}
+
+.badge-sub-label {
+    font-size: 11px;
+    font-weight: 400;
+    color: #9CA3AF;
+    margin-top: 2px;
+    text-align: center;
+}
+
+@media (max-width: 1200px) {
+    .badges-flex-row {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+    }
+    .password-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .personal-info-body {
+        grid-template-columns: 1fr;
+    }
+}
