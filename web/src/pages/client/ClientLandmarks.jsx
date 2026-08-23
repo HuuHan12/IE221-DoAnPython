@@ -1,186 +1,383 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, MapPin, Sparkles, Compass, Eye } from "lucide-react";
+import {
+    MapPin,
+    Clock,
+    Ticket,
+    Star,
+    Heart,
+    Share2,
+    Camera,
+    UploadCloud,
+    CheckCircle2,
+    ChevronRight,
+    Sparkles,
+    Search
+} from "lucide-react";
 import ClientLayout from "../../components/client/ClientLayout";
 import "../../css/Client.css";
 
-const landmarksData = [
+const landmarksList = [
     {
-        id: 1,
-        name: "Vịnh Hạ Long",
-        region: "Miền Bắc",
-        province: "Quảng Ninh",
-        image: "https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop",
-        desc: "Kỳ quan thiên nhiên thế giới với hàng ngàn đảo đá vôi nhấp nhô trên làn nước biển xanh ngọc.",
-        coords: "20.9500° N, 107.0833° E"
-    },
-    {
-        id: 2,
-        name: "Phố cổ Hội An",
-        region: "Miền Trung",
-        province: "Quảng Nam",
-        image: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop",
-        desc: "Di sản văn hóa thế giới UNESCO với kiến trúc nhà cổ màu vàng đặc trưng và phố đèn lồng sông Hoài.",
-        coords: "15.8801° N, 108.3380° E"
-    },
-    {
-        id: 3,
-        name: "Hồ Hoàn Kiếm",
-        region: "Miền Bắc",
-        province: "Hà Nội",
-        image: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&auto=format&fit=crop",
-        desc: "Trái tim của thủ đô Hà Nội, gắn liền với truyền thuyết Tháp Rùa và cầu Thê Húc đỏ son.",
-        coords: "21.0285° N, 105.8542° E"
-    },
-    {
-        id: 4,
+        id: "thien-mu",
         name: "Chùa Thiên Mụ",
-        region: "Miền Trung",
-        province: "Thừa Thiên Huế",
-        image: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&auto=format&fit=crop",
-        desc: "Ngôi chùa cổ kính 400 năm tuổi với tháp Phước Duyên 7 tầng soi bóng xuống dòng sông Hương.",
-        coords: "16.4533° N, 107.5458° E"
+        city: "Huế",
+        coords: "16.4539° N, 107.5450° E",
+        tags: ["Di tích lịch sử", "Thế kỷ 17", "Miền Trung"],
+        heroImg: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&auto=format&fit=crop",
+        address: "Đường Nguyễn Phúc Nguyên, P. Hương Long, TP. Huế",
+        hours: "06:00 - 18:00 hằng ngày",
+        price: "Miễn phí tham quan",
+        rating: "4.7 / 5 (12.480 đánh giá)",
+        aiConfidence: "94,2%",
+        scannedCount: "318",
+        desc: "Chùa Thiên Mụ – còn gọi là Linh Mụ – toạ lạc trên đồi Hà Khê, tả ngạn sông Hương, cách trung tâm thành phố Huế khoảng 5 km về phía tây. Ngôi chùa được xem là biểu tượng tâm linh thần của vùng đất thần kinh.\n\nĐiểm nhấn kiến trúc là tháp Phước Duyên bảy tầng cao 21 m, mỗi tầng thờ một vị Phật, dựng năm 1844 dưới triều vua Thiệu Trị. Phía sau tháp là điện Đại Hùng, điện Địa Tạng, điện Quan Âm và khu vườn thông tĩnh lặng nơi đặt mộ tháp các vị hoà thượng.\n\nTừ sân trước chùa, tầm nhìn mở ra khúc uốn của sông Hương – khung hình quen thuộc trong tranh và thơ về Huế, và cũng là góc chụp mà mô hình AI của chúng tôi nhận diện với độ chính xác cao nhất.",
+        gallery: [
+            "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=500&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=500&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1528127269322-539801943592?w=500&auto=format&fit=crop"
+        ],
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3826.333249089201!2d107.54281137588725!3d16.45391698428268!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3141a052ff6b7e61%3A0xb36336e4f3a76356!2zQ2jDuWEgVGhpw6puIE3hu6U!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s",
+        nearby: [
+            { name: "Đại Nội Huế", dist: "Cách 5.2 km", img: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=150&auto=format&fit=crop" },
+            { name: "Cầu Tràng Tiền", dist: "Cách 6.0 km", img: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=150&auto=format&fit=crop" },
+            { name: "Lăng Tự Đức", dist: "Cách 7.8 km", img: "https://images.unsplash.com/photo-1528127269322-539801943592?w=150&auto=format&fit=crop" }
+        ]
     },
     {
-        id: 5,
-        name: "Bà Nà Hills",
-        region: "Miền Trung",
-        province: "Đà Nẵng",
-        image: "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600&auto=format&fit=crop",
-        desc: "Nổi tiếng với Cầu Vàng bàn tay khổng lồ giữa mây trời và làng Pháp thơ mộng trên đỉnh núi.",
-        coords: "15.9988° N, 107.9880° E"
-    },
-    {
-        id: 6,
-        name: "Ruộng Bậc Thang Sa Pa",
-        region: "Miền Bắc",
-        province: "Lào Cai",
-        image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=600&auto=format&fit=crop",
-        desc: "Tuyệt tác nông nghiệp kỳ vĩ của đồng bào các dân tộc thiểu số vùng cao Tây Bắc.",
-        coords: "22.3364° N, 103.8438° E"
+        id: "ha-long",
+        name: "Vịnh Hạ Long",
+        city: "Quảng Ninh",
+        coords: "20.9500° N, 107.0833° E",
+        tags: ["Kỳ quan thiên nhiên", "UNESCO", "Miền Bắc"],
+        heroImg: "https://images.unsplash.com/photo-1528127269322-539801943592?w=1200&auto=format&fit=crop",
+        address: "Thành phố Hạ Long, Tỉnh Quảng Ninh",
+        hours: "06:00 - 19:00 hằng ngày",
+        price: "290.000 VNĐ / vé tuyến",
+        rating: "4.9 / 5 (38.900 đánh giá)",
+        aiConfidence: "96,8%",
+        scannedCount: "542",
+        desc: "Vịnh Hạ Long là di sản thiên nhiên thế giới UNESCO nổi tiếng với hàng ngàn hòn đảo đá vôi nhấp nhô trên vùng biển xanh ngọc bích.",
+        gallery: [
+            "https://images.unsplash.com/photo-1528127269322-539801943592?w=500&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=500&auto=format&fit=crop",
+            "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=500&auto=format&fit=crop"
+        ],
+        mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119330.4355551322!2d107.03713025!3d20.950000000000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314a5796a5861739%3A0xc665187e17420!2zVmluaCBIYSBMb25n!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s",
+        nearby: [
+            { name: "Đảo Ti Tốp", dist: "Cách 3.5 km", img: "https://images.unsplash.com/photo-1528127269322-539801943592?w=150&auto=format&fit=crop" },
+            { name: "Hang Sửng Sốt", dist: "Cách 4.8 km", img: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=150&auto=format&fit=crop" }
+        ]
     }
 ];
 
 function ClientLandmarks() {
-    const [selectedRegion, setSelectedRegion] = useState("Tất cả");
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedLandmark, setSelectedLandmark] = useState(null);
+    const [selectedLandmarkId, setSelectedLandmarkId] = useState("thien-mu");
+    const [activeTab, setActiveTab] = useState("gioi-thieu");
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [checkinSuccess, setCheckinSuccess] = useState(false);
 
-    const regions = ["Tất cả", "Miền Bắc", "Miền Trung", "Miền Nam"];
+    const currentLandmark =
+        landmarksList.find((l) => l.id === selectedLandmarkId) || landmarksList[0];
 
-    const filtered = landmarksData.filter((item) => {
-        const matchesRegion = selectedRegion === "Tất cả" || item.region === selectedRegion;
-        const matchesSearch =
-            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.province.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesRegion && matchesSearch;
-    });
+    const handleFileDrop = (e) => {
+        e.preventDefault();
+        setCheckinSuccess(true);
+        setTimeout(() => setCheckinSuccess(false), 4000);
+    };
 
     return (
         <ClientLayout activeTab="landmarks">
-            <section className="client-hero-section">
-                <span className="client-hero-subtitle">DANH MỤC ĐỊA DANH VIỆT NAM</span>
-                <div className="client-hero-header-row">
-                    <div className="client-hero-left">
-                        <h1 className="client-hero-title">
-                            Khám phá <span className="highlight-text">địa danh</span> Việt Nam qua góc nhìn AI
-                        </h1>
+            <div className="landmark-detail-wrapper">
+                {/* SELECTOR BAR (Allow exploring different landmarks) */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                    <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        {landmarksList.map((item) => (
+                            <button
+                                key={item.id}
+                                type="button"
+                                className={`category-pill ${selectedLandmarkId === item.id ? "active" : ""}`}
+                                onClick={() => setSelectedLandmarkId(item.id)}
+                            >
+                                📍 {item.name} ({item.city})
+                            </button>
+                        ))}
                     </div>
 
-                    <div className="client-search-box">
-                        <Search size={18} className="client-search-icon" />
-                        <input
-                            type="text"
-                            placeholder="Tìm tên địa danh, tỉnh thành..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="client-search-input"
-                        />
-                    </div>
+                    <Link to="/dashboard" className="btn-client-scan" style={{ padding: "8px 18px", fontSize: "0.86rem" }}>
+                        <Sparkles size={14} /> Nhận diện ảnh mới
+                    </Link>
                 </div>
 
-                <div className="client-category-filters">
-                    {regions.map((reg) => (
-                        <button
-                            key={reg}
-                            type="button"
-                            className={`category-pill ${selectedRegion === reg ? "active" : ""}`}
-                            onClick={() => setSelectedRegion(reg)}
-                        >
-                            {reg}
-                        </button>
-                    ))}
-                </div>
-            </section>
+                {/* HERO LANDMARK HEADER BANNER */}
+                <div className="landmark-hero-banner">
+                    <img src={currentLandmark.heroImg} alt={currentLandmark.name} className="landmark-hero-img" />
 
-            <div className="articles-grid" style={{ marginTop: "32px" }}>
-                {filtered.map((item) => (
-                    <div
-                        key={item.id}
-                        className="article-card"
-                        onClick={() => setSelectedLandmark(item)}
-                    >
-                        <div className="article-image-box">
-                            <img src={item.image} alt={item.name} />
-                            <span className="article-category-badge">{item.region}</span>
+                    <div className="landmark-hero-overlay">
+                        {/* TOP ROW: BREADCRUMB & SHARE */}
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <div className="landmark-breadcrumb">
+                                <span>Trang chủ</span> &gt; <span>{currentLandmark.city}</span> &gt; <strong style={{ color: "#ffffff" }}>{currentLandmark.name}</strong>
+                            </div>
+
+                            <div className="landmark-hero-actions">
+                                <button
+                                    type="button"
+                                    className="btn-hero-action primary"
+                                    onClick={() => alert("Mở camera check-in địa danh!")}
+                                >
+                                    <Camera size={15} />
+                                    <span>Thử thách check-in</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn-hero-action"
+                                    onClick={() => setIsFavorite(!isFavorite)}
+                                >
+                                    <Heart size={15} fill={isFavorite ? "#ef4444" : "none"} color={isFavorite ? "#ef4444" : "#ffffff"} />
+                                    <span>{isFavorite ? "Đã thích" : "Yêu thích"}</span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="btn-hero-action"
+                                    style={{ borderRadius: "50%", padding: "8px", width: "36px", height: "36px", justifyContent: "center" }}
+                                    onClick={() => {
+                                        navigator.clipboard?.writeText(window.location.href);
+                                        alert("Đã sao chép link địa danh!");
+                                    }}
+                                >
+                                    <Share2 size={15} />
+                                </button>
+                            </div>
                         </div>
-                        <div className="article-body">
-                            <h4 className="article-title">{item.name}</h4>
-                            <p className="article-excerpt">{item.desc}</p>
-                            <div className="article-meta-footer">
-                                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                    <MapPin size={14} color="#0d9488" /> {item.province}
-                                </span>
-                                <span style={{ color: "#0d9488", fontWeight: "600" }}>Chi tiết →</span>
+
+                        {/* BOTTOM ROW: TITLE & TAGS */}
+                        <div>
+                            <div className="landmark-tags-row">
+                                {currentLandmark.tags.map((tag, idx) => (
+                                    <span key={idx} className="landmark-hero-tag">{tag}</span>
+                                ))}
+                            </div>
+
+                            <h1 className="landmark-hero-title">{currentLandmark.name}</h1>
+
+                            <p className="landmark-hero-location">
+                                <MapPin size={16} color="#2dd4bf" />
+                                <span>Thành phố {currentLandmark.city} • {currentLandmark.coords}</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* QUICK INFO BAR (4 Columns Floating Bar) */}
+                <div className="landmark-quick-info-bar">
+                    <div className="quick-info-item">
+                        <MapPin size={20} className="quick-info-icon" />
+                        <div className="quick-info-text-box">
+                            <span className="quick-info-label">ĐỊA CHỈ</span>
+                            <span className="quick-info-value">{currentLandmark.address}</span>
+                        </div>
+                    </div>
+
+                    <div className="quick-info-item">
+                        <Clock size={20} className="quick-info-icon" />
+                        <div className="quick-info-text-box">
+                            <span className="quick-info-label">GIỜ MỞ CỬA</span>
+                            <span className="quick-info-value">{currentLandmark.hours}</span>
+                        </div>
+                    </div>
+
+                    <div className="quick-info-item">
+                        <Ticket size={20} className="quick-info-icon" />
+                        <div className="quick-info-text-box">
+                            <span className="quick-info-label">GIÁ VÉ</span>
+                            <span className="quick-info-value">{currentLandmark.price}</span>
+                        </div>
+                    </div>
+
+                    <div className="quick-info-item">
+                        <Star size={20} className="quick-info-icon" color="#f59e0b" />
+                        <div className="quick-info-text-box">
+                            <span className="quick-info-label">XẾP HẠNG</span>
+                            <span className="quick-info-value">{currentLandmark.rating}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* CONTENT TWO-COLUMN GRID */}
+                <div className="landmark-detail-grid">
+                    {/* LEFT COLUMN: ABOUT, AI INSIGHT, GALLERY, MAP */}
+                    <div>
+                        {/* TABS */}
+                        <div className="landmark-tabs-nav">
+                            <button
+                                type="button"
+                                className={`landmark-tab-btn ${activeTab === "gioi-thieu" ? "active" : ""}`}
+                                onClick={() => setActiveTab("gioi-thieu")}
+                            >
+                                Giới thiệu
+                            </button>
+                            <button
+                                type="button"
+                                className={`landmark-tab-btn ${activeTab === "lich-su" ? "active" : ""}`}
+                                onClick={() => setActiveTab("lich-su")}
+                            >
+                                Lịch sử
+                            </button>
+                            <button
+                                type="button"
+                                className={`landmark-tab-btn ${activeTab === "kinh-nghiem" ? "active" : ""}`}
+                                onClick={() => setActiveTab("kinh-nghiem")}
+                            >
+                                Kinh nghiệm
+                            </button>
+                        </div>
+
+                        {/* DESCRIPTION CONTENT */}
+                        <div style={{ fontSize: "0.98rem", lineHeight: "1.7", color: "#334155", whitespace: "pre-line" }}>
+                            {currentLandmark.desc}
+                        </div>
+
+                        {/* AI INSIGHT BOX */}
+                        <div className="ai-insight-box">
+                            <span className="ai-insight-title">AI INSIGHT</span>
+                            <p className="ai-insight-text">
+                                Mô hình nhận diện địa danh này với độ tin cậy trung bình <strong>{currentLandmark.aiConfidence}</strong> trên {currentLandmark.scannedCount} ảnh do người dùng tải lên. Đặc trưng quyết định: hình dáng tháp bảy tầng và đường bờ sông phía trước.
+                            </p>
+                            <div className="ai-insight-progress-bg">
+                                <div className="ai-insight-progress-bar" style={{ width: currentLandmark.aiConfidence.replace(",", ".") }} />
+                            </div>
+                        </div>
+
+                        {/* GALLERY */}
+                        <div style={{ margin: "36px 0" }}>
+                            <h3 className="section-title" style={{ fontSize: "1.3rem", marginBottom: "16px" }}>Thư viện ảnh</h3>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px" }}>
+                                {currentLandmark.gallery.map((imgUrl, i) => (
+                                    <img
+                                        key={i}
+                                        src={imgUrl}
+                                        alt={`Gallery ${i}`}
+                                        style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "16px" }}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* MAP CONTAINER */}
+                        <div>
+                            <h3 className="section-title" style={{ fontSize: "1.3rem", marginBottom: "16px" }}>Vị trí trên bản đồ</h3>
+                            <div style={{ borderRadius: "20px", overflow: "hidden", border: "1px solid #e2e8f0" }}>
+                                <iframe
+                                    title={`Map ${currentLandmark.name}`}
+                                    src={currentLandmark.mapEmbed}
+                                    style={{ width: "100%", height: "320px", border: "none" }}
+                                    allowFullScreen=""
+                                    loading="lazy"
+                                />
                             </div>
                         </div>
                     </div>
-                ))}
-            </div>
 
-            {selectedLandmark && (
-                <div className="article-modal-backdrop" onClick={() => setSelectedLandmark(null)}>
-                    <div className="article-modal-card" onClick={(e) => e.stopPropagation()}>
-                        <button
-                            type="button"
-                            className="article-modal-close"
-                            onClick={() => setSelectedLandmark(null)}
-                        >
-                            ✕
-                        </button>
-                        <div className="featured-badge-row">
-                            <span className="badge-tag">{selectedLandmark.region}</span>
-                            <span className="read-time">{selectedLandmark.province}</span>
+                    {/* RIGHT COLUMN (SIDEBAR CARDS) */}
+                    <div>
+                        {/* CARD 1: CHECK-IN CHALLENGE */}
+                        <div className="checkin-challenge-card">
+                            <span className="client-hero-subtitle" style={{ fontSize: "0.75rem", marginBottom: "2px" }}>CHECK-IN CHALLENGE</span>
+                            <h4 style={{ fontSize: "1.15rem", fontWeight: "800", color: "#0f172a", marginBottom: "6px" }}>
+                                Xác thực chuyến đi của bạn
+                            </h4>
+                            <p style={{ fontSize: "0.85rem", color: "#64748b", lineHeight: "1.4" }}>
+                                Tải ảnh bạn tự chụp tại đây. AI so khớp với địa danh và ghi nhận huy hiệu vào hồ sơ.
+                            </p>
+
+                            {checkinSuccess ? (
+                                <div style={{ padding: "14px", backgroundColor: "#ecfdf5", color: "#047857", borderRadius: "12px", fontSize: "0.85rem", margin: "16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
+                                    <CheckCircle2 size={18} />
+                                    <span>Check-in thành công! Bạn nhận được Huy hiệu Huế 🎉</span>
+                                </div>
+                            ) : (
+                                <div
+                                    className="checkin-dropzone"
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={handleFileDrop}
+                                >
+                                    <div style={{ width: "42px", height: "42px", borderRadius: "50%", background: "#ccfbf1", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "#0d9488", marginBottom: "8px" }}>
+                                        <UploadCloud size={20} />
+                                    </div>
+                                    <strong style={{ display: "block", fontSize: "0.9rem", color: "#0f172a" }}>Kéo & thả ảnh vào đây</strong>
+                                    <span style={{ fontSize: "0.78rem", color: "#94a3b8" }}>JPG, PNG • tối đa 12 MB</span>
+
+                                    <div style={{ marginTop: "12px" }}>
+                                        <label className="btn-client-scan" style={{ display: "inline-flex", padding: "8px 18px", fontSize: "0.84rem", cursor: "pointer" }}>
+                                            <span>Chọn ảnh từ thiết bị</span>
+                                            <input type="file" accept="image/*" style={{ display: "none" }} onChange={() => setCheckinSuccess(true)} />
+                                        </label>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="checkin-stats-box">
+                                <div className="checkin-stats-text">
+                                    <span className="checkin-stats-label">ĐÃ CHECK-IN</span>
+                                    <span className="checkin-stats-value">1.284 lượt khách</span>
+                                </div>
+                                <span className="badge-tag checkin-badge">Huy hiệu Huế</span>
+                            </div>
                         </div>
-                        <h2 className="featured-title" style={{ marginTop: "8px" }}>
-                            {selectedLandmark.name}
-                        </h2>
-                        <p style={{ color: "#64748b", marginBottom: "16px" }}>
-                            📍 Tọa độ GPS: <strong>{selectedLandmark.coords}</strong>
-                        </p>
-                        <img
-                            src={selectedLandmark.image}
-                            alt={selectedLandmark.name}
-                            style={{
-                                width: "100%",
-                                maxHeight: "360px",
-                                objectFit: "cover",
-                                borderRadius: "16px",
-                                marginBottom: "20px"
-                            }}
-                        />
-                        <p style={{ fontSize: "1rem", lineHeight: "1.6", color: "#334155" }}>
-                            {selectedLandmark.desc}
-                        </p>
 
-                        <div style={{ marginTop: "24px", paddingTop: "16px", borderTop: "1px solid #e2e8f0", display: "flex", justifyContent: "flex-end" }}>
-                            <Link to="/dashboard" className="btn-client-scan" style={{ borderRadius: "12px" }}>
-                                <Sparkles size={16} /> Thử nhận diện ảnh này trên AI
-                            </Link>
+                        {/* CARD 2: LƯU ĐỊA DANH */}
+                        <div className="checkin-challenge-card">
+                            <h4 style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", marginBottom: "4px" }}>Lưu địa danh</h4>
+                            <p style={{ fontSize: "0.84rem", color: "#64748b", marginBottom: "16px" }}>
+                                Thêm vào bộ sưu tập để lên kế hoạch cho chuyến đi miền Trung.
+                            </p>
+
+                            <div style={{ display: "flex", gap: "10px" }}>
+                                <button
+                                    type="button"
+                                    className="btn-pricing-action outline"
+                                    style={{ padding: "8px 12px", fontSize: "0.85rem", flex: 1, borderRadius: "14px" }}
+                                    onClick={() => setIsFavorite(!isFavorite)}
+                                >
+                                    ♡ {isFavorite ? "Đã thích" : "Yêu thích"}
+                                </button>
+                                <Link
+                                    to="/dashboard/favorites"
+                                    className="btn-client-scan"
+                                    style={{ padding: "8px 12px", fontSize: "0.85rem", flex: 1.2, borderRadius: "14px", justifyContent: "center" }}
+                                >
+                                    Thêm vào hành trình
+                                </Link>
+                            </div>
+                        </div>
+
+                        {/* CARD 3: ĐỊA DANH GẦN ĐÂY */}
+                        <div className="checkin-challenge-card">
+                            <h4 style={{ fontSize: "1.1rem", fontWeight: "800", color: "#0f172a", marginBottom: "12px" }}>
+                                Địa danh gần đây
+                            </h4>
+
+                            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                {currentLandmark.nearby.map((item, idx) => (
+                                    <div key={idx} className="landmark-nearby-item">
+                                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                            <img src={item.img} alt={item.name} className="landmark-nearby-thumb" />
+                                            <div>
+                                                <strong className="nearby-title">{item.name}</strong>
+                                                <span style={{ fontSize: "0.78rem", color: "#64748b", display: "block" }}>{item.dist}</span>
+                                            </div>
+                                        </div>
+                                        <ChevronRight size={16} className="nearby-chevron" />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </div>
-            )}
+            </div>
         </ClientLayout>
     );
 }

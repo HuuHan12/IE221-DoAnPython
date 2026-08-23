@@ -1,138 +1,208 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Check, Sparkles, Zap, ShieldCheck } from "lucide-react";
+import { Check, ChevronDown, Zap } from "lucide-react";
 import ClientLayout from "../../components/client/ClientLayout";
 import "../../css/Client.css";
 
 function ClientPricing() {
-    const plans = [
+    // FAQ Accordion active state
+    const [openFaq, setOpenFaq] = useState(null);
+
+    const toggleFaq = (index) => {
+        setOpenFaq(openFaq === index ? null : index);
+    };
+
+    const faqItems = [
         {
-            name: "Khám Phá (Miễn Phí)",
-            price: "0 VNĐ",
-            period: "mãi mãi",
-            desc: "Dành cho người dùng cá nhân muốn trải nghiệm nhận diện địa danh bằng AI cơ bản.",
-            features: [
-                "Tải lên tối đa 10 ảnh/ngày",
-                "Nhận diện 50+ địa danh phổ biến Việt Nam",
-                "Hiển thị tọa độ GPS & độ tin cậy phần trăm",
-                "Lưu lịch sử nhận diện 7 ngày"
-            ],
-            btnText: "Bắt đầu trải nghiệm",
-            highlight: false
+            question: "Một lượt scan được tính như thế nào?",
+            answer: "Mỗi lần bạn tải một hình ảnh lên hệ thống để mô hình AI GeoCLIP phân tích đặc trưng và dự đoán tọa độ GPS của địa danh sẽ được tính là 1 lượt scan."
         },
         {
-            name: "Cá Nhân Pro",
-            price: "99.000 VNĐ",
-            period: "tháng",
-            desc: "Dành cho nhiếp ảnh gia, traveler chuyên nghiệp cần kho lưu trữ & độ chính xác cao nhất.",
-            features: [
-                "Tải lên không giới hạn số lượng ảnh",
-                "Nhận diện 500+ địa danh & danh thắng Việt Nam",
-                "Mô hình AI GeoCLIP & Vision Transformers nâng cao",
-                "Đo đạc sai số GIS chi tiết theo bán kính",
-                "Bộ sưu tập yêu thích & xuất báo cáo PDF/Excel",
-                "Hỗ trợ ưu tiên 24/7"
-            ],
-            btnText: "Đăng ký Pro ngay",
-            highlight: true
+            question: "Tôi có thể huỷ gói Pro bất cứ lúc nào không?",
+            answer: "Có. Bạn có thể huỷ gia hạn tự động gói Pro bất cứ lúc nào trong trang Cài đặt tài khoản mà không phát sinh thêm chi phí nào."
         },
         {
-            name: "Doanh Nghiệp / API",
-            price: "Liên hệ",
-            period: "dự án",
-            desc: "Tích hợp API nhận diện địa danh tự động vào ứng dụng du lịch, bản đồ số doanh nghiệp.",
-            features: [
-                "Cổng API RESTful tốc độ cao (<200ms)",
-                "Custom dataset địa danh theo yêu cầu doanh nghiệp",
-                "Hỗ trợ triển khai On-premise hoặc Cloud riêng",
-                "Cam kết SLA 99.9% uptime",
-                "Chuyên viên AI hỗ trợ tích hợp trực tiếp"
-            ],
-            btnText: "Liên hệ tư vấn",
-            highlight: false
+            question: "Ảnh của tôi có được dùng để huấn luyện lại mô hình?",
+            answer: "Không. Quyền riêng tư của bạn là ưu tiên hàng đầu. Ảnh của bạn chỉ được xử lý tạm thời để dự đoán vị trí địa lý và không được lưu trữ để huấn luyện lại mô hình khi chưa có sự đồng ý."
+        },
+        {
+            question: "Đây là dịch vụ thương mại?",
+            answer: "LandmarkAI là đồ án học thuật phát triển tại Đại học FPT. Bảng giá trên được xây dựng nhằm mô phỏng mô hình vận hành sản phẩm thực tế trong bài toán AI Visual Geo-localization."
         }
+    ];
+
+    const comparisonData = [
+        { feature: "Số lượt scan / ngày", free: "10", pro: "500", enterprise: "Không giới hạn" },
+        { feature: "Độ phân giải ảnh tối đa", free: "2 MP", pro: "12 MP", enterprise: "50 MP" },
+        { feature: "Bán kính dự đoán GPS", free: "~25 km", pro: "~1 km", enterprise: "~1 km + tinh chỉnh" },
+        { feature: "Tốc độ xử lý API", free: "Hàng đợi chung", pro: "Ưu tiên", enterprise: "Kênh riêng" },
+        { feature: "Lịch sử tìm kiếm", free: "20 bản ghi", pro: "Không giới hạn", enterprise: "Không giới hạn" },
+        { feature: "Kho ảnh cá nhân", free: "100 MB", pro: "20 GB", enterprise: "Tuỳ chọn" },
+        { feature: "Dashboard thống kê", free: "—", pro: "✓", enterprise: "✓" },
+        { feature: "Truy cập REST API", free: "—", pro: "✓", enterprise: "✓" },
+        { feature: "Xuất báo cáo PDF/CSV", free: "—", pro: "✓", enterprise: "✓" },
+        { feature: "Hỗ trợ ưu tiên", free: "—", pro: "—", enterprise: "✓" }
     ];
 
     return (
         <ClientLayout activeTab="pricing">
-            <section className="client-hero-section" style={{ textAlign: "center", alignItems: "center" }}>
-                <span className="client-hero-subtitle">BẢNG GIÁ DỊCH VỤ</span>
+            {/* HERO SECTION */}
+            <div className="pricing-hero-container">
+                <span className="client-hero-subtitle">PRICING</span>
                 <h1 className="client-hero-title">
-                    Gói dịch vụ <span className="highlight-text">linh hoạt</span> cho mọi nhu cầu
+                    Chọn gói phù hợp cho <span className="highlight-text">hành trình</span> của bạn
                 </h1>
-                <p style={{ color: "#64748b", maxWidth: "600px", margin: "12px auto 36px auto" }}>
-                    Trải nghiệm sức mạnh của AI Vision Transformers trong việc định vị địa danh Việt Nam với chi phí tối ưu.
+                <p style={{ color: "#64748b", maxWidth: "640px", margin: "12px auto 0 auto", fontSize: "0.98rem", lineHeight: "1.6" }}>
+                    Mọi gói đều dùng cùng một mô hình nhận diện địa danh. Khác biệt nằm ở khối lượng xử lý, độ phân giải ảnh và các tính năng cá nhân hoá.
                 </p>
-            </section>
 
-            <div className="articles-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", gap: "28px" }}>
-                {plans.map((plan, idx) => (
-                    <div
-                        key={idx}
-                        className="article-card"
-                        style={{
-                            padding: "36px 28px",
-                            borderRadius: "24px",
-                            border: plan.highlight ? "2px solid #0d9488" : "1px solid #e2e8f0",
-                            boxShadow: plan.highlight ? "0 12px 30px rgba(13,148,136,0.15)" : "var(--shadow-sm)",
-                            position: "relative",
-                            backgroundColor: plan.highlight ? "#fafdfd" : "#ffffff"
-                        }}
-                    >
-                        {plan.highlight && (
-                            <span
-                                style={{
-                                    position: "absolute",
-                                    top: "-14px",
-                                    left: "50%",
-                                    transform: "translateX(-50%)",
-                                    backgroundColor: "#0d9488",
-                                    color: "#ffffff",
-                                    fontSize: "0.78rem",
-                                    fontWeight: "800",
-                                    padding: "4px 16px",
-                                    borderRadius: "20px"
-                                }}
-                            >
-                                POPULAR 🔥
-                            </span>
-                        )}
+                <div className="pricing-student-pill">
+                    <Zap size={15} />
+                    <span>Sinh viên nhận 3 tháng Pro miễn phí</span>
+                </div>
+            </div>
 
-                        <h3 style={{ fontSize: "1.3rem", fontWeight: "800", color: "#0f172a", marginBottom: "8px" }}>
-                            {plan.name}
-                        </h3>
-                        <p style={{ fontSize: "0.88rem", color: "#64748b", minHeight: "44px", marginBottom: "20px" }}>
-                            {plan.desc}
-                        </p>
+            {/* 3 PRICING CARDS */}
+            <div className="pricing-cards-grid">
+                {/* FREE CARD */}
+                <div className="pricing-card-box">
+                    <h3 className="pricing-plan-title">Free</h3>
+                    <p className="pricing-plan-tagline">Dành cho sinh viên trải nghiệm</p>
 
-                        <div style={{ marginBottom: "24px" }}>
-                            <span style={{ fontSize: "2rem", fontWeight: "800", color: "#0f172a" }}>{plan.price}</span>
-                            <span style={{ fontSize: "0.88rem", color: "#64748b" }}> /{plan.period}</span>
-                        </div>
-
-                        <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px 0", display: "flex", flexDirection: "column", gap: "12px", flex: 1 }}>
-                            {plan.features.map((feat, fIdx) => (
-                                <li key={fIdx} style={{ display: "flex", alignItems: "flex-start", gap: "10px", fontSize: "0.9rem", color: "#334155" }}>
-                                    <Check size={16} color="#0d9488" style={{ marginTop: "3px", flexShrink: 0 }} />
-                                    <span>{feat}</span>
-                                </li>
-                            ))}
-                        </ul>
-
-                        <Link
-                            to={plan.highlight ? "/dashboard" : "/login"}
-                            className="btn-client-scan"
-                            style={{
-                                justifyContent: "center",
-                                width: "100%",
-                                borderRadius: "14px",
-                                background: plan.highlight ? "linear-gradient(135deg, #0d9488, #0f766e)" : "#0f172a"
-                            }}
-                        >
-                            <span>{plan.btnText}</span>
-                        </Link>
+                    <div className="pricing-plan-price-row">
+                        <span className="pricing-plan-price">0đ</span>
+                        <span className="pricing-plan-period">/tháng</span>
                     </div>
-                ))}
+
+                    <ul className="pricing-features-list">
+                        <li className="pricing-feature-item"><Check size={16} /> 10 lượt scan ảnh / ngày</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Ảnh tối đa 2 MP</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Độ chính xác bán kính ~25 km</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Lưu 20 kết quả lịch sử</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Bộ sưu tập yêu thích cơ bản</li>
+                    </ul>
+
+                    <Link to="/dashboard" className="btn-pricing-action outline">
+                        Bắt đầu miễn phí
+                    </Link>
+                </div>
+
+                {/* PRO CARD (FEATURED / HIGHLIGHTED) */}
+                <div className="pricing-card-box pro-featured">
+                    {/* FLOATING BADGE - NO CLIPPING */}
+                    <div className="pricing-floating-badge">
+                        PHỔ BIẾN NHẤT
+                    </div>
+
+                    <h3 className="pricing-plan-title">Pro</h3>
+                    <p className="pricing-plan-tagline">Cho người đi du lịch thường xuyên</p>
+
+                    <div className="pricing-plan-price-row">
+                        <span className="pricing-plan-price">99.000đ</span>
+                        <span className="pricing-plan-period">/tháng</span>
+                    </div>
+
+                    <ul className="pricing-features-list">
+                        <li className="pricing-feature-item"><Check size={16} /> 500 lượt scan ảnh / ngày</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Ảnh tối đa 12 MP + RAW</li>
+                        <li className="pricing-feature-item"><Check size={16} /> GeoCLIP V2 — bán kính ~1 km</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Lịch sử & kho ảnh không giới hạn</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Dashboard thống kê hành trình</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Thử thách check-in & huy hiệu</li>
+                    </ul>
+
+                    <Link to="/dashboard" className="btn-pricing-action filled-teal">
+                        Nâng cấp Pro
+                    </Link>
+                </div>
+
+                {/* ENTERPRISE CARD */}
+                <div className="pricing-card-box">
+                    <h3 className="pricing-plan-title">Enterprise</h3>
+                    <p className="pricing-plan-tagline">Cho tổ chức du lịch, nhà trường</p>
+
+                    <div className="pricing-plan-price-row">
+                        <span className="pricing-plan-price">Liên hệ</span>
+                    </div>
+
+                    <ul className="pricing-features-list">
+                        <li className="pricing-feature-item"><Check size={16} /> Không giới hạn lượt scan</li>
+                        <li className="pricing-feature-item"><Check size={16} /> API riêng + hàng đợi ưu tiên</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Batch upload 1.000 ảnh/lần</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Fine-tune tập địa danh riêng</li>
+                        <li className="pricing-feature-item"><Check size={16} /> SSO, phân quyền theo nhóm</li>
+                        <li className="pricing-feature-item"><Check size={16} /> Hỗ trợ kỹ thuật 24/7</li>
+                    </ul>
+
+                    <Link to="/lien-he" className="btn-pricing-action filled-dark">
+                        Nhận báo giá
+                    </Link>
+                </div>
+            </div>
+
+            {/* FEATURE COMPARISON TABLE SECTION */}
+            <div className="pricing-table-section">
+                <h2 className="section-title" style={{ marginBottom: "24px" }}>
+                    So sánh chi tiết tính năng
+                </h2>
+
+                <div className="pricing-table-card">
+                    <table className="pricing-table">
+                        <thead>
+                            <tr>
+                                <th style={{ width: "35%" }}>TÍNH NĂNG</th>
+                                <th style={{ width: "20%" }}>FREE</th>
+                                <th style={{ width: "22.5%", color: "#0d9488" }}>PRO</th>
+                                <th style={{ width: "22.5%" }}>ENTERPRISE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {comparisonData.map((row, idx) => (
+                                <tr key={idx}>
+                                    <td style={{ fontWeight: "600", color: "#0f172a" }}>{row.feature}</td>
+                                    <td>{row.free}</td>
+                                    <td className="col-pro" style={{ fontWeight: "700", color: "#0f172a" }}>
+                                        {row.pro === "✓" ? <Check size={18} className="table-check-icon" /> : row.pro}
+                                    </td>
+                                    <td>
+                                        {row.enterprise === "✓" ? <Check size={18} className="table-check-icon" /> : row.enterprise === "—" ? <span className="table-dash">—</span> : row.enterprise}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* FAQ ACCORDION SECTION */}
+            <div className="faq-section">
+                <h2 className="section-title" style={{ textAlign: "center", marginBottom: "8px" }}>
+                    Câu hỏi thường gặp
+                </h2>
+
+                <div className="faq-list">
+                    {faqItems.map((item, index) => {
+                        const isOpen = openFaq === index;
+                        return (
+                            <div key={index} className="faq-item-card">
+                                <button
+                                    type="button"
+                                    className="faq-header-trigger"
+                                    onClick={() => toggleFaq(index)}
+                                >
+                                    <span>{item.question}</span>
+                                    <ChevronDown size={18} className={`faq-chevron ${isOpen ? "open" : ""}`} />
+                                </button>
+
+                                {isOpen && (
+                                    <div className="faq-body-content">
+                                        <p>{item.answer}</p>
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </ClientLayout>
     );

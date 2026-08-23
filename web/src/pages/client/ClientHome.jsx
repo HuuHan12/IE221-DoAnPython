@@ -81,7 +81,7 @@ Vào các đêm đêm rằm hàng tháng, phố cổ ngừng sử dụng ánh s�
     }
 ];
 
-function ClientHome() {
+function ClientHome({ activeTab = "home" }) {
     const [selectedCategory, setSelectedCategory] = useState("Tất cả");
     const [searchQuery, setSearchQuery] = useState("");
     const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -109,7 +109,7 @@ function ClientHome() {
     };
 
     return (
-        <ClientLayout activeTab="home">
+        <ClientLayout activeTab={activeTab}>
             {/* HERO / HEADER TITLE SECTION */}
             <section className="client-hero-section">
                 <div className="client-hero-header-row">

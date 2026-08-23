@@ -1,70 +1,235 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Sparkles, Code2, Database, MapPin, Cpu, Award } from "lucide-react";
+import {
+    Sparkles,
+    Database,
+    Layers,
+    Compass,
+    Monitor,
+    Users,
+    GitBranch,
+    ArrowUpRight
+} from "lucide-react";
 import ClientLayout from "../../components/client/ClientLayout";
 import "../../css/Client.css";
 
 function ClientAbout() {
+    const techStack = [
+        "Python 3.11",
+        "PyTorch",
+        "GeoCLIP",
+        "ViT-B/16",
+        "FastAPI",
+        "PostgreSQL",
+        "React + TanStack",
+        "Google Maps API"
+    ];
+
+    const teamMembers = [
+        { initial: "D", name: "Dư Hữu Hân", role: "Team Lead + AI Model" },
+        { initial: "T", name: "Thành viên 2", role: "Backend + FastAPI" },
+        { initial: "T", name: "Thành viên 3", role: "Frontend + React" },
+        { initial: "T", name: "Thành viên 4", role: "Data + Gắn nhãn & Kiểm thử" }
+    ];
+
     return (
         <ClientLayout activeTab="about">
-            <section className="client-hero-section">
-                <span className="client-hero-subtitle">VỀ DỰ ÁN NGHIÊN CỨU</span>
-                <h1 className="client-hero-title">
-                    Hệ thống nhận diện địa danh <span className="highlight-text">LandmarkAI</span>
+            {/* HERO SECTION */}
+            <div className="about-hero-container">
+                <span className="client-hero-subtitle">ABOUT THE PROJECT</span>
+                <h1 className="about-hero-title">
+                    Dạy máy tính <span className="highlight-text">nhìn</span> và nhận ra từng địa danh Việt Nam
                 </h1>
-                <p style={{ color: "#475569", fontSize: "1.05rem", lineHeight: "1.7", maxWidth: "800px", marginTop: "12px" }}>
-                    Đồ án môn <strong>Kỹ thuật lập trình Python (IE221) — Trường Đại học FPT</strong>. Nền tảng ứng dụng mô hình AI thị giác máy tính tiên tiến Vision Transformers và GeoCLIP nhằm xác định vị trí địa lý của các danh lam thắng cảnh Việt Nam qua ảnh chụp.
+                <p className="about-hero-desc">
+                    LandmarkAI là đồ án môn Python: một web app du lịch thông minh có thể đoán tên địa danh và toạ độ GPS chỉ từ một bức ảnh chụp.
                 </p>
-            </section>
 
-            {/* TECH STACK CARDS */}
-            <div className="articles-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)", margin: "40px 0" }}>
-                <div className="article-card" style={{ padding: "28px" }}>
-                    <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#ccfbf1", display: "flex", alignItems: "center", justifyContent: "center", color: "#0d9488", marginBottom: "16px" }}>
-                        <Cpu size={24} />
-                    </div>
-                    <h3 style={{ fontSize: "1.15rem", fontWeight: "700", marginBottom: "8px" }}>Mô hình Vision Transformer</h3>
-                    <p style={{ fontSize: "0.9rem", color: "#64748b", lineHeight: "1.6" }}>
-                        Trích xuất đặc trưng hình ảnh theo không gian patch, nhận diện sắc nét kiến trúc, mái chùa, dòng sông và đồi núi độc bản.
-                    </p>
-                </div>
+                <div className="about-hero-btns-row">
+                    <Link to="/dashboard" className="btn-client-scan">
+                        <Sparkles size={16} />
+                        <span>Thử nhận diện ảnh</span>
+                    </Link>
 
-                <div className="article-card" style={{ padding: "28px" }}>
-                    <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center", color: "#d97706", marginBottom: "16px" }}>
-                        <MapPin size={24} />
-                    </div>
-                    <h3 style={{ fontSize: "1.15rem", fontWeight: "700", marginBottom: "8px" }}>Định vị GeoCLIP Việt Nam</h3>
-                    <p style={{ fontSize: "0.9rem", color: "#64748b", lineHeight: "1.6" }}>
-                        Ánh xạ trực tiếp vector hình ảnh sang hệ tọa độ GPS thực tế với sai số tính bằng ki-lô-mét và khoảng cách Haversine.
-                    </p>
-                </div>
-
-                <div className="article-card" style={{ padding: "28px" }}>
-                    <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: "#e0f2fe", display: "flex", alignItems: "center", justifyContent: "center", color: "#0284c7", marginBottom: "16px" }}>
-                        <Code2 size={24} />
-                    </div>
-                    <h3 style={{ fontSize: "1.15rem", fontWeight: "700", marginBottom: "8px" }}>Backend Python & React UI</h3>
-                    <p style={{ fontSize: "0.9rem", color: "#64748b", lineHeight: "1.6" }}>
-                        Hệ thống API RESTful phát triển bằng Python FastAPI, kết hợp với giao diện React + Vite mượt mà và bản đồ Leaflet.
-                    </p>
+                    <Link to="/cam-nang" className="btn-about-outline">
+                        Xem tài liệu kỹ thuật
+                    </Link>
                 </div>
             </div>
 
-            {/* AUTHOR / TEAM SECTION */}
-            <div className="newsletter-banner" style={{ background: "#ffffff", color: "#0f172a", border: "1px solid #e2e8f0", boxShadow: "var(--shadow-md)" }}>
-                <div>
-                    <span style={{ fontSize: "0.82rem", fontWeight: "700", color: "#0d9488", textTransform: "uppercase" }}>ĐỘI NGUÕ THỰC HIỆN</span>
-                    <h2 style={{ fontSize: "1.6rem", fontWeight: "800", marginTop: "4px", marginBottom: "8px" }}>
-                        Tác giả & Nhóm phát triển
-                    </h2>
-                    <p style={{ color: "#475569", fontSize: "0.95rem" }}>
-                        Dự án được thực hiện bởi sinh viên <strong>Dư Hữu Hân</strong> cùng các thành viên nhóm đồ án Python - Trường Đại học FPT.
-                    </p>
+            {/* BANNER CARD & METRICS BAR */}
+            <div className="about-banner-card">
+                <div className="about-banner-img-box">
+                    <img
+                        src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&auto=format&fit=crop"
+                        alt="LandmarkAI Pagoda Landscape"
+                    />
                 </div>
 
-                <Link to="/dashboard" className="btn-client-scan">
-                    <Sparkles size={16} /> Mở Dashboard Nhận Diện
-                </Link>
+                <div className="about-metrics-bar">
+                    <div className="metric-item">
+                        <span className="metric-value">1.200+</span>
+                        <span className="metric-label">Ảnh địa danh trong tập dữ liệu</span>
+                    </div>
+
+                    <div className="metric-item">
+                        <span className="metric-value">63</span>
+                        <span className="metric-label">Tỉnh thành được gắn nhãn</span>
+                    </div>
+
+                    <div className="metric-item">
+                        <span className="metric-value">87%</span>
+                        <span className="metric-label">Top-1 accuracy trên tập test</span>
+                    </div>
+
+                    <div className="metric-item">
+                        <span className="metric-value">~1 km</span>
+                        <span className="metric-label">Bán kính sai số GPS trung vị</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* TWO-COLUMN SECTION */}
+            <div className="about-two-col-grid">
+                {/* LEFT COLUMN: MỤC TIÊU */}
+                <div className="about-left-col">
+                    <span className="client-hero-subtitle">MỤC TIÊU</span>
+                    <h2 className="section-title" style={{ marginBottom: "16px", marginTop: "4px" }}>
+                        Vì sao chúng tôi làm dự án này
+                    </h2>
+
+                    <p>
+                        Rất nhiều bức ảnh du lịch bị lãng quên trong thư viện điện thoại vì không ai còn nhớ nơi đó tên gì. Chúng tôi muốn biến một tấm ảnh thành một câu chuyện có địa chỉ.
+                    </p>
+
+                    <p>
+                        Về mặt học thuật, dự án là dịp áp dụng trọn vẹn kiến thức Python: xử lý ảnh, học sâu, xây dựng API, thiết kế cơ sở dữ liệu và triển khai giao diện người dùng hoàn chỉnh.
+                    </p>
+
+                    {/* TECH STACK BADGES */}
+                    <div className="about-tech-badges-list">
+                        {techStack.map((tech, idx) => (
+                            <span key={idx} className="about-tech-badge">
+                                {tech}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+
+                {/* RIGHT COLUMN: KIẾN TRÚC MÔ HÌNH */}
+                <div className="about-pipeline-card">
+                    <span className="client-hero-subtitle">KIẾN TRÚC MÔ HÌNH</span>
+                    <h3 className="section-title" style={{ fontSize: "1.35rem", marginTop: "4px", marginBottom: "16px" }}>
+                        Pipeline nhận diện 4 bước
+                    </h3>
+
+                    <div className="pipeline-steps-list">
+                        {/* STEP 1 */}
+                        <div className="pipeline-step-item">
+                            <div className="pipeline-icon-box">
+                                <Database size={18} />
+                            </div>
+                            <div>
+                                <h4 className="pipeline-step-title">1. Thu thập & gắn nhãn</h4>
+                                <p className="pipeline-step-desc">
+                                    Crawl ảnh địa danh từ nguồn mở, làm sạch trùng lặp, gắn nhãn tên địa danh + toạ độ GPS theo tỉnh thành.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* STEP 2 */}
+                        <div className="pipeline-step-item">
+                            <div className="pipeline-icon-box">
+                                <Layers size={18} />
+                            </div>
+                            <div>
+                                <h4 className="pipeline-step-title">2. Trích xuất đặc trưng</h4>
+                                <p className="pipeline-step-desc">
+                                    Ảnh đi qua backbone Vision Transformer (ViT-B/16) để tạo embedding 512 chiều bất biến với góc chụp và ánh sáng.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* STEP 3 */}
+                        <div className="pipeline-step-item">
+                            <div className="pipeline-icon-box">
+                                <Compass size={18} />
+                            </div>
+                            <div>
+                                <h4 className="pipeline-step-title">3. Đối chiếu GeoCLIP</h4>
+                                <p className="pipeline-step-desc">
+                                    Embedding ảnh được so khớp cosine với embedding toạ độ đã học, trả về top-K vị trí kèm điểm tin cậy.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* STEP 4 */}
+                        <div className="pipeline-step-item">
+                            <div className="pipeline-icon-box">
+                                <Monitor size={18} />
+                            </div>
+                            <div>
+                                <h4 className="pipeline-step-title">4. Hậu xử lý & hiển thị</h4>
+                                <p className="pipeline-step-desc">
+                                    Chuẩn hoá xác suất, đối chiếu cơ sở dữ liệu địa danh, render bản đồ tương tác và lưu vào lịch sử người dùng.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* TEAM SECTION */}
+            <div style={{ marginBottom: "60px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "20px" }}>
+                    <div>
+                        <span className="client-hero-subtitle">TEAM</span>
+                        <h2 className="section-title" style={{ marginTop: "4px" }}>
+                            Nhóm phát triển
+                        </h2>
+                    </div>
+
+                    <div style={{ color: "#0d9488", opacity: 0.7 }}>
+                        <Users size={28} />
+                    </div>
+                </div>
+
+                <div className="about-team-grid">
+                    {teamMembers.map((member, idx) => (
+                        <div key={idx} className="team-member-card">
+                            <div className="team-avatar-circle">{member.initial}</div>
+                            <h4 className="team-member-name">{member.name}</h4>
+                            <span className="team-member-role">{member.role}</span>
+                        </div>
+                    ))}
+                </div>
+
+                {/* GITHUB OPEN SOURCE BANNER */}
+                <div className="about-github-banner">
+                    <div className="github-banner-left">
+                        <div className="github-icon-box">
+                            <GitBranch size={24} />
+                        </div>
+                        <div>
+                            <h3 style={{ fontSize: "1.15rem", fontWeight: "800", marginBottom: "4px" }}>
+                                Mã nguồn mở cho mục đích học tập
+                            </h3>
+                            <p style={{ fontSize: "0.88rem", color: "#94a3b8", margin: 0 }}>
+                                Toàn bộ notebook huấn luyện, script tiền xử lý và tài liệu báo cáo đều được công bố.
+                            </p>
+                        </div>
+                    </div>
+
+                    <a
+                        href="https://github.com/HuuHan12/IE221-DoAnPython"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-client-scan"
+                        style={{ whiteSpace: "nowrap" }}
+                    >
+                        <span>Xem repository</span>
+                        <ArrowUpRight size={16} />
+                    </a>
+                </div>
             </div>
         </ClientLayout>
     );
