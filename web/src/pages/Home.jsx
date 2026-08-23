@@ -1,4 +1,5 @@
 import React from "react";
+import Sidebar from "../components/Sidebar";
 import { usePredict } from "../hooks/usePredict";
 import GeoPredictionTab from "../components/GeoPredictionTab/GeoPredictionTab";
 import DataExplorerTab from "../components/DataExplorerTab/DataExplorerTab";
@@ -41,7 +42,10 @@ function Home() {
     } = usePredict();
 
     return (
-        <main className="dashboard-page-container">
+        <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#f8fafc" }}>
+            <Sidebar activeMenu="overview" />
+            <div style={{ flex: 1, padding: "24px", overflowY: "auto" }}>
+                <main className="dashboard-page-container">
             {/* Tiêu đề */}
             <header className="dashboard-hero-header">
                 <div className="title-row">
@@ -143,6 +147,8 @@ function Home() {
                 />
             ) : null}
         </main>
+            </div>
+        </div>
     );
 }
 

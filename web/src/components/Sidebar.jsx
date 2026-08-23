@@ -20,16 +20,16 @@ function Sidebar({ activeMenu }) {
 
     // Menu list based on the mockup designs
     const menuItems = [
-        { id: "overview", label: "Tổng quan", icon: LayoutDashboard, path: "/" },
-        { id: "scan", label: "Quét & Khám phá", icon: QrCode, path: "/" },
-        { id: "history", label: "Lịch sử Tìm kiếm", icon: Clock, path: "/history" },
-        { id: "favorites", label: "Địa điểm yêu thích", icon: Heart, path: "/favorites" },
-        { id: "journey", label: "Hành trình của tôi", icon: Compass, path: "/" },
-        { id: "gallery", label: "Kho ảnh", icon: ImageIcon, path: "/gallery" },
-        { id: "statistics", label: "Bảng Thống kê", icon: BarChart3, path: "/statistics" },
-        { id: "notifications", label: "Thông báo", icon: Bell, path: "/" },
-        { id: "profile", label: "Hồ sơ", icon: User, path: "/profile" },
-        { id: "settings", label: "Cài đặt", icon: Settings, path: "/" },
+        { id: "overview", label: "Tổng quan", icon: LayoutDashboard, path: "/dashboard" },
+        { id: "scan", label: "Quét & Khám phá", icon: QrCode, path: "/dashboard/scan" },
+        { id: "history", label: "Lịch sử Tìm kiếm", icon: Clock, path: "/dashboard/history" },
+        { id: "favorites", label: "Địa điểm yêu thích", icon: Heart, path: "/dashboard/favorites" },
+        { id: "journey", label: "Hành trình của tôi", icon: Compass, path: "/dashboard/journey" },
+        { id: "gallery", label: "Kho ảnh", icon: ImageIcon, path: "/dashboard/gallery" },
+        { id: "statistics", label: "Bảng Thống kê", icon: BarChart3, path: "/dashboard/statistics" },
+        { id: "notifications", label: "Thông báo", icon: Bell, path: "/dashboard/notifications" },
+        { id: "profile", label: "Hồ sơ", icon: User, path: "/dashboard/profile" },
+        { id: "settings", label: "Cài đặt", icon: Settings, path: "/dashboard/settings" },
     ];
 
     const currentPath = location.pathname;
@@ -37,7 +37,7 @@ function Sidebar({ activeMenu }) {
     return (
         <aside className="app-sidebar">
             <div className="sidebar-header">
-                <Link to="/" className="sidebar-brand">
+                <Link to="/dashboard" className="sidebar-brand">
                     <div className="brand-logo-icon">
                         <MapPin size={22} color="#FFFFFF" fill="#FFFFFF" />
                     </div>
@@ -53,7 +53,9 @@ function Sidebar({ activeMenu }) {
                     const IconComponent = item.icon;
                     const isActive =
                         activeMenu === item.id ||
-                        (item.path !== "/" && currentPath.startsWith(item.path));
+                        (item.path === "/dashboard"
+                            ? currentPath === "/dashboard" || currentPath === "/dashboard/"
+                            : currentPath.startsWith(item.path));
 
                     return (
                         <Link
