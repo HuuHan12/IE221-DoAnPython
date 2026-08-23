@@ -54,7 +54,7 @@ function TopResultHero({
     const gtLat = gisError?.ground_truth?.lat ?? (hasGt ? Number(groundTruth.lat) : null);
     const gtLon = gisError?.ground_truth?.lon ?? (hasGt ? Number(groundTruth.lon) : null);
 
-    // Dữ liệu sai số Geodesic và phân loại chuẩn tính toán 100% từ Python Backend
+    // Dữ liệu sai số Geodesic và phân loại chuẩn tính toán 100% 
     const formattedDistance = gisError?.formatted_distance ?? null;
     const accuracyLabel = gisError?.accuracy_label ?? null;
     const accuracyLevelClass = gisError?.accuracy_level ?? "dist-good";
@@ -76,7 +76,7 @@ function TopResultHero({
 
     return (
         <div className="top-result-hero-card" aria-label="Kết Quả Dự Đoán Tốt Nhất">
-            {/* HÀNG 1: TÊN ĐỊA DANH & BADGE ĐỘ CHÍNH XÁC */}
+            {/* HÀNG 1: Tên địa danh và độ chính xác */}
             <div className="hero-name-row">
                 <div className="hero-title-group">
                     <span className="hero-rank-pill">#{rank}</span>
@@ -91,7 +91,7 @@ function TopResultHero({
                 ) : null}
             </div>
 
-            {/* HÀNG 2: TỈNH THÀNH & LOẠI HÌNH */}
+            {/* HÀNG 2: Tỉnh thành loại hình */}
             <div className="hero-meta-row">
                 <span className="hero-meta-item">
                     <span className="meta-label">Tỉnh/Thành:</span>
@@ -104,12 +104,12 @@ function TopResultHero({
                 </span>
             </div>
 
-            {/* HÀNG 3: MÔ TẢ ĐỊA DANH */}
+            {/* HÀNG 3: Mô tả địa danh */}
             {description ? (
                 <p className="hero-description-text">{description}</p>
             ) : null}
 
-            {/* HÀNG 4: SO SÁNH TỌA ĐỘ AI & TỌA ĐỘ THỰC TẾ */}
+            {/* HÀNG 4:So sánh tọa độ thực tế*/}
             <div className="hero-coordinates-comparison-box">
                 {/* 4.1. TỌA ĐỘ DO AI TẠO */}
                 <div className="coord-compare-row ai-coord-row">
