@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
 
 from app.auth.dependencies import supabase, get_current_user
+from app.database.pg import update_user_profile, update_user_last_login
 
 
 router = APIRouter(
@@ -65,11 +66,18 @@ def register(data: RegisterRequest):
         # public.user_profiles
 
         if data.full_name:
-            supabase.table("user_profiles").update({
-                "full_name": data.full_name
-            }).eq(
-                "user_id", user.id
-            ).execute()
+            try:
+                supabase.table("user_profiles").update({
+                    "full_name": data.full_name
+                }).eq(
+                    "user_id", user.id
+                ).execute()
+            except Exception:
+                # Fallback: update directly via Postgres
+                try:
+                    update_user_profile(user.id, {"full_name": data.full_name})
+                except Exception:
+                    pass
 
         return {
             "message": "Đăng ký thành công.",
@@ -119,11 +127,17 @@ def login(data: LoginRequest):
         session = response.session
 
         # Cập nhật last_login_at.
-        supabase.table("users").update({
-            "last_login_at": datetime.now(timezone.utc).isoformat()
-        }).eq(
-            "id", user.id
-        ).execute()
+        try:
+            supabase.table("users").update({
+                "last_login_at": datetime.now(timezone.utc).isoformat()
+            }).eq(
+                "id", user.id
+            ).execute()
+        except Exception:
+            try:
+                update_user_last_login(user.id, datetime.now(timezone.utc).isoformat())
+            except Exception:
+                pass
 
         return {
             "message": "Đăng nhập thành công.",
@@ -155,33 +169,41 @@ def get_profile(
     current_user=Depends(get_current_user)
 ):
     try:
-        user_response = (
-            supabase
-            .table("users")
-            .select(
-                "id,email,status,last_login_at,created_at,updated_at"
+        try:
+            user_response = (
+                supabase
+                .table("users")
+                .select(
+                    "id,email,status,last_login_at,created_at,updated_at"
+                )
+                .eq("id", current_user.id)
+                .single()
+                .execute()
             )
-            .eq("id", current_user.id)
-            .single()
-            .execute()
-        )
 
-        profile_response = (
-            supabase
-            .table("user_profiles")
-            .select(
-                "id,user_id,full_name,avatar_media_id,"
-                "created_at,updated_at"
+            profile_response = (
+                supabase
+                .table("user_profiles")
+                .select(
+                    "id,user_id,full_name,avatar_media_id,"
+                    "created_at,updated_at"
+                )
+                .eq("user_id", current_user.id)
+                .single()
+                .execute()
             )
-            .eq("user_id", current_user.id)
-            .single()
-            .execute()
-        )
 
-        return {
-            "user": user_response.data,
-            "profile": profile_response.data
-        }
+            return {
+                "user": user_response.data,
+                "profile": profile_response.data
+            }
+        except Exception:
+            # Fallback to direct Postgres read
+            try:
+                user, profile = get_user_and_profile(current_user.id)
+                return {"user": user, "profile": profile}
+            except Exception as e2:
+                raise HTTPException(status_code=404, detail=str(e2))
 
     except Exception as error:
         raise HTTPException(
@@ -214,17 +236,25 @@ def update_profile(
                 detail="Không có thông tin nào để cập nhật."
             )
 
-        response = (
-            supabase
-            .table("user_profiles")
-            .update(update_data)
-            .eq("user_id", current_user.id)
-            .execute()
-        )
+        try:
+            response = (
+                supabase
+                .table("user_profiles")
+                .update(update_data)
+                .eq("user_id", current_user.id)
+                .execute()
+            )
+            profile_data = response.data[0] if response.data else None
+        except Exception:
+            profile_data = None
+            try:
+                profile_data = update_user_profile(current_user.id, update_data)
+            except Exception:
+                profile_data = None
 
         return {
             "message": "Cập nhật thông tin cá nhân thành công.",
-            "profile": response.data[0] if response.data else None
+            "profile": profile_data
         }
 
     except HTTPException:
