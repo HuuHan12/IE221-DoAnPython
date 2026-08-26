@@ -5,7 +5,6 @@ import "./css/Client.css";
 // Client Pages
 import ClientHome from "./pages/client/ClientHome";
 import ClientLandmarks from "./pages/client/ClientLandmarks";
-import ClientGuides from "./pages/client/ClientGuides";
 import ClientPricing from "./pages/client/ClientPricing";
 import ClientAbout from "./pages/client/ClientAbout";
 import ClientContact from "./pages/client/ClientContact";
@@ -29,7 +28,6 @@ function App() {
             {/* Client Routes */}
             <Route path="/" element={<ClientHome />} />
             <Route path="/dia-danh" element={<ClientLandmarks />} />
-            <Route path="/cam-nang" element={<ClientGuides />} />
             <Route path="/bang-gia" element={<ClientPricing />} />
             <Route path="/ve-du-an" element={<ClientAbout />} />
             <Route path="/lien-he" element={<ClientContact />} />

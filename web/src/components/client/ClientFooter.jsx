@@ -28,7 +28,6 @@ function ClientFooter() {
                         <h4 className="footer-col-title">SẢN PHẨM</h4>
                         <ul className="footer-links-list">
                             <li><Link to="/dia-danh">Chi tiết địa danh</Link></li>
-                            <li><Link to="/cam-nang">Cẩm nang du lịch</Link></li>
                             <li><Link to="/bang-gia">Bảng giá dịch vụ</Link></li>
                         </ul>
                     </div>
