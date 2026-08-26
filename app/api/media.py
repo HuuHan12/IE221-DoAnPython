@@ -1,10 +1,12 @@
 import os
+import tempfile
 import time
 import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from app.auth.dependencies import get_supabase_client
+from app.database.supabase import get_supabase_admin_client
+from app.utils.geoclip import predict_image
 
 
 router = APIRouter(
@@ -32,7 +34,7 @@ def get_db():
             detail="DEV_USER_ID is not configured",
         )
 
-    return get_supabase_client()
+    return get_supabase_admin_client()
 
 
 def validate_file(file: UploadFile, data: bytes):
@@ -115,6 +117,84 @@ def remove_storage_file(client, bucket: str, storage_path: str):
         pass
 
 
+def find_place_id(client, landmark: str) -> str | None:
+    exact_response = (
+        client.table("places")
+        .select("id")
+        .ilike("name", landmark)
+        .limit(1)
+        .execute()
+    )
+    if exact_response.data:
+        return str(exact_response.data[0]["id"])
+
+    partial_response = (
+        client.table("places")
+        .select("id")
+        .ilike("name", f"%{landmark}%")
+        .limit(1)
+        .execute()
+    )
+    if partial_response.data:
+        return str(partial_response.data[0]["id"])
+    return None
+
+
+def recognize_place(
+    client,
+    data: bytes,
+    original_filename: str | None,
+    scope: str,
+):
+    suffix = Path(original_filename or "upload.jpg").suffix.lower()
+    if suffix not in {".jpg", ".jpeg", ".png", ".webp"}:
+        suffix = ".jpg"
+
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+            temp_file.write(data)
+            temp_path = temp_file.name
+
+        predictions = predict_image(temp_path, top_k=1, scope=scope)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Landmark recognition failed: {exc}",
+        ) from exc
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            os.remove(temp_path)
+
+    if not predictions:
+        raise HTTPException(
+            status_code=422,
+            detail="No landmark was recognized from the uploaded image",
+        )
+
+    prediction = predictions[0]
+    landmark = prediction.get("name")
+    if not landmark:
+        raise HTTPException(
+            status_code=422,
+            detail="The recognition result does not contain a landmark name",
+        )
+
+    place_id = find_place_id(client, landmark)
+    if not place_id:
+        raise HTTPException(
+            status_code=422,
+            detail=f"Recognized landmark is not available in places: {landmark}",
+        )
+
+    return {
+        "place_id": place_id,
+        "landmark": landmark,
+        "confidence": float(prediction.get("prob_percent", 0.0)) / 100.0,
+        "prediction": prediction,
+    }
+
+
 # ============================================================
 # LIST
 # ============================================================
@@ -192,11 +272,18 @@ def list_media():
 async def upload_media(
     file: UploadFile = File(...),
     note: str | None = Form(None),
+    scope: str = Form("iconic"),
 ):
     client = get_db()
 
     data = await file.read()
     content_type = validate_file(file, data)
+    recognition = recognize_place(
+        client,
+        data,
+        file.filename,
+        scope,
+    )
 
     filename = sanitize_filename(file.filename)
     storage_path = build_storage_path(filename)
@@ -260,6 +347,7 @@ async def upload_media(
         gallery_insert = {
             "user_id": DEV_USER_ID,
             "media_id": media_id,
+            "place_id": recognition["place_id"],
             "note": note,
         }
 
@@ -270,7 +358,7 @@ async def upload_media(
             .execute()
         )
 
-        if not gallery_response.data:
+        if gallery_response is None or not gallery_response.data:
             raise RuntimeError(
                 "gallery_items insert returned no data"
             )
@@ -281,6 +369,7 @@ async def upload_media(
             "media": media,
             "gallery": gallery,
             "public_url": public_url,
+            "recognition": recognition,
         }
 
     except Exception as exc:
@@ -328,7 +417,7 @@ def update_media_note(
             .execute()
         )
 
-        if not gallery_response.data:
+        if gallery_response is None or not gallery_response.data:
             raise HTTPException(
                 status_code=404,
                 detail="Media not found",
@@ -392,7 +481,7 @@ def delete_media(media_id: str):
             .execute()
         )
 
-        if not media_response.data:
+        if media_response is None or not media_response.data:
             raise HTTPException(
                 status_code=404,
                 detail="Media not found",
@@ -471,7 +560,7 @@ def download_media(media_id: str):
             .execute()
         )
 
-        if not media_response.data:
+        if media_response is None or not media_response.data:
             raise HTTPException(
                 status_code=404,
                 detail="Media not found",

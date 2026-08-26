@@ -5,8 +5,8 @@ import "react-datepicker/dist/react-datepicker.css";
 
 function HistoryFilterCard({ onFilter, onReset }) {
     const [landmarkSearch, setLandmarkSearch] = useState("");
-    const [startDate, setStartDate] = useState(new Date(2024, 4, 1));
-    const [endDate, setEndDate] = useState(new Date(2024, 4, 31));
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
     const datePickerRef = useRef(null);
@@ -45,8 +45,8 @@ function HistoryFilterCard({ onFilter, onReset }) {
 
     const handleResetAll = () => {
         setLandmarkSearch("");
-        setStartDate(new Date(2024, 4, 1));
-        setEndDate(new Date(2024, 4, 31));
+        setStartDate(null);
+        setEndDate(null);
         onReset();
     };
 

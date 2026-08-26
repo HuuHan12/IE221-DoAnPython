@@ -327,4 +327,12 @@ CREATE POLICY trip_places_all_own ON public.trip_places
   WHERE ((trips.id = trip_places.trip_id) AND (trips.user_id = auth.uid())))))
  WITH CHECK ((EXISTS ( SELECT 1
    FROM trips
-  WHERE ((trips.id = trip_places.trip_id) AND (trips.user_id = auth.uid())))));
+ WHERE ((trips.id = trip_places.trip_id) AND (trips.user_id = auth.uid())))));
+
+
+-- Backend privileges required by Search History and prediction persistence.
+-- The service-role key is backend-only and must never be exposed to clients.
+GRANT USAGE ON SCHEMA public TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.search_histories TO service_role;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.media_files TO service_role;
+GRANT SELECT ON TABLE public.places, public.place_images TO service_role;
