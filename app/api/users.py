@@ -3,10 +3,27 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.auth.dependencies import supabase, get_current_user
-from app.database.pg import update_user_profile, update_user_last_login
-
-
+from app.database.supabase import (
+    get_current_user,
+    get_supabase_admin_client,
+    get_supabase_client,
+    supabase,
+)
+from app.database.pg import (
+    get_user_and_profile,
+    update_user_profile,
+    update_user_last_login,
+)
+from app.schemas.user import (
+    ChangePasswordRequest,
+    LoginRequest,
+    LoginResponse,
+    MessageResponse,
+    RegisterRequest,
+    UpdateProfileRequest,
+    UpdateUserRequest,
+    UserResponse,
+)
 router = APIRouter(
     prefix="/users",
     tags=["Users"]
@@ -112,6 +129,15 @@ def register(payload: RegisterRequest):
                 "email": user.email
             }
         }
+
+    except HTTPException:
+        raise
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Không thể đăng ký tài khoản: {error}"
+        )
 
 
 # ============================================================

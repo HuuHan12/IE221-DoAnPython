@@ -1,5 +1,3 @@
-from contextlib import asynccontextmanager
-
 from dotenv import load_dotenv
 import os
 
@@ -14,21 +12,13 @@ from app.api import predict
 from app.api import data
 from app.api import gis
 from app.api import media
-#from app.api import history
-from app.database.database import init_database
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_database()
-    yield
+from app.api import history
 
 
 app = FastAPI(
     title="Vietnam Landmark Recognition API",
     description="AI-based Vietnamese landmark recognition system",
     version="1.0.0",
-    lifespan=lifespan
 )
 
 
@@ -86,7 +76,7 @@ app.include_router(predict.router)
 app.include_router(data.router)
 app.include_router(gis.router)
 app.include_router(media.router)
-# app.include_router(history.router)
+app.include_router(history.router)
 
 
 if __name__ == "__main__":

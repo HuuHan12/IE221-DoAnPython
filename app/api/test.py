@@ -1,4 +1,4 @@
-from auth.dependencies import supabase
+from app.database.supabase import supabase
 
 
 print("Testing Supabase...")
