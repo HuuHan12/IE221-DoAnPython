@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api import users
 from app.api import hello
 from app.api import predict
 from app.api import data
@@ -38,7 +39,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+app.include_router(users.router)
 app.include_router(hello.router)
 app.include_router(predict.router)
 app.include_router(data.router)
