@@ -13,6 +13,7 @@ from app.api import data
 from app.api import gis
 from app.api import media
 from app.api import history
+from app.api import statistics
 
 
 app = FastAPI(
@@ -64,12 +65,15 @@ app.add_middleware(
         "http://127.0.0.1:5173",
         "http://localhost:5174",
         "http://127.0.0.1:5174",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Đăng ký toàn bộ các API Routers
 app.include_router(users.router)
 app.include_router(hello.router)
 app.include_router(predict.router)
@@ -77,6 +81,7 @@ app.include_router(data.router)
 app.include_router(gis.router)
 app.include_router(media.router)
 app.include_router(history.router)
+app.include_router(statistics.router)
 
 
 if __name__ == "__main__":
