@@ -1,32 +1,41 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Lock, Eye, EyeOff, Key } from "lucide-react";
+import { changePasswordApi } from "../../service/userService";
 
 function PasswordForm() {
-    const [currentPass, setCurrentPass] = useState("");
     const [newPass, setNewPass] = useState("");
     const [confirmPass, setConfirmPass] = useState("");
-
-    const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
-
+    const [loading, setLoading] = useState(false);
     const [statusMsg, setStatusMsg] = useState(null);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!currentPass || !newPass || !confirmPass) {
-            setStatusMsg({ type: "error", text: "Vui lòng nhập đầy đủ thông tin mật khẩu." });
+        setStatusMsg(null);
+
+        if (!newPass || !confirmPass) {
+            setStatusMsg({ type: "error", text: "Vui lòng nhập đầy đủ mật khẩu mới." });
             return;
         }
+
         if (newPass !== confirmPass) {
             setStatusMsg({ type: "error", text: "Mật khẩu mới không trùng khớp." });
             return;
         }
-        setStatusMsg({ type: "success", text: "Cập nhật mật khẩu thành công!" });
-        setCurrentPass("");
-        setNewPass("");
-        setConfirmPass("");
-        setTimeout(() => setStatusMsg(null), 3500);
+
+        try {
+            setLoading(true);
+            await changePasswordApi(newPass);
+            setStatusMsg({ type: "success", text: "✓ Cập nhật mật khẩu thành công!" });
+            setNewPass("");
+            setConfirmPass("");
+            setTimeout(() => setStatusMsg(null), 3500);
+        } catch (err) {
+            setStatusMsg({ type: "error", text: err.message || "Đổi mật khẩu thất bại." });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -40,31 +49,12 @@ function PasswordForm() {
 
             <form className="password-form-grid" onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label className="form-label">Mật khẩu hiện tại</label>
-                    <div className="input-with-icon">
-                        <input
-                            type={showCurrent ? "text" : "password"}
-                            className="form-input"
-                            placeholder="Nhập mật khẩu hiện tại"
-                            value={currentPass}
-                            onChange={(e) => setCurrentPass(e.target.value)}
-                        />
-                        <button
-                            type="button"
-                            className="password-toggle-btn"
-                            onClick={() => setShowCurrent(!showCurrent)}
-                        >
-                            {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                    </div>
-                </div>
-
-                <div className="form-group">
                     <label className="form-label">Mật khẩu mới</label>
                     <div className="input-with-icon">
                         <input
                             type={showNew ? "text" : "password"}
                             className="form-input"
+                            required
                             placeholder="Nhập mật khẩu mới"
                             value={newPass}
                             onChange={(e) => setNewPass(e.target.value)}
@@ -85,6 +75,7 @@ function PasswordForm() {
                         <input
                             type={showConfirm ? "text" : "password"}
                             className="form-input"
+                            required
                             placeholder="Nhập lại mật khẩu mới"
                             value={confirmPass}
                             onChange={(e) => setConfirmPass(e.target.value)}
@@ -100,9 +91,9 @@ function PasswordForm() {
                 </div>
 
                 <div className="password-action-container">
-                    <button type="submit" className="btn-primary-teal">
+                    <button type="submit" className="btn-primary-teal" disabled={loading}>
                         <Key size={18} />
-                        <span>Cập nhật mật khẩu</span>
+                        <span>{loading ? "Đang đổi..." : "Cập nhật mật khẩu"}</span>
                     </button>
                 </div>
             </form>

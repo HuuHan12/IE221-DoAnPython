@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Info, ChevronDown, MapPin, Check, Search } from "lucide-react";
 
 const initialLocationsData = [
@@ -16,14 +16,21 @@ const initialLocationsData = [
 
 const MAX_COUNT = 5000;
 
-function TopLocationsChart() {
-    const [selectedLandmark, setSelectedLandmark] = useState(null); // null = All
+function TopLocationsChart({ apiLocationsData }) {
+    const [selectedLandmark, setSelectedLandmark] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-
     const dropdownRef = useRef(null);
 
-    // Close on click outside
+    const locationsData =
+        apiLocationsData && apiLocationsData.length > 0
+            ? apiLocationsData.map((item, idx) => ({
+                id: idx + 1,
+                name: item.name || "Địa danh",
+                count: item.count || 100
+            }))
+            : initialLocationsData;
+
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -44,7 +51,7 @@ function TopLocationsChart() {
         setIsOpen(false);
     };
 
-    const filteredMenuLocations = initialLocationsData.filter((loc) =>
+    const filteredMenuLocations = locationsData.filter((loc) =>
         loc.name.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
@@ -122,8 +129,8 @@ function TopLocationsChart() {
             </div>
 
             <div className="top-locations-list">
-                {initialLocationsData.map((item) => {
-                    const barWidthPercent = (item.count / MAX_COUNT) * 100;
+                {locationsData.map((item) => {
+                    const barWidthPercent = Math.min(100, (item.count / MAX_COUNT) * 100);
                     const isSelected = selectedLandmark?.id === item.id;
 
                     return (
@@ -134,7 +141,7 @@ function TopLocationsChart() {
                             title="Click để chọn xem địa điểm"
                         >
                             <span className="location-name">
-                                {isSelected && <MapPin size={14} color="#009080" inline style={{ marginRight: 4 }} />}
+                                {isSelected && <MapPin size={14} color="#009080" style={{ marginRight: 4, display: "inline" }} />}
                                 {item.name}
                             </span>
                             <div className="bar-track">
