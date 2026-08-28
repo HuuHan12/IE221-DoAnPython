@@ -129,35 +129,55 @@ export async function registerUserApi(payload: UserRegisterPayload): Promise<any
  * Lấy thông tin hồ sơ cá nhân từ API GET /users/me
  */
 export async function getUserProfileApi(): Promise<UserProfileResponse> {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
-        method: "GET",
-        headers: getAuthHeaders(),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(data.detail || "Không thể tải thông tin hồ sơ cá nhân.");
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.detail || "Không thể tải thông tin hồ sơ cá nhân.");
+        }
+
+        return data;
+    } catch (err: any) {
+        clearTimeout(timeoutId);
+        throw err;
     }
-
-    return data;
 }
 
 /**
  * Cập nhật thông tin hồ sơ từ API PUT /users/me
  */
 export async function updateUserProfileApi(payload: UserProfileUpdatePayload): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/users/me`, {
-        method: "PUT",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) {
-        throw new Error(data.detail || "Không thể cập nhật hồ sơ cá nhân.");
+    try {
+        const response = await fetch(`${API_BASE_URL}/users/me`, {
+            method: "PUT",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+            throw new Error(data.detail || "Không thể cập nhật hồ sơ cá nhân.");
+        }
+
+        return data;
+    } catch (err: any) {
+        clearTimeout(timeoutId);
+        throw err;
     }
-
-    return data;
 }
 
 /**

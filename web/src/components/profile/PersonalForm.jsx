@@ -17,12 +17,11 @@ function PersonalForm() {
             try {
                 setLoading(true);
                 const data = await getUserProfileApi();
-                if (data.profile?.full_name) {
-                    setFullName(data.profile.full_name);
-                }
-                if (data.user?.email) {
-                    setEmail(data.user.email);
-                }
+                if (data.email) setEmail(data.email);
+                else if (data.user?.email) setEmail(data.user.email);
+
+                if (data.profile?.full_name) setFullName(data.profile.full_name);
+                else if (data.full_name) setFullName(data.full_name);
             } catch (err) {
                 const cached = localStorage.getItem("user_info");
                 if (cached) {
@@ -30,6 +29,7 @@ function PersonalForm() {
                         const parsed = JSON.parse(cached);
                         if (parsed.email) setEmail(parsed.email);
                         if (parsed.full_name) setFullName(parsed.full_name);
+                        else if (parsed.profile?.full_name) setFullName(parsed.profile.full_name);
                     } catch (e) { }
                 }
             } finally {
