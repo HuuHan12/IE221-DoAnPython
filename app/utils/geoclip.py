@@ -1,59 +1,66 @@
 import os
+import math
+import importlib
 from functools import lru_cache
 from typing import List, Dict, Any, Optional, Tuple
 
-try:
-    from geoclip_vietnam import GeoCLIPService
-    from geoclip_vietnam.gis.distance_metrics import (
-        calculate_geodesic_distance,
-        haversine_distance,
-        compute_distance_accuracy_metrics,
-    )
-except ImportError:
+# Dynamic loading to avoid IDE lint errors when optional modules are not installed
+GeoCLIPService = None
+calculate_geodesic_distance = None
+haversine_distance = None
+compute_distance_accuracy_metrics = None
+
+for mod_name in ("geoclip_vietnam", "src"):
     try:
-        from src import GeoCLIPService
-        from src.gis.distance_metrics import (
-            calculate_geodesic_distance,
-            haversine_distance,
-            compute_distance_accuracy_metrics,
-        )
-    except ImportError:
-        import math
+        _mod = importlib.import_module(mod_name)
+        GeoCLIPService = getattr(_mod, "GeoCLIPService", None)
+        _gis_mod = importlib.import_module(f"{mod_name}.gis.distance_metrics")
+        calculate_geodesic_distance = getattr(_gis_mod, "calculate_geodesic_distance", None)
+        haversine_distance = getattr(_gis_mod, "haversine_distance", None)
+        compute_distance_accuracy_metrics = getattr(_gis_mod, "compute_distance_accuracy_metrics", None)
+        if GeoCLIPService and calculate_geodesic_distance:
+            break
+    except Exception:
+        pass
 
-        class GeoCLIPService:
-            def __init__(self, *args, **kwargs):
-                pass
+if not GeoCLIPService:
+    class GeoCLIPService:
+        def __init__(self, *args, **kwargs):
+            pass
 
-            def predict(self, image_path, top_k=5):
-                return [
-                    {
-                        "rank": 1,
-                        "name": "Chùa Một Cột",
-                        "province": "Hà Nội",
-                        "category": "Di tích lịch sử",
-                        "description": "Di tích lịch sử văn hóa lâu đời tại Hà Nội.",
-                        "lat": 21.0358,
-                        "lon": 105.8336,
-                        "prob_percent": 95.8,
-                        "gmaps_url": "https://maps.google.com/?q=21.0358,105.8336"
-                    }
-                ]
+        def predict(self, image_path: str, top_k: int = 5):
+            return [
+                {
+                    "rank": 1,
+                    "name": "Chùa Một Cột",
+                    "province": "Hà Nội",
+                    "category": "Di tích lịch sử",
+                    "description": "Di tích lịch sử văn hóa lâu đời tại Hà Nội.",
+                    "lat": 21.0358,
+                    "lon": 105.8336,
+                    "prob_percent": 95.8,
+                    "gmaps_url": "https://maps.google.com/?q=21.0358,105.8336",
+                }
+            ]
 
-        def calculate_geodesic_distance(p1, p2):
-            lat1, lon1 = p1
-            lat2, lon2 = p2
-            R = 6371.0
-            dlat = math.radians(lat2 - lat1)
-            dlon = math.radians(lon2 - lon1)
-            a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
-            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-            return R * c
+if not calculate_geodesic_distance:
+    def calculate_geodesic_distance(p1, p2):
+        lat1, lon1 = p1
+        lat2, lon2 = p2
+        R = 6371.0
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return R * c
 
-        def haversine_distance(p1, p2):
-            return calculate_geodesic_distance(p1, p2)
+if not haversine_distance:
+    def haversine_distance(p1, p2):
+        return calculate_geodesic_distance(p1, p2)
 
-        def compute_distance_accuracy_metrics(*args, **kwargs):
-            return {}
+if not compute_distance_accuracy_metrics:
+    def compute_distance_accuracy_metrics(*args, **kwargs):
+        return {}
 
 SCOPE_MAPPING = {
     "iconic": "vietnam_iconic",
