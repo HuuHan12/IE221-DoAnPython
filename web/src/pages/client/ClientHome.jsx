@@ -211,8 +211,8 @@ function ClientHome({ activeTab = "home" }) {
             <section>
                 <div className="section-header-row">
                     <h3 className="section-title">Bài viết mới nhất</h3>
-                    <Link to="/cam-nang" className="section-link">
-                        Xem tất cả
+                    <Link to="/dia-danh" className="section-link">
+                        Xem địa danh
                     </Link>
                 </div>
 

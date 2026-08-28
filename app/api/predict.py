@@ -1,13 +1,18 @@
 import os
 import time
 import tempfile
+import uuid
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 
-from app.database.database import save_prediction
+from app.database.supabase import (
+    SUPABASE_BUCKET,
+    SUPABASE_URL,
+    get_current_user,
+    get_supabase_admin_client,
+)
 from app.utils.geoclip import predict_image, compute_gis_error, get_geoclip_service
 
 
@@ -23,11 +28,123 @@ ALLOWED_CONTENT_TYPES = {
 MAX_FILE_SIZE = 10 * 1024 * 1024
 
 
-class DistanceRequest(BaseModel):
-    lat1: float
-    lon1: float
-    lat2: float
-    lon2: float
+def _get_public_url(client, storage_path: str) -> str:
+    response = client.storage.from_(SUPABASE_BUCKET).get_public_url(storage_path)
+    if isinstance(response, str):
+        return response
+    if isinstance(response, dict):
+        return (
+            response.get("publicUrl")
+            or response.get("publicURL")
+            or response.get("public_url")
+        )
+    if hasattr(response, "public_url"):
+        return response.public_url
+    return f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{storage_path}"
+
+
+def _find_place_id(client, landmark: str) -> str | None:
+    exact_response = (
+        client.table("places")
+        .select("id")
+        .ilike("name", landmark)
+        .limit(1)
+        .execute()
+    )
+    if exact_response.data:
+        return str(exact_response.data[0]["id"])
+
+    partial_response = (
+        client.table("places")
+        .select("id")
+        .ilike("name", f"%{landmark}%")
+        .limit(1)
+        .execute()
+    )
+    if partial_response.data:
+        return str(partial_response.data[0]["id"])
+    return None
+
+
+def _save_prediction_history(
+    image_data: bytes,
+    original_filename: str,
+    content_type: str,
+    landmark: str,
+    confidence: float,
+    user_id: str,
+) -> dict:
+    client = get_supabase_admin_client()
+    extension = Path(original_filename).suffix.lower()
+    if extension not in {".jpg", ".jpeg", ".png", ".webp"}:
+        extension = ".jpg"
+
+    stored_filename = f"{uuid.uuid4().hex}{extension}"
+    storage_path = f"{user_id}/history/{int(time.time())}_{stored_filename}"
+    media_id = None
+    storage_uploaded = False
+
+    try:
+        client.storage.from_(SUPABASE_BUCKET).upload(
+            storage_path,
+            image_data,
+            {"content-type": content_type},
+        )
+        storage_uploaded = True
+        public_url = _get_public_url(client, storage_path)
+
+        media_response = (
+            client.table("media_files")
+            .insert(
+                {
+                    "user_id": user_id,
+                    "file_name": original_filename,
+                    "file_url": public_url,
+                    "mime_type": content_type,
+                    "file_size": len(image_data),
+                    "storage_path": storage_path,
+                }
+            )
+            .execute()
+        )
+        if not media_response.data:
+            raise RuntimeError("media_files insert returned no data")
+        media_id = str(media_response.data[0]["id"])
+
+        place_id = _find_place_id(client, landmark)
+        history_response = (
+            client.table("search_histories")
+            .insert(
+                {
+                    "user_id": user_id,
+                    "input_media_id": media_id,
+                    "place_id": place_id,
+                    "confidence": confidence,
+                    "search_type": "image",
+                }
+            )
+            .execute()
+        )
+        if not history_response.data:
+            raise RuntimeError("search_histories insert returned no data")
+
+        return {
+            "history_id": str(history_response.data[0]["id"]),
+            "input_media_id": media_id,
+            "place_id": place_id,
+        }
+    except Exception:
+        if media_id:
+            (
+                client.table("media_files")
+                .delete()
+                .eq("id", media_id)
+                .eq("user_id", user_id)
+                .execute()
+            )
+        if storage_uploaded:
+            client.storage.from_(SUPABASE_BUCKET).remove([storage_path])
+        raise
 
 
 @router.post("/predict")
@@ -37,6 +154,7 @@ async def predict(
     scope: str = Form("iconic"),
     ground_truth_lat: Optional[str] = Form(None),
     ground_truth_lon: Optional[str] = Form(None),
+    current_user=Depends(get_current_user),
 ):
     """
     API endpoint nhận diện vị trí và địa danh Việt Nam từ ảnh bằng GeoCLIP AI model,
@@ -108,19 +226,22 @@ async def predict(
             except Exception as e:
                 print(f"[GIS Error Warning] {e}")
 
-        # Lưu lịch sử
-        prediction_id = save_prediction(
-            filename=image.filename or "upload.jpg",
+        history = _save_prediction_history(
+            image_data=image_data,
+            original_filename=image.filename or "upload.jpg",
             content_type=content_type,
-            size_bytes=size_bytes,
             landmark=landmark,
-            confidence=confidence
+            confidence=confidence,
+            user_id=str(current_user.id),
         )
 
         size_mb = size_bytes / (1024 * 1024)
 
         return {
-            "id": prediction_id,
+            "id": history["history_id"],
+            "history_id": history["history_id"],
+            "input_media_id": history["input_media_id"],
+            "place_id": history["place_id"],
             "filename": image.filename or "upload.jpg",
             "content_type": content_type,
             "size_bytes": size_bytes,
@@ -147,11 +268,3 @@ async def predict(
     finally:
         if temp_path and os.path.exists(temp_path):
             os.remove(temp_path)
-
-
-@router.post("/gis/distance")
-async def calculate_distance_api(payload: DistanceRequest):
-    try:
-        return compute_gis_error((payload.lat1, payload.lon1), (payload.lat2, payload.lon2))
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))

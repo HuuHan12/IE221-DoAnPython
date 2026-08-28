@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Info, ChevronDown, Calendar as CalendarIcon, Check } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -41,15 +41,14 @@ const monthlyData = [
     { date: "Tháng 5", value: 41689 },
 ];
 
-function TimeFrequencyChart() {
+function TimeFrequencyChart({ apiTrendsData }) {
     const [filterMode, setFilterMode] = useState("Theo ngày");
     const [selectedSingleDate, setSelectedSingleDate] = useState(new Date(2024, 4, 19));
     const [isOpen, setIsOpen] = useState(false);
-    const [activeTab, setActiveTab] = useState("calendar"); // 'calendar' | 'preset'
+    const [activeTab, setActiveTab] = useState("calendar");
 
     const dropdownRef = useRef(null);
 
-    // Close on click outside
     useEffect(() => {
         function handleClickOutside(event) {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -75,6 +74,12 @@ function TimeFrequencyChart() {
     };
 
     const getChartData = () => {
+        if (apiTrendsData && apiTrendsData.length > 0) {
+            return apiTrendsData.map((item) => ({
+                date: item.date || "Ngày",
+                value: item.count || 0
+            }));
+        }
         if (filterMode.startsWith("Theo tuần")) return weeklyData;
         if (filterMode.startsWith("Theo tháng")) return monthlyData;
         return dailyData;
@@ -169,7 +174,6 @@ function TimeFrequencyChart() {
                             axisLine={false}
                             tickLine={false}
                             tick={{ fill: "#6B7280", fontSize: 12 }}
-                            domain={[0, 50000]}
                             tickFormatter={(v) => (v === 0 ? "0" : v >= 1000 ? `${(v / 1000).toFixed(0)}.000` : v)}
                         />
                         <Tooltip

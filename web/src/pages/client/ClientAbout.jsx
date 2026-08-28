@@ -50,9 +50,14 @@ function ClientAbout() {
                         <span>Thử nhận diện ảnh</span>
                     </Link>
 
-                    <Link to="/cam-nang" className="btn-about-outline">
-                        Xem tài liệu kỹ thuật
-                    </Link>
+                    <a
+                        href="https://github.com/HuuHan12/IE221-DoAnPython"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-about-outline"
+                    >
+                        Xem GitHub Repo
+                    </a>
                 </div>
             </div>
 

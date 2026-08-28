@@ -10,7 +10,6 @@ function ClientHeader({ activeTab }) {
     const navItems = [
         { id: "home", label: "Trang chủ", path: "/" },
         { id: "landmarks", label: "Địa danh", path: "/dia-danh" },
-        { id: "guides", label: "Cẩm nang", path: "/cam-nang" },
         { id: "pricing", label: "Bảng giá", path: "/bang-gia" },
         { id: "about", label: "Về dự án", path: "/ve-du-an" },
         { id: "contact", label: "Liên hệ", path: "/lien-he" },
