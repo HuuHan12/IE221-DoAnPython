@@ -3,8 +3,10 @@ import { Lock, Eye, EyeOff, Key } from "lucide-react";
 import { changePasswordApi } from "../../service/userService";
 
 function PasswordForm() {
+    const [currentPass, setCurrentPass] = useState("");
     const [newPass, setNewPass] = useState("");
     const [confirmPass, setConfirmPass] = useState("");
+    const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -14,8 +16,13 @@ function PasswordForm() {
         e.preventDefault();
         setStatusMsg(null);
 
-        if (!newPass || !confirmPass) {
-            setStatusMsg({ type: "error", text: "Vui lòng nhập đầy đủ mật khẩu mới." });
+        if (!currentPass || !newPass || !confirmPass) {
+            setStatusMsg({ type: "error", text: "Vui lòng nhập đầy đủ mật khẩu hiện tại và mật khẩu mới." });
+            return;
+        }
+
+        if (newPass.length < 8) {
+            setStatusMsg({ type: "error", text: "Mật khẩu mới phải có ít nhất 8 ký tự." });
             return;
         }
 
@@ -26,8 +33,12 @@ function PasswordForm() {
 
         try {
             setLoading(true);
-            await changePasswordApi(newPass);
+            await changePasswordApi({
+                current_password: currentPass,
+                new_password: newPass,
+            });
             setStatusMsg({ type: "success", text: "✓ Cập nhật mật khẩu thành công!" });
+            setCurrentPass("");
             setNewPass("");
             setConfirmPass("");
             setTimeout(() => setStatusMsg(null), 3500);
@@ -49,13 +60,34 @@ function PasswordForm() {
 
             <form className="password-form-grid" onSubmit={handleSubmit}>
                 <div className="form-group">
+                    <label className="form-label">Mật khẩu hiện tại</label>
+                    <div className="input-with-icon">
+                        <input
+                            type={showCurrent ? "text" : "password"}
+                            className="form-input"
+                            required
+                            placeholder="Nhập mật khẩu hiện tại"
+                            value={currentPass}
+                            onChange={(e) => setCurrentPass(e.target.value)}
+                        />
+                        <button
+                            type="button"
+                            className="password-toggle-btn"
+                            onClick={() => setShowCurrent(!showCurrent)}
+                        >
+                            {showCurrent ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="form-group">
                     <label className="form-label">Mật khẩu mới</label>
                     <div className="input-with-icon">
                         <input
                             type={showNew ? "text" : "password"}
                             className="form-input"
                             required
-                            placeholder="Nhập mật khẩu mới"
+                            placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
                             value={newPass}
                             onChange={(e) => setNewPass(e.target.value)}
                         />

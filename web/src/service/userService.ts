@@ -12,24 +12,36 @@ export interface UserRegisterPayload {
 }
 
 export interface UserProfileUpdatePayload {
+    email?: string;
     full_name?: string;
     avatar_media_id?: string;
 }
 
+export interface ChangePasswordPayload {
+    current_password: string;
+    new_password: string;
+}
+
 export interface UserProfileResponse {
-    user: {
-        id: string;
-        email: string;
-        status?: string;
-        last_login_at?: string;
-        created_at?: string;
-        updated_at?: string;
-    };
-    profile: {
+    id: string;
+    email: string;
+    status?: string;
+    last_login_at?: string;
+    created_at?: string;
+    updated_at?: string;
+    profile?: {
         id: string;
         user_id: string;
         full_name?: string;
         avatar_media_id?: string;
+        created_at?: string;
+        updated_at?: string;
+    };
+    user?: {
+        id: string;
+        email: string;
+        status?: string;
+        last_login_at?: string;
         created_at?: string;
         updated_at?: string;
     };
@@ -66,7 +78,10 @@ export async function loginUserApi(payload: UserLoginPayload): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+            email: payload.email.trim(),
+            password: payload.password,
+        }),
     });
 
     const data = await response.json().catch(() => ({}));
@@ -88,25 +103,33 @@ export async function loginUserApi(payload: UserLoginPayload): Promise<any> {
  * Đăng ký tài khoản mới qua API /users/register
  */
 export async function registerUserApi(payload: UserRegisterPayload): Promise<any> {
+    const bodyPayload: Record<string, any> = {
+        email: payload.email.trim(),
+        password: payload.password,
+    };
+    if (payload.full_name && payload.full_name.trim()) {
+        bodyPayload.full_name = payload.full_name.trim();
+    }
+
     const response = await fetch(`${API_BASE_URL}/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(bodyPayload),
     });
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(data.detail || "Đăng ký thất bại. Vui lòng thử lại.");
+        throw new Error(data.detail || "Đăng ký không thành công. Vui lòng thử lại.");
     }
 
     return data;
 }
 
 /**
- * Lấy thông tin hồ sơ cá nhân từ API /users/profile
+ * Lấy thông tin hồ sơ cá nhân từ API GET /users/me
  */
 export async function getUserProfileApi(): Promise<UserProfileResponse> {
-    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
         method: "GET",
         headers: getAuthHeaders(),
     });
@@ -120,10 +143,10 @@ export async function getUserProfileApi(): Promise<UserProfileResponse> {
 }
 
 /**
- * Cập nhật thông tin hồ sơ từ API PUT /users/profile
+ * Cập nhật thông tin hồ sơ từ API PUT /users/me
  */
 export async function updateUserProfileApi(payload: UserProfileUpdatePayload): Promise<any> {
-    const response = await fetch(`${API_BASE_URL}/users/profile`, {
+    const response = await fetch(`${API_BASE_URL}/users/me`, {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -138,13 +161,16 @@ export async function updateUserProfileApi(payload: UserProfileUpdatePayload): P
 }
 
 /**
- * Đổi mật khẩu qua API /users/change-password
+ * Đổi mật khẩu qua API PUT /users/change-password
  */
-export async function changePasswordApi(newPassword: string): Promise<any> {
+export async function changePasswordApi(payload: ChangePasswordPayload): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/users/change-password`, {
-        method: "POST",
+        method: "PUT",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ new_password: newPassword }),
+        body: JSON.stringify({
+            current_password: payload.current_password,
+            new_password: payload.new_password,
+        }),
     });
 
     const data = await response.json().catch(() => ({}));
