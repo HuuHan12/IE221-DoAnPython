@@ -2,4 +2,6 @@
 name = "ie221-doanpython"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "myapplication>=0.1.0",
+]
