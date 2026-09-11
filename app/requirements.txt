@@ -4,24 +4,16 @@ pydantic==2.13.4
 python-dotenv==1.2.2
 python-multipart==0.0.32
 PyYAML==6.0.3
-<<<<<<< HEAD
 email-validator==2.3.0
 supabase==2.31.0
 psycopg[binary]==3.3.4
 pandas==3.0.5
-=======
 starlette==1.6.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 uvicorn==0.52.1
 watchfiles==1.2.0
-<<<<<<< HEAD
 websockets>=11,<13
-=======
 websockets>=15,<16
->>>>>>> 52ea522f948309bb59e1c732478b6e3d0ff9ec4c
-fastapi>=0.100.0
-uvicorn>=0.20.0
->>>>>>> dae9bf8 (toan update api)
 geoclip-vietnam==1.0.2
 httpx2==2.12.0
