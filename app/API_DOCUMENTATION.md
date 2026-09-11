@@ -159,11 +159,146 @@ Prefix: `/users`
 
 ---
 
+## Payments & Pricing (VietQR)
+Prefix: `/payments`
+
+### GET /payments/plans
+- Auth: none
+- Request: none
+- Response 200:
+  - `status`: `"success"`
+  - `total_plans`: int
+  - `data`: list of plan objects (`code`, `name`, `tagline`, `price`, `formatted_price`, `billing_period`, `scan_limit_per_day`, `features`, `badge`, `is_active`)
+
+### POST /payments/create-qr
+- Auth: optional / Bearer token (defaults to dev user in local)
+- Request JSON:
+  - `plan_code`: string (default `"pro"`)
+  - `duration_months`: int (default `1`)
+- Response 201:
+  - `status`: `"success"`
+  - `order_code`: string (e.g. `"PRO879124"`)
+  - `plan_code`: `"pro"`
+  - `plan_name`: `"Pro"`
+  - `amount`: int (`99000`)
+  - `formatted_amount`: `"99.000 đ"`
+  - `currency`: `"VND"`
+  - `qr_url`: string (VietQR Napas 247 image URL)
+  - `bank_info`: `{ bank_id: "TPB", bank_name: "Ngân hàng TMCP Tiên Phong (TPBank)", account_no: "87971498888", account_name: "DOAN HUU HAN" }`
+  - `payment_content`: string (e.g. `"PRO879124"`)
+  - `expires_at`: ISO 8601 string
+  - `expires_in_seconds`: int (`900`)
+
+### GET /payments/status/{order_code}
+- Path param: `order_code` (string)
+- Auth: none
+- Response 200:
+  - `status`: `"success"`
+  - `order_code`: string
+  - `order_status`: `"pending"` | `"completed"` | `"expired"` | `"cancelled"`
+  - `plan_code`: string
+  - `amount`: int
+  - `is_completed`: boolean
+  - `completed_at`: string | null
+
+### POST /payments/simulate-success
+- Auth: none
+- Request JSON: `{ "order_code": string }`
+- Behavior: Marks order as `completed` and activates 30-day Pro subscription for user.
+- Response 200: `{ status: "success", order_code, order_status: "completed", is_completed: true, completed_at }`
+
+### GET /payments/my-subscription
+- Auth: required / dev user
+- Response 200:
+  - `{ status: "success", user_id, plan_code, plan_name, subscription_status, scan_limit_per_day, start_date, end_date, days_remaining, is_active }`
+
+---
+
+## Contact & Support
+Prefix: `/contact`
+
+### GET /contact/subjects
+- Path: `/contact/subjects`
+- Auth: none (public)
+- Response 200:
+  - `status`: `"success"`
+  - `subjects`: `["Tư vấn gói cước", "Báo lỗi kỹ thuật", "Hợp tác phát triển", "Góp ý tính năng", "Khác"]`
+
+### POST /contact/submit
+- Path: `/contact/submit`
+- Auth: required (`get_current_user` — người dùng phải có tài khoản tồn tại trong `public.users`)
+- Request JSON:
+  - `full_name`: string (2-100 ký tự, required)
+  - `email`: string (email format, required)
+  - `subject`: string (chủ đề, required)
+  - `phone`: string | null (tùy chọn)
+  - `message`: string (5-3000 ký tự, required)
+- Responses:
+  - 201: `{ "status": "success", "message": "...", "data": { "id", "user_id", "full_name", "email", "phone", "subject", "message", "status", "created_at" } }`
+  - 401: Unauthorized (Chưa đăng nhập hoặc tài khoản không tồn tại trong hệ thống)
+  - 422: Validation error
+- Behavior: Lưu bản ghi vào bảng `contact_messages` và tự động kích hoạt `BackgroundTasks` gửi thông báo chi tiết qua Telegram Bot.
+
+---
+
+## Notifications
+Prefix: `/notifications`
+
+### GET /notifications/unread-count
+- Path: `/notifications/unread-count`
+- Auth: required (`get_current_user`)
+- Response 200:
+  - `{ "status": "success", "unread_count": int }`
+  - Mục đích: Dùng cho Header hiển thị chấm đỏ trên biểu tượng Quả chuông.
+
+### GET /notifications
+- Path: `/notifications`
+- Auth: required (`get_current_user`)
+- Query params:
+  - `unread_only`: boolean (default `false`)
+  - `limit`: int (default `20`, max `100`)
+- Response 200:
+  - `{ "status": "success", "unread_count": int, "total": int, "data": [ { "id", "user_id", "type", "title", "content", "is_read", "read_at", "created_at" } ] }`
+
+### PATCH /notifications/{notification_id}/read
+- Path: `/notifications/{notification_id}/read`
+- Auth: required (`get_current_user`)
+- Response 200:
+  - `{ "status": "success", "message": "Đã đánh dấu thông báo là đã đọc." }`
+
+### PATCH /notifications/read-all
+- Path: `/notifications/read-all`
+- Auth: required (`get_current_user`)
+- Response 200:
+  - `{ "status": "success", "message": "Đã đánh dấu tất cả thông báo là đã đọc." }`
+
+---
+
+## Achievements
+Prefix: `/achievements`
+
+### GET /achievements/my
+- Path: `/achievements/my`
+- Auth: required (`get_current_user`)
+- Response 200:
+  - `{ "status": "success", "total_achievements": int, "unlocked_count": int, "completion_rate": float, "data": [ { "id", "code", "name", "description", "achievement_type", "target_value", "progress", "progress_percent", "is_unlocked", "unlocked_at" } ] }`
+  - Mục đích: Cung cấp toàn bộ 7 danh hiệu chuẩn, tính toán % tiến độ và trạng thái mở khóa cho trang Profile.
+
+### POST /achievements/record-checkin
+- Path: `/achievements/record-checkin`
+- Auth: required (`get_current_user`)
+- Response 200:
+  - `{ "status": "success", "message": "...", "total_checkins": int, "new_unlocked": [ "STREAK_1", ... ] }`
+  - Hành vi: Tự động tăng số lần check-in, mở khóa huy hiệu khi đạt mốc và kích hoạt thông báo quả chuông Header.
+
+---
+
 ## How to use this doc
 - This is a concise reference; use the code in `app/api/*.py` for exact behavior and field names.
-- For auth flows: check `app/auth/dependencies.py` for `get_current_user` behavior and `DEV_SKIP_SUPABASE_AUTH` dev-mode.
+- For auth flows: check `app/core/security.py` and `app/database/supabase.py` for `get_current_user`.
 - For direct Postgres fallbacks and helpers see `app/database/pg.py`.
 
 ---
 
-Generated on: 2026-08-23
+Generated on: 2026-09-11
+

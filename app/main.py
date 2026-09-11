@@ -14,6 +14,10 @@ from app.api import gis
 from app.api import media
 from app.api import history
 from app.api import statistics
+from app.api import payments
+from app.api import contact
+from app.api import notifications
+from app.api import achievements
 
 
 app = FastAPI(
@@ -82,6 +86,10 @@ app.include_router(gis.router)
 app.include_router(media.router)
 app.include_router(history.router)
 app.include_router(statistics.router)
+app.include_router(payments.router)
+app.include_router(contact.router)
+app.include_router(notifications.router)
+app.include_router(achievements.router)
 
 
 if __name__ == "__main__":
