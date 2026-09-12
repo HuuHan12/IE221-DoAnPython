@@ -1,17 +1,21 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { loginUserApi } from "../service/userService";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { getApiErrorMessage, loginUserApi } from "../service/userService";
 import "../css/Login.css";
 
 function Login() {
     const navigate = useNavigate();
+    const location = useLocation();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [successMsg] = useState(location.state?.successMessage || "");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (loading) return;
+
         setError("");
 
         if (!email.trim() || !password) {
@@ -24,7 +28,7 @@ function Login() {
             await loginUserApi({ email: email.trim(), password });
             navigate("/dashboard");
         } catch (err) {
-            setError(err.message || "Đăng nhập không thành công. Vui lòng thử lại.");
+            setError(getApiErrorMessage(err, "Đăng nhập không thành công. Vui lòng thử lại."));
         } finally {
             setLoading(false);
         }
@@ -40,8 +44,14 @@ function Login() {
                     <p>Đăng nhập để tiếp tục khám phá thế giới cùng AI</p>
 
                     {error && (
-                        <div style={{ padding: "10px 14px", backgroundColor: "#fef2f2", color: "#ef4444", borderRadius: "10px", fontSize: "0.85rem", marginBottom: "16px", border: "1px solid #fecaca" }}>
+                        <div role="alert" style={{ padding: "10px 14px", backgroundColor: "#fef2f2", color: "#ef4444", borderRadius: "10px", fontSize: "0.85rem", marginBottom: "16px", border: "1px solid #fecaca" }}>
                             {error}
+                        </div>
+                    )}
+
+                    {successMsg && (
+                        <div role="status" style={{ padding: "10px 14px", backgroundColor: "#ecfdf5", color: "#047857", borderRadius: "10px", fontSize: "0.85rem", marginBottom: "16px", border: "1px solid #a7f3d0" }}>
+                            {successMsg}
                         </div>
                     )}
 
@@ -53,6 +63,8 @@ function Login() {
                             placeholder="Nhập email của bạn"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
+                            maxLength={255}
+                            disabled={loading}
                         />
 
                         <label>Mật khẩu</label>
@@ -62,6 +74,8 @@ function Login() {
                             placeholder="Nhập mật khẩu của bạn"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
+                            maxLength={128}
+                            disabled={loading}
                         />
 
                         <div className="forgot-password">Quên mật khẩu?</div>

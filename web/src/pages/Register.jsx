@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerUserApi } from "../service/userService";
+import { getApiErrorMessage, registerUserApi } from "../service/userService";
 import "../css/Register.css";
 
 function Register() {
@@ -12,14 +12,28 @@ function Register() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [successMsg, setSuccessMsg] = useState("");
+    const [requiresEmailConfirmation, setRequiresEmailConfirmation] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (loading) return;
+
         setError("");
         setSuccessMsg("");
+        setRequiresEmailConfirmation(false);
 
         if (!email.trim() || !password) {
             setError("Vui lòng nhập đầy đủ email và mật khẩu.");
+            return;
+        }
+
+        if (fullName.trim().length > 255) {
+            setError("Họ và tên không được vượt quá 255 ký tự.");
+            return;
+        }
+
+        if (password.length < 8 || password.length > 128) {
+            setError("Mật khẩu phải có từ 8 đến 128 ký tự.");
             return;
         }
 
@@ -30,18 +44,28 @@ function Register() {
 
         try {
             setLoading(true);
-            await registerUserApi({
+            const response = await registerUserApi({
                 email: email.trim(),
                 password,
                 full_name: fullName.trim() || undefined,
             });
 
-            setSuccessMsg("Tạo tài khoản thành công! Đang chuyển hướng tới trang Đăng nhập...");
-            setTimeout(() => {
-                navigate("/login");
-            }, 1800);
+            const needsConfirmation = Boolean(response?.requires_email_confirmation);
+            const message = response?.message || (
+                needsConfirmation
+                    ? "Tài khoản đã được tạo. Vui lòng xác nhận email trước khi đăng nhập."
+                    : "Tạo tài khoản thành công."
+            );
+            setSuccessMsg(message);
+            setRequiresEmailConfirmation(needsConfirmation);
+            setPassword("");
+            setConfirmPassword("");
+
+            if (!needsConfirmation) {
+                navigate("/login", { state: { successMessage: message } });
+            }
         } catch (err) {
-            setError(err.message || "Đăng ký không thành công. Vui lòng thử lại.");
+            setError(getApiErrorMessage(err, "Đăng ký không thành công. Vui lòng thử lại."));
         } finally {
             setLoading(false);
         }
@@ -57,14 +81,19 @@ function Register() {
                     <p>Đăng ký để bắt đầu khám phá thế giới cùng AI</p>
 
                     {error && (
-                        <div style={{ padding: "10px 14px", backgroundColor: "#fef2f2", color: "#ef4444", borderRadius: "10px", fontSize: "0.85rem", marginBottom: "16px", border: "1px solid #fecaca" }}>
+                        <div role="alert" style={{ padding: "10px 14px", backgroundColor: "#fef2f2", color: "#ef4444", borderRadius: "10px", fontSize: "0.85rem", marginBottom: "16px", border: "1px solid #fecaca" }}>
                             {error}
                         </div>
                     )}
 
                     {successMsg && (
-                        <div style={{ padding: "10px 14px", backgroundColor: "#ecfdf5", color: "#047857", borderRadius: "10px", fontSize: "0.85rem", marginBottom: "16px", border: "1px solid #a7f3d0" }}>
+                        <div role="status" style={{ padding: "10px 14px", backgroundColor: "#ecfdf5", color: "#047857", borderRadius: "10px", fontSize: "0.85rem", marginBottom: "16px", border: "1px solid #a7f3d0" }}>
                             {successMsg}
+                            {requiresEmailConfirmation && (
+                                <div style={{ marginTop: "8px" }}>
+                                    <Link to="/login">Đến trang đăng nhập</Link>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -77,6 +106,7 @@ function Register() {
                                 placeholder="Nhập họ và tên của bạn"
                                 value={fullName}
                                 onChange={(e) => setFullName(e.target.value)}
+                                maxLength={255}
                             />
                         </div>
 
@@ -101,6 +131,8 @@ function Register() {
                                 placeholder="Nhập mật khẩu của bạn"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                minLength={8}
+                                maxLength={128}
                             />
                         </div>
 
@@ -113,6 +145,8 @@ function Register() {
                                 placeholder="Nhập lại mật khẩu"
                                 value={confirmPassword}
                                 onChange={(e) => setConfirmPassword(e.target.value)}
+                                minLength={8}
+                                maxLength={128}
                             />
                         </div>
 
