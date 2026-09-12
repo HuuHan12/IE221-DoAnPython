@@ -47,10 +47,8 @@ def create_user_notification(
     return None
 
 
-# =============================================================
-# 1. GET UNREAD COUNT (Số thông báo chưa đọc - Cho quả chuông)
-# =============================================================
 
+# 1. Số thông báo chưa đọc
 @router.get(
     "/unread-count",
     response_model=UnreadCountResponse,
@@ -78,10 +76,8 @@ def get_unread_count(current_user=Depends(get_current_user)):
         )
 
 
-# =============================================================
-# 2. GET ALL NOTIFICATIONS (Danh sách thông báo)
-# =============================================================
 
+# 2. Danh sách thông báo
 @router.get(
     "",
     response_model=NotificationListResponse,
@@ -158,10 +154,8 @@ def get_notifications(
         )
 
 
-# =============================================================
-# 3. MARK ALL AS READ (Đánh dấu tất cả là đã đọc)
-# =============================================================
 
+# 3. Đánh dấu tất cả là đã đọc
 @router.patch(
     "/read-all",
     response_model=MarkReadResponse,
@@ -190,10 +184,8 @@ def mark_all_notifications_as_read(current_user=Depends(get_current_user)):
         )
 
 
-# =============================================================
-# 4. MARK SINGLE AS READ (Đánh dấu 1 thông báo cụ thể là đã đọc)
-# =============================================================
 
+# 4. Đánh dấu 1 thông báo cụ thể là đã đọc
 @router.patch(
     "/{notification_id}/read",
     response_model=MarkReadResponse,

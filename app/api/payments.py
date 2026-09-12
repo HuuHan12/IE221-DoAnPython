@@ -46,10 +46,8 @@ def _build_vietqr_url(bank_id: str, account_no: str, amount: int, content: str, 
     )
 
 
-# =============================================================
-# 1. GET ALL PRICING PLANS (Lấy dữ liệu Bảng giá từ Supabase)
-# =============================================================
 
+# 1. Lấy dữ liệu Bảng giá
 @router.get(
     "/plans",
     response_model=PricingPlansResponse,
@@ -112,10 +110,8 @@ def get_pricing_plans():
         )
 
 
-# =============================================================
-# 2. CREATE PAYMENT QR (Tạo đơn hàng & sinh mã VietQR)
-# =============================================================
 
+# 2. Tạo đơn hàng & sinh mã VietQR
 @router.post(
     "/create-qr",
     response_model=PaymentQRResponse,
@@ -232,10 +228,7 @@ def create_payment_qr(
     )
 
 
-# =============================================================
-# 3. CHECK PAYMENT STATUS (Kiểm tra trạng thái đơn từ Supabase)
-# =============================================================
-
+# 3. Kiểm tra trạng thái đơn
 @router.get(
     "/status/{order_code}",
     response_model=PaymentStatusResponse,
@@ -290,10 +283,8 @@ def check_payment_status(order_code: str):
     )
 
 
-# =============================================================
-# 4. SIMULATE SUCCESS PAYMENT (Giả lập thanh toán cho Demo đồ án)
-# =============================================================
 
+# 4. Giả lập thanh toán
 @router.post(
     "/simulate-success",
     response_model=PaymentStatusResponse,
@@ -411,10 +402,8 @@ def simulate_payment_success(
     )
 
 
-# =============================================================
-# 5. GET CURRENT USER SUBSCRIPTION (Lấy gói cước hiện tại của user)
-# =============================================================
 
+# 5. Lấy gói cước hiện tại của user
 @router.get(
     "/my-subscription",
     response_model=UserSubscriptionResponse,

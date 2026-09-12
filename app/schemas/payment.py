@@ -3,10 +3,8 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
-# -------------------------------------------------------------
-# 1. PRICING PLANS SCHEMAS
-# -------------------------------------------------------------
 
+# 1. PRICING PLANS SCHEMAS
 class PricingPlanItem(BaseModel):
     code: str = Field(..., description="Mã định danh gói (free, pro, enterprise)")
     name: str = Field(..., description="Tên gói hiển thị (Free, Pro, Enterprise)")
@@ -31,9 +29,8 @@ class PricingPlansResponse(BaseModel):
     data: List[PricingPlanItem]
 
 
-# -------------------------------------------------------------
-# 2. PAYMENT QR SCHEMAS
-# -------------------------------------------------------------
+
+# 2. thanh toán QR
 
 class CreatePaymentQRRequest(BaseModel):
     plan_code: str = Field(default="pro", description="Mã gói cần đăng ký (mặc định: pro)")
@@ -62,10 +59,8 @@ class PaymentQRResponse(BaseModel):
     expires_in_seconds: int = Field(default=900, description="Số giây còn lại trước khi hết hạn (15 phút)")
 
 
-# -------------------------------------------------------------
-# 3. PAYMENT STATUS & SUBSCRIPTION SCHEMAS
-# -------------------------------------------------------------
 
+# 3. trạng thái thanh toán & đăng ký
 class PaymentStatusResponse(BaseModel):
     status: str = Field(default="success")
     order_code: str = Field(..., description="Mã đơn hàng")

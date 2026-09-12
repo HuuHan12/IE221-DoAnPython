@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/achievements", tags=["Achievements"])
 
-# Danh sách 7 danh hiệu chuẩn khớp 100% với giao diện Achievements.jsx
+# Danh sách 7 danh hiệu
 DEFAULT_ACHIEVEMENTS = [
     {
         "code": "STREAK_1",
@@ -93,10 +93,8 @@ def _ensure_achievements_exist(supabase) -> List[dict]:
         return []
 
 
-# =============================================================
-# 1. GET MY ACHIEVEMENTS (Lấy danh sách 7 danh hiệu của User)
-# =============================================================
 
+# 1. Lấy danh sách danh hiệu của User
 @router.get(
     "/my",
     response_model=UserAchievementsResponse,
@@ -171,10 +169,8 @@ def get_my_achievements(current_user=Depends(get_current_user)):
         )
 
 
-# =============================================================
-# 2. RECORD CHECKIN (Ghi nhận checkin và tự động mở khóa huy hiệu)
-# =============================================================
 
+# 2. Ghi nhận checkin và tự động mở khóa huy hiệu
 @router.post(
     "/record-checkin",
     response_model=RecordCheckinResponse,
