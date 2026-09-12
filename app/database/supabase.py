@@ -4,7 +4,7 @@ from types import SimpleNamespace
 
 from dotenv import load_dotenv
 from fastapi import HTTPException
-from supabase import Client, create_client
+from supabase import Client, ClientOptions, create_client
 
 
 # ============================================================
@@ -76,11 +76,6 @@ if not SUPABASE_SERVICE_ROLE_KEY:
 # CLIENTS
 # ============================================================
 
-_anon_client = create_client(
-    SUPABASE_URL,
-    SUPABASE_KEY
-)
-
 _admin_client = create_client(
     SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY
@@ -98,8 +93,18 @@ def get_supabase_client() -> Client:
     """
     Client dùng public/publishable key.
     Dùng cho các thao tác thông thường/authentication.
+
+    Auth requests receive a fresh, non-persisted client so one user's
+    sign-in/sign-up session cannot leak into another request.
     """
-    return _anon_client
+    return create_client(
+        SUPABASE_URL,
+        SUPABASE_KEY,
+        options=ClientOptions(
+            auto_refresh_token=False,
+            persist_session=False,
+        ),
+    )
 
 
 # ============================================================

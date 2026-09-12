@@ -5,7 +5,7 @@ import uuid
 from pathlib import Path
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
-from app.database.supabase import get_supabase_admin_client
+from app.database.supabase import SUPABASE_URL, get_supabase_admin_client
 from app.utils.geoclip import predict_image
 
 
@@ -22,6 +22,7 @@ ALLOWED_CONTENT_TYPES = {
 }
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
+SIGNED_URL_EXPIRES_IN = 3600
 
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "uploads")
 DEV_USER_ID = os.getenv("DEV_USER_ID")
@@ -87,32 +88,145 @@ def build_storage_path(filename: str) -> str:
     return f"{DEV_USER_ID}/{int(time.time())}_{filename}"
 
 
-def get_public_url(client, bucket: str, storage_path: str) -> str:
-    response = client.storage.from_(bucket).get_public_url(storage_path)
+def _storage_response_value(response, *keys: str):
+    """Return a value from the response shapes used by supabase-py."""
 
     if isinstance(response, dict):
-        url = (
-            response.get("publicUrl")
-            or response.get("publicURL")
-            or response.get("public_url")
+        for key in keys:
+            if key in response and response[key] is not None:
+                value = response[key]
+                return value
+
+        nested = response.get("data")
+        if isinstance(nested, dict):
+            for key in keys:
+                if key in nested and nested[key] is not None:
+                    value = nested[key]
+                    return value
+
+    for key in keys:
+        value = getattr(response, key, None)
+        if value is not None:
+            return value
+
+    return None
+
+
+def get_bucket_public(client, bucket: str) -> bool:
+    """Read bucket visibility once and fail clearly when unavailable."""
+
+    try:
+        response = client.storage.get_bucket(bucket)
+    except Exception as exc:
+        raise RuntimeError(
+            f"Unable to inspect Supabase Storage bucket '{bucket}': {exc}"
+        ) from exc
+
+    public = _storage_response_value(response, "public")
+    if isinstance(public, str):
+        public = public.strip().lower() in {"1", "true", "yes", "on"}
+
+    if not isinstance(public, bool):
+        raise RuntimeError(
+            f"Supabase Storage bucket '{bucket}' did not return a public flag"
         )
 
-        if url:
-            return url
+    return public
 
-    if hasattr(response, "public_url"):
-        return response.public_url
 
-    # Supabase public storage URL fallback
-    return (
-        f"{os.getenv('SUPABASE_URL')}/storage/v1/object/public/"
-        f"{bucket}/{storage_path}"
+def get_public_url(client, bucket: str, storage_path: str) -> str:
+    """Build a public object URL from the Storage API response."""
+
+    response = client.storage.from_(bucket).get_public_url(storage_path)
+    url = _storage_response_value(
+        response,
+        "publicUrl",
+        "publicURL",
+        "public_url",
     )
+
+    # Supabase versions differ: some return the URL directly as a string.
+    if isinstance(response, str) and response.strip():
+        url = response.strip()
+
+    if url:
+        return str(url)
+
+    if SUPABASE_URL:
+        return (
+            f"{SUPABASE_URL.rstrip('/')}/storage/v1/object/public/"
+            f"{bucket}/{storage_path}"
+        )
+
+    raise RuntimeError(
+        f"Supabase Storage did not return a public URL for '{storage_path}'"
+    )
+
+
+def get_signed_url(client, bucket: str, storage_path: str) -> str:
+    """Create a short-lived URL for an object in a private bucket."""
+
+    try:
+        response = (
+            client.storage.from_(bucket).create_signed_url(
+                storage_path,
+                SIGNED_URL_EXPIRES_IN,
+            )
+        )
+    except Exception as exc:
+        raise RuntimeError(
+            f"Unable to create a signed URL for '{storage_path}': {exc}"
+        ) from exc
+
+    url = _storage_response_value(
+        response,
+        "signedURL",
+        "signedUrl",
+        "signed_url",
+    )
+    if not url:
+        raise RuntimeError(
+            f"Supabase Storage did not return a signed URL for '{storage_path}'"
+        )
+
+    return str(url)
+
+
+def get_display_url(
+    client,
+    bucket: str,
+    storage_path: str,
+    bucket_public: bool | None = None,
+) -> str:
+    """Return a usable object URL without persisting private signed URLs."""
+
+    if bucket_public is None:
+        bucket_public = get_bucket_public(client, bucket)
+
+    if bucket_public:
+        return get_public_url(client, bucket, storage_path)
+
+    return get_signed_url(client, bucket, storage_path)
 
 
 def remove_storage_file(client, bucket: str, storage_path: str):
     try:
         client.storage.from_(bucket).remove([storage_path])
+    except Exception:
+        pass
+
+
+def remove_media_record(client, media_id: str):
+    """Best-effort cleanup that never hides the original upload error."""
+
+    try:
+        (
+            client.table("media_files")
+            .delete()
+            .eq("id", media_id)
+            .eq("user_id", DEV_USER_ID)
+            .execute()
+        )
     except Exception:
         pass
 
@@ -204,6 +318,7 @@ def list_media():
     client = get_db()
 
     try:
+        bucket_public = get_bucket_public(client, SUPABASE_BUCKET)
         gallery_response = (
             client
             .table("gallery_items")
@@ -235,16 +350,33 @@ def list_media():
 
         for row in gallery_response.data or []:
             media = row.get("media_files") or {}
+            if isinstance(media, list):
+                media = media[0] if media else {}
+
+            storage_path = media.get("storage_path")
+            if not storage_path:
+                raise RuntimeError(
+                    f"Gallery item {row.get('id', '<unknown>')} has no storage path"
+                )
+
+            display_url = get_display_url(
+                client,
+                SUPABASE_BUCKET,
+                storage_path,
+                bucket_public=bucket_public,
+            )
 
             items.append(
                 {
                     "id": media.get("id"),
                     "gallery_id": row.get("id"),
-                    "url": media.get("file_url"),
+                    "url": display_url,
+                    "file_url": display_url,
                     "file_name": media.get("file_name"),
                     "mime_type": media.get("mime_type"),
                     "size": media.get("file_size"),
-                    "storage_path": media.get("storage_path"),
+                    "file_size": media.get("file_size"),
+                    "storage_path": storage_path,
                     "note": row.get("note"),
                     "place_id": row.get("place_id"),
                     "taken_at": row.get("taken_at"),
@@ -273,17 +405,20 @@ async def upload_media(
     file: UploadFile = File(...),
     note: str | None = Form(None),
     scope: str = Form("iconic"),
+    recognize: bool = Form(False),
 ):
     client = get_db()
 
     data = await file.read()
     content_type = validate_file(file, data)
-    recognition = recognize_place(
-        client,
-        data,
-        file.filename,
-        scope,
-    )
+    recognition = None
+    if recognize:
+        recognition = recognize_place(
+            client,
+            data,
+            file.filename,
+            scope,
+        )
 
     filename = sanitize_filename(file.filename)
     storage_path = build_storage_path(filename)
@@ -292,6 +427,8 @@ async def upload_media(
     media_id = None
 
     try:
+        bucket_public = get_bucket_public(client, SUPABASE_BUCKET)
+
         # ----------------------------------------------------
         # 1. Upload to Supabase Storage
         # ----------------------------------------------------
@@ -306,10 +443,11 @@ async def upload_media(
 
         storage_uploaded = True
 
-        public_url = get_public_url(
+        display_url = get_display_url(
             client,
             SUPABASE_BUCKET,
             storage_path,
+            bucket_public=bucket_public,
         )
 
         # ----------------------------------------------------
@@ -319,7 +457,9 @@ async def upload_media(
         media_insert = {
             "user_id": DEV_USER_ID,
             "file_name": file.filename or filename,
-            "file_url": public_url,
+            # Signed URLs expire; derive them from storage_path for private
+            # buckets instead of persisting them in media_files.
+            "file_url": display_url if bucket_public else None,
             "mime_type": content_type,
             "file_size": len(data),
             "storage_path": storage_path,
@@ -347,7 +487,7 @@ async def upload_media(
         gallery_insert = {
             "user_id": DEV_USER_ID,
             "media_id": media_id,
-            "place_id": recognition["place_id"],
+            "place_id": recognition["place_id"] if recognition else None,
             "note": note,
         }
 
@@ -368,13 +508,27 @@ async def upload_media(
         return {
             "media": media,
             "gallery": gallery,
-            "public_url": public_url,
+            # Kept for frontend/backward compatibility. For a private bucket
+            # this is a signed URL and is intentionally not stored in DB.
+            "public_url": display_url,
             "recognition": recognition,
         }
 
+    except HTTPException:
+        if media_id:
+            remove_media_record(client, media_id)
+        if storage_uploaded:
+            remove_storage_file(
+                client,
+                SUPABASE_BUCKET,
+                storage_path,
+            )
+        raise
+
     except Exception as exc:
-        # DB failed after Storage succeeded.
-        # Remove orphaned Storage object.
+        # DB failed after Storage succeeded. Remove both potential orphans.
+        if media_id:
+            remove_media_record(client, media_id)
         if storage_uploaded:
             remove_storage_file(
                 client,
@@ -385,7 +539,7 @@ async def upload_media(
         raise HTTPException(
             status_code=500,
             detail=f"Upload failed: {exc}",
-        )
+        ) from exc
 
 
 # ============================================================

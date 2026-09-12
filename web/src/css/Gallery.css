@@ -39,6 +39,16 @@
     transform: translateY(-1px);
 }
 
+.btn-upload-cloud:disabled,
+.action-icon-btn:disabled,
+.page-num-btn:disabled,
+.btn-modal-cancel:disabled,
+.btn-modal-delete:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+}
+
 .gallery-body-padding {
     padding: 0 32px 32px 32px;
     display: flex;
@@ -122,6 +132,70 @@
     font-weight: 700;
 }
 
+.gallery-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+}
+
+.gallery-alert-error {
+    color: #991B1B;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+}
+
+.gallery-alert button,
+.gallery-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    border: 1px solid currentColor;
+    border-radius: 8px;
+    padding: 6px 10px;
+    background: transparent;
+    color: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.gallery-alert button:disabled,
+.gallery-retry-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.gallery-error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 220px;
+    padding: 30px;
+    border: 1px solid #FECACA;
+    border-radius: var(--radius-lg);
+    background: #FFF7F7;
+    color: #991B1B;
+    text-align: center;
+}
+
+.gallery-error-state p {
+    margin: 0;
+    font-size: 14px;
+}
+
+.gallery-error-state .gallery-retry-btn {
+    margin-left: 0;
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+    background: #FFFFFF;
+}
+
 /* 4-column Photo Grid (8 items per page) */
 .photo-grid-4cols {
     display: grid;
@@ -151,6 +225,17 @@
     overflow: hidden;
     background-color: #F3F4F6;
     position: relative;
+}
+
+.photo-missing-image {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #9CA3AF;
+    font-size: 12px;
 }
 
 .photo-img-element {
@@ -234,6 +319,22 @@
 
 .action-icon-btn.delete-btn:hover {
     background-color: #FEE2E2;
+}
+
+.photo-action-error {
+    display: block;
+    margin-top: 8px;
+    color: #DC2626;
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+.spin-animation {
+    animation: gallery-spin 0.8s linear infinite;
+}
+
+@keyframes gallery-spin {
+    to { transform: rotate(360deg); }
 }
 
 /* Empty State */
@@ -396,6 +497,20 @@
     color: #6B7280;
     margin: 0 0 24px 0;
     line-height: 1.5;
+}
+
+.modal-error-message {
+    width: 100%;
+    box-sizing: border-box;
+    margin: -8px 0 18px;
+    padding: 9px 10px;
+    border: 1px solid #FECACA;
+    border-radius: 8px;
+    background: #FEF2F2;
+    color: #B91C1C;
+    font-size: 12px;
+    line-height: 1.4;
+    text-align: left;
 }
 
 .modal-actions-row {

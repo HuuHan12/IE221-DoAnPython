@@ -75,6 +75,11 @@ class UserResponse(BaseModel):
     profile: Optional[UserProfileResponse] = None
 
 
+class RegisterResponse(UserResponse):
+    message: str
+    requires_email_confirmation: bool = False
+
+
 class LoginResponse(BaseModel):
     access_token: str
     refresh_token: Optional[str] = None

@@ -1,7 +1,9 @@
 import { Cloud } from "lucide-react";
 
 function StorageProgressBar({ usedGB = 2.45, totalGB = 10 }) {
-    const percentage = ((usedGB / totalGB) * 100).toFixed(1);
+    const safeUsedGB = Number.isFinite(Number(usedGB)) && Number(usedGB) >= 0 ? Number(usedGB) : 0;
+    const safeTotalGB = Number.isFinite(Number(totalGB)) && Number(totalGB) > 0 ? Number(totalGB) : 1;
+    const percentage = Math.min(100, Math.max(0, (safeUsedGB / safeTotalGB) * 100)).toFixed(1);
 
     return (
         <div className="storage-card-section">
@@ -11,7 +13,7 @@ function StorageProgressBar({ usedGB = 2.45, totalGB = 10 }) {
                 </div>
                 <div className="storage-text-details">
                     <span className="storage-title-text">Dung lượng đã sử dụng</span>
-                    <span className="storage-sub-text">{usedGB.toString().replace('.', ',')} GB / {totalGB} GB</span>
+                    <span className="storage-sub-text">{safeUsedGB.toString().replace('.', ',')} GB / {safeTotalGB} GB</span>
                 </div>
             </div>
 
