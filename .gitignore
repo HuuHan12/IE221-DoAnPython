@@ -2,7 +2,7 @@
 __pycache__/
 *.py[cod]
 .vscode/
-.env
+app/.env
 node_modules/
 
 # Logs

@@ -34,6 +34,17 @@ export interface HistoryFilters {
     endDate?: string;
 }
 
+function getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+    };
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+    return headers;
+}
+
 async function parseResponse<T>(response: Response): Promise<T> {
     const data = await response.json().catch(() => ({})) as T & {
         detail?: string;
@@ -62,15 +73,46 @@ export async function fetchHistory(
         params.set("end_date", filters.endDate);
     }
 
-    const response = await fetch(`${API_BASE_URL}/history?${params.toString()}`);
-    return parseResponse<HistoryListResponse>(response);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/history?${params.toString()}`, {
+            headers: getAuthHeaders(),
+            signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+        return await parseResponse<HistoryListResponse>(response);
+    } catch (err: any) {
+        clearTimeout(timeoutId);
+        return {
+            items: [],
+            page: Number(filters.page || 1),
+            page_size: Number(filters.pageSize || 10),
+            total_records: 0,
+            total_pages: 0,
+        };
+    }
 }
 
 export async function fetchHistoryDetail(id: string): Promise<HistoryItem> {
-    const response = await fetch(
-        `${API_BASE_URL}/history/${encodeURIComponent(id)}`,
-    );
-    return parseResponse<HistoryItem>(response);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/history/${encodeURIComponent(id)}`,
+            {
+                headers: getAuthHeaders(),
+                signal: controller.signal,
+            }
+        );
+        clearTimeout(timeoutId);
+        return await parseResponse<HistoryItem>(response);
+    } catch (err: any) {
+        clearTimeout(timeoutId);
+        throw err;
+    }
 }
 
 export async function deleteHistory(
@@ -78,7 +120,10 @@ export async function deleteHistory(
 ): Promise<{ deleted: boolean; history_id: string }> {
     const response = await fetch(
         `${API_BASE_URL}/history/${encodeURIComponent(id)}`,
-        { method: "DELETE" },
+        {
+            method: "DELETE",
+            headers: getAuthHeaders(),
+        },
     );
     return parseResponse(response);
 }

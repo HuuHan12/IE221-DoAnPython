@@ -131,9 +131,9 @@ function HistoryPage() {
 
                     <div className="history-table-card-section">
                         {loading ? (
-                            <div className="history-empty-state">
-                                <Clock size={48} color="#9CA3AF" />
-                                <p>Đang tải lịch sử tìm kiếm...</p>
+                            <div className="api-loading-overlay">
+                                <div className="api-loading-spinner"></div>
+                                <p>Đang truy vấn lịch sử tìm kiếm từ máy chủ API...</p>
                             </div>
                         ) : (
                             <HistoryTable
