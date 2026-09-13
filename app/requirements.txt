@@ -12,7 +12,6 @@ starlette==1.6.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
 watchfiles==1.2.0
-websockets>=11,<13
 websockets>=15,<16
 geoclip-vietnam==1.0.2
 httpx2==2.12.0
