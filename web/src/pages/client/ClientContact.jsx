@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
     Mail,
     Phone,
@@ -8,38 +9,124 @@ import {
     Send,
     ChevronDown,
     CheckCircle2,
+    AlertCircle,
     ExternalLink,
-    MessageSquareQuote
+    MessageSquareQuote,
+    Loader2
 } from "lucide-react";
 import ClientLayout from "../../components/client/ClientLayout";
+import {
+    fetchContactSubjectsApi,
+    submitContactMessageApi,
+} from "../../service/contactService";
 import "../../css/Client.css";
 
 function ClientContact() {
+    const location = useLocation();
+
+    // Danh sách chủ đề từ API (với fallback mặc định an toàn)
+    const [subjects, setSubjects] = useState([
+        "Tư vấn gói cước",
+        "Báo lỗi kỹ thuật",
+        "Hợp tác phát triển",
+        "Góp ý tính năng",
+        "Khác"
+    ]);
+
     const [formData, setFormData] = useState({
         name: "",
         email: "",
-        subject: "Gặp kết quả nhận diện chưa chính xác",
+        subject: "Tư vấn gói cước",
         phone: "",
         message: ""
     });
-    const [submitted, setSubmitted] = useState(false);
+
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [successMessage, setSuccessMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
     const [openFaq, setOpenFaq] = useState(null);
+
+    // Tải danh sách chủ đề động từ API & Tự động điền thông tin người dùng nếu đã đăng nhập
+    useEffect(() => {
+        const loadInitialData = async () => {
+            try {
+                const res = await fetchContactSubjectsApi();
+                if (res?.subjects?.length) {
+                    setSubjects(res.subjects);
+                }
+            } catch {
+                // Giữ danh sách mặc định nếu mạng offline
+            }
+
+            // Tự động điền tên và email từ tài khoản người dùng nếu đã đăng nhập
+            try {
+                const rawUser = localStorage.getItem("user_info");
+                if (rawUser) {
+                    const user = JSON.parse(rawUser);
+                    setFormData((prev) => ({
+                        ...prev,
+                        name: prev.name || user.full_name || user.name || "",
+                        email: prev.email || user.email || "",
+                    }));
+                }
+            } catch {
+                // Bỏ qua nếu dữ liệu lưu không hợp lệ
+            }
+
+            // Kiểm tra tham số ?subject= trên URL (ví dụ chuyển từ trang Bảng giá sang)
+            const queryParams = new URLSearchParams(location.search);
+            const subjectParam = queryParams.get("subject");
+            if (subjectParam) {
+                setFormData((prev) => ({
+                    ...prev,
+                    subject: subjectParam,
+                }));
+            }
+        };
+
+        loadInitialData();
+    }, [location.search]);
 
     const toggleFaq = (index) => {
         setOpenFaq(openFaq === index ? null : index);
     };
 
-    const handleSubmit = (e) => {
+    // Xử lý gửi form liên hệ qua API POST /contact/submit
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setSubmitted(true);
-        setTimeout(() => setSubmitted(false), 4000);
-        setFormData({
-            name: "",
-            email: "",
-            subject: "Gặp kết quả nhận diện chưa chính xác",
-            phone: "",
-            message: ""
-        });
+        setSuccessMessage("");
+        setErrorMessage("");
+
+        try {
+            setIsSubmitting(true);
+            const res = await submitContactMessageApi({
+                full_name: formData.name.trim(),
+                email: formData.email.trim(),
+                subject: formData.subject.trim(),
+                phone: formData.phone?.trim() || undefined,
+                message: formData.message.trim(),
+            });
+
+            setSuccessMessage(
+                res.message || "Gửi lời nhắn thành công! Nhóm dự án sẽ phản hồi cho bạn qua email sớm nhất."
+            );
+
+            // Xóa nội dung lời nhắn & số điện thoại sau khi gửi thành công
+            setFormData((prev) => ({
+                ...prev,
+                phone: "",
+                message: "",
+            }));
+
+            // Tự động ẩn thông báo thành công sau 6 giây
+            setTimeout(() => {
+                setSuccessMessage("");
+            }, 6000);
+        } catch (err) {
+            setErrorMessage(err.message || "Không thể gửi lời nhắn. Vui lòng thử lại sau.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const faqList = [
@@ -79,12 +166,51 @@ function ClientContact() {
                         Các trường có dấu * là bắt buộc. Thông tin chỉ dùng để phản hồi yêu cầu của bạn.
                     </p>
 
-                    {submitted ? (
-                        <div style={{ padding: "20px", backgroundColor: "#ecfdf5", color: "#047857", borderRadius: "14px", display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
-                            <CheckCircle2 size={24} />
-                            <span>Cảm ơn bạn! Tin nhắn của bạn đã được gửi thành công. Chúng tôi sẽ phản hồi trong 24h.</span>
+                    {/* Thông báo thành công */}
+                    {successMessage && (
+                        <div
+                            style={{
+                                padding: "16px 20px",
+                                backgroundColor: "#ecfdf5",
+                                color: "#047857",
+                                border: "1px solid #a7f3d0",
+                                borderRadius: "14px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "12px",
+                                marginBottom: "20px",
+                                fontSize: "14px",
+                                fontWeight: "500",
+                                animation: "fadeInDown 0.25s ease-out",
+                            }}
+                        >
+                            <CheckCircle2 size={22} color="#059669" style={{ flexShrink: 0 }} />
+                            <span>{successMessage}</span>
                         </div>
-                    ) : null}
+                    )}
+
+                    {/* Thông báo lỗi */}
+                    {errorMessage && (
+                        <div
+                            style={{
+                                padding: "16px 20px",
+                                backgroundColor: "#fef2f2",
+                                color: "#991b1b",
+                                border: "1px solid #fecaca",
+                                borderRadius: "14px",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "12px",
+                                marginBottom: "20px",
+                                fontSize: "14px",
+                                fontWeight: "500",
+                                animation: "fadeInDown 0.25s ease-out",
+                            }}
+                        >
+                            <AlertCircle size={22} color="#dc2626" style={{ flexShrink: 0 }} />
+                            <span>{errorMessage}</span>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit}>
                         <div className="contact-form-grid">
@@ -117,16 +243,17 @@ function ClientContact() {
 
                         <div className="contact-form-grid">
                             <div className="contact-form-group">
-                                <label className="contact-form-label">Chủ đề</label>
+                                <label className="contact-form-label">Chủ đề *</label>
                                 <select
                                     value={formData.subject}
                                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                                     className="contact-form-select"
                                 >
-                                    <option value="Gặp kết quả nhận diện chưa chính xác">Gặp kết quả nhận diện chưa chính xác</option>
-                                    <option value="Đề xuất thêm địa danh">Đề xuất thêm địa danh</option>
-                                    <option value="Cần dữ liệu báo cáo môn học">Cần dữ liệu báo cáo môn học</option>
-                                    <option value="Hợp tác / Khác">Hợp tác / Khác</option>
+                                    {subjects.map((sub, idx) => (
+                                        <option key={idx} value={sub}>
+                                            {sub}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
 
@@ -134,7 +261,7 @@ function ClientContact() {
                                 <label className="contact-form-label">Số điện thoại</label>
                                 <input
                                     type="tel"
-                                    placeholder="Không bắt buộc"
+                                    placeholder="Không bắt buộc (ví dụ: 0935901051)"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                     className="client-search-input"
@@ -148,6 +275,7 @@ function ClientContact() {
                             <textarea
                                 rows="5"
                                 required
+                                minLength={5}
                                 placeholder="Mô tả chi tiết vấn đề, kèm tên địa danh hoặc mã kết quả scan nếu có..."
                                 value={formData.message}
                                 onChange={(e) => setFormData({ ...formData, message: e.target.value })}
@@ -161,9 +289,19 @@ function ClientContact() {
                                 type="submit"
                                 className="btn-client-scan"
                                 style={{ borderRadius: "24px", padding: "12px 28px" }}
+                                disabled={isSubmitting}
                             >
-                                <Send size={16} />
-                                <span>Gửi lời nhắn</span>
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 size={16} className="animate-spin" />
+                                        <span>Đang gửi lời nhắn...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Send size={16} />
+                                        <span>Gửi lời nhắn</span>
+                                    </>
+                                )}
                             </button>
 
                             <span style={{ fontSize: "0.78rem", color: "#94a3b8" }}>

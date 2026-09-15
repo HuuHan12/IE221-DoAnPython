@@ -74,11 +74,15 @@ async def get_overview(
         None, 
         description="Ngày bắt đầu (Định dạng YYYY-MM-DD). Mặc định: 30 ngày trước"
     ),
+    from_date_hyphen: Optional[date] = Query(None, alias="from-date", include_in_schema=False),
     to_date: Optional[date] = Query(
         None, 
         description="Ngày kết thúc (Định dạng YYYY-MM-DD). Mặc định: Ngày hôm nay"
     ),
+    to_date_hyphen: Optional[date] = Query(None, alias="to-date", include_in_schema=False),
 ):
+    from_date = from_date or from_date_hyphen
+    to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
 
     try:
@@ -225,15 +229,19 @@ async def get_search_trends(
         None, 
         description="Ngày bắt đầu (Định dạng YYYY-MM-DD). Mặc định: 30 ngày trước"
     ),
+    from_date_hyphen: Optional[date] = Query(None, alias="from-date", include_in_schema=False),
     to_date: Optional[date] = Query(
         None, 
         description="Ngày kết thúc (Định dạng YYYY-MM-DD). Mặc định: Ngày hôm nay"
     ),
+    to_date_hyphen: Optional[date] = Query(None, alias="to-date", include_in_schema=False),
     group_by: str = Query(
         "day",
         description="Kiểu gom nhóm thời gian: 'day' (theo ngày), 'week' (theo tuần), 'month' (theo tháng)"
     ),
 ):
+    from_date = from_date or from_date_hyphen
+    to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
 
     valid_groups = ["day", "week", "month"]
@@ -337,10 +345,12 @@ async def get_top_places(
         None, 
         description="Ngày bắt đầu (Định dạng YYYY-MM-DD). Mặc định: 30 ngày trước"
     ),
+    from_date_hyphen: Optional[date] = Query(None, alias="from-date", include_in_schema=False),
     to_date: Optional[date] = Query(
         None, 
         description="Ngày kết thúc (Định dạng YYYY-MM-DD). Mặc định: Ngày hôm nay"
     ),
+    to_date_hyphen: Optional[date] = Query(None, alias="to-date", include_in_schema=False),
     limit: int = Query(
         10,
         ge=1,
@@ -348,6 +358,8 @@ async def get_top_places(
         description="Số lượng địa điểm cần lấy (Mặc định: 10, tối đa: 50)"
     ),
 ):
+    from_date = from_date or from_date_hyphen
+    to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
 
     try:
@@ -426,11 +438,15 @@ async def get_category_distribution(
         None, 
         description="Ngày bắt đầu (Định dạng YYYY-MM-DD). Mặc định: 30 ngày trước"
     ),
+    from_date_hyphen: Optional[date] = Query(None, alias="from-date", include_in_schema=False),
     to_date: Optional[date] = Query(
         None, 
         description="Ngày kết thúc (Định dạng YYYY-MM-DD). Mặc định: Ngày hôm nay"
     ),
+    to_date_hyphen: Optional[date] = Query(None, alias="to-date", include_in_schema=False),
 ):
+    from_date = from_date or from_date_hyphen
+    to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
 
     try:
@@ -529,15 +545,19 @@ async def export_statistics_report(
         None, 
         description="Ngày bắt đầu (Định dạng YYYY-MM-DD). Mặc định: 30 ngày trước"
     ),
+    from_date_hyphen: Optional[date] = Query(None, alias="from-date", include_in_schema=False),
     to_date: Optional[date] = Query(
         None, 
         description="Ngày kết thúc (Định dạng YYYY-MM-DD). Mặc định: Ngày hôm nay"
     ),
+    to_date_hyphen: Optional[date] = Query(None, alias="to-date", include_in_schema=False),
     format: str = Query(
         "xlsx",
         description="Định dạng xuất file: 'xlsx' (Excel 4 Sheet) hoặc 'csv'"
     ),
 ):
+    from_date = from_date or from_date_hyphen
+    to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
 
     try:

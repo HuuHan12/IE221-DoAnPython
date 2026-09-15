@@ -121,10 +121,18 @@ def get_pricing_plans():
 )
 def create_payment_qr(
     payload: Optional[CreatePaymentQRRequest] = None,
+    plan_code: Optional[str] = Query(None, description="Mã gói cước (nếu truyền qua URL query)"),
+    duration_months: Optional[int] = Query(None, description="Số tháng đăng ký (nếu truyền qua URL query)"),
     current_user=Depends(get_current_user),
 ):
     if payload is None:
         payload = CreatePaymentQRRequest()
+
+    # Hỗ trợ ghi đè từ URL query parameters nếu có
+    if plan_code:
+        payload.plan_code = plan_code
+    if duration_months:
+        payload.duration_months = duration_months
 
     supabase = get_supabase_admin_client()
     plan_code = payload.plan_code.lower()

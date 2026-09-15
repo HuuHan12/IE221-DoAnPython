@@ -115,7 +115,6 @@ function HistoryPage() {
                 <Header
                     title="Lịch sử Tìm kiếm"
                     subtitle="Xem lại các địa danh bạn đã tìm kiếm bằng ảnh."
-                    notificationCount={2}
                 />
 
                 <main className="history-body-padding">

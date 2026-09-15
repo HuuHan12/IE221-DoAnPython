@@ -3,7 +3,9 @@ import TopResultHero from "./TopResultHero";
 import LeafletMap from "./LeafletMap";
 import RankedResultList from "./RankedResultList";
 import { ShareIcon, CheckIcon, GlobeIcon, SparklesIcon } from "../common/Icons";
+import { MapPin, Loader2, Trophy } from "lucide-react";
 import { calculateHaversineDistance } from "../../libs/geoUtils";
+import { recordCheckinApi } from "../../service/achievementService";
 import "../../css/ResultCard.css";
 
 function ResultCard({
@@ -19,6 +21,9 @@ function ResultCard({
     onShare,
 }) {
     const [copiedShare, setCopiedShare] = useState(false);
+    const [isCheckingIn, setIsCheckingIn] = useState(false);
+    const [checkinSuccess, setCheckinSuccess] = useState(false);
+    const [checkinMessage, setCheckinMessage] = useState("");
     const activePrediction = selectedPrediction || result?.prediction || null;
     const activeGisError = selectedGisError ?? result?.gis_error ?? null;
     const predictions = result?.predictions || (activePrediction ? [activePrediction] : []);
@@ -51,6 +56,22 @@ function ResultCard({
         }
         setCopiedShare(true);
         setTimeout(() => setCopiedShare(false), 2200);
+    };
+
+    const handleCheckinClick = async () => {
+        setIsCheckingIn(true);
+        try {
+            const res = await recordCheckinApi();
+            if (res && res.status === "success") {
+                setCheckinSuccess(true);
+                setCheckinMessage(res.message || "Đã check-in thành công!");
+                setTimeout(() => setCheckinSuccess(false), 4000);
+            }
+        } catch (err) {
+            console.error("Lỗi check-in địa danh:", err);
+        } finally {
+            setIsCheckingIn(false);
+        }
     };
 
     return (
@@ -123,6 +144,45 @@ function ResultCard({
                     />
 
                     <div className="result-bottom-actions">
+                        <button
+                            type="button"
+                            className={`action-btn checkin-btn ${checkinSuccess ? "success" : ""}`}
+                            onClick={handleCheckinClick}
+                            disabled={isCheckingIn || checkinSuccess}
+                            title="Ghi nhận lượt check-in địa danh này vào hồ sơ thành tích"
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                backgroundColor: checkinSuccess ? "#10B981" : "#009080",
+                                color: "#FFFFFF",
+                                border: "none",
+                                padding: "9px 16px",
+                                borderRadius: "10px",
+                                fontSize: "13px",
+                                fontWeight: 600,
+                                cursor: checkinSuccess ? "default" : "pointer",
+                                transition: "all 0.2s ease",
+                            }}
+                        >
+                            {isCheckingIn ? (
+                                <>
+                                    <Loader2 size={15} className="spin-icon" />
+                                    <span>Đang ghi nhận...</span>
+                                </>
+                            ) : checkinSuccess ? (
+                                <>
+                                    <CheckIcon size={15} />
+                                    <span>{checkinMessage || "Check-in thành công!"}</span>
+                                </>
+                            ) : (
+                                <>
+                                    <MapPin size={15} />
+                                    <span>Check-in địa danh này</span>
+                                </>
+                            )}
+                        </button>
+
                         <button
                             type="button"
                             className={`action-btn share-btn ${copiedShare ? "copied" : ""}`}

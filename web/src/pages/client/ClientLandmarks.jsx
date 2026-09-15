@@ -12,9 +12,12 @@ import {
     CheckCircle2,
     ChevronRight,
     Sparkles,
-    Search
+    Search,
+    Loader2,
+    Trophy,
 } from "lucide-react";
 import ClientLayout from "../../components/client/ClientLayout";
+import { recordCheckinApi } from "../../service/achievementService";
 import "../../css/Client.css";
 
 const landmarksList = [
@@ -76,14 +79,32 @@ function ClientLandmarks() {
     const [activeTab, setActiveTab] = useState("gioi-thieu");
     const [isFavorite, setIsFavorite] = useState(false);
     const [checkinSuccess, setCheckinSuccess] = useState(false);
+    const [isCheckingIn, setIsCheckingIn] = useState(false);
+    const [checkinData, setCheckinData] = useState(null);
+    const [checkinError, setCheckinError] = useState(null);
 
     const currentLandmark =
         landmarksList.find((l) => l.id === selectedLandmarkId) || landmarksList[0];
 
+    const handlePerformCheckin = async () => {
+        setIsCheckingIn(true);
+        setCheckinError(null);
+        try {
+            const res = await recordCheckinApi();
+            if (res && res.status === "success") {
+                setCheckinData(res);
+                setCheckinSuccess(true);
+            }
+        } catch (err) {
+            setCheckinError(err.message || "Không thể thực hiện check-in lúc này.");
+        } finally {
+            setIsCheckingIn(false);
+        }
+    };
+
     const handleFileDrop = (e) => {
         e.preventDefault();
-        setCheckinSuccess(true);
-        setTimeout(() => setCheckinSuccess(false), 4000);
+        handlePerformCheckin();
     };
 
     return (
@@ -293,10 +314,36 @@ function ClientLandmarks() {
                                 Tải ảnh bạn tự chụp tại đây. AI so khớp với địa danh và ghi nhận huy hiệu vào hồ sơ.
                             </p>
 
-                            {checkinSuccess ? (
-                                <div style={{ padding: "14px", backgroundColor: "#ecfdf5", color: "#047857", borderRadius: "12px", fontSize: "0.85rem", margin: "16px 0", display: "flex", alignItems: "center", gap: "8px" }}>
-                                    <CheckCircle2 size={18} />
-                                    <span>Check-in thành công! Bạn nhận được Huy hiệu Huế 🎉</span>
+                            {checkinError && (
+                                <div style={{ padding: "10px 14px", backgroundColor: "#fef2f2", color: "#b91c1c", borderRadius: "10px", fontSize: "0.82rem", margin: "12px 0" }}>
+                                    {checkinError}
+                                </div>
+                            )}
+
+                            {isCheckingIn ? (
+                                <div style={{ padding: "32px 16px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "10px", color: "#009080", background: "#f0fdf9", borderRadius: "14px", margin: "14px 0" }}>
+                                    <Loader2 size={28} className="spin-icon" />
+                                    <span style={{ fontSize: "0.86rem", fontWeight: 600 }}>Đang ghi nhận check-in và đồng bộ thành tích...</span>
+                                </div>
+                            ) : checkinSuccess ? (
+                                <div style={{ padding: "14px", backgroundColor: "#ecfdf5", color: "#047857", borderRadius: "12px", fontSize: "0.85rem", margin: "16px 0", display: "flex", flexDirection: "column", gap: "8px" }}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                        <CheckCircle2 size={18} />
+                                        <strong>{checkinData?.message || "Check-in thành công!"}</strong>
+                                    </div>
+                                    {checkinData?.new_unlocked && checkinData.new_unlocked.length > 0 && (
+                                        <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#b45309", backgroundColor: "#fef3c7", padding: "6px 10px", borderRadius: "8px", fontSize: "0.8rem" }}>
+                                            <Trophy size={14} />
+                                            <span>Mở khóa danh hiệu mới: <strong>{checkinData.new_unlocked.join(", ")}</strong> 🎉</span>
+                                        </div>
+                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={() => setCheckinSuccess(false)}
+                                        style={{ alignSelf: "flex-start", background: "none", border: "none", color: "#047857", fontSize: "0.8rem", textDecoration: "underline", cursor: "pointer", padding: 0, marginTop: "4px" }}
+                                    >
+                                        Check-in thêm địa danh khác
+                                    </button>
                                 </div>
                             ) : (
                                 <div
@@ -313,7 +360,7 @@ function ClientLandmarks() {
                                     <div style={{ marginTop: "12px" }}>
                                         <label className="btn-client-scan" style={{ display: "inline-flex", padding: "8px 18px", fontSize: "0.84rem", cursor: "pointer" }}>
                                             <span>Chọn ảnh từ thiết bị</span>
-                                            <input type="file" accept="image/*" style={{ display: "none" }} onChange={() => setCheckinSuccess(true)} />
+                                            <input type="file" accept="image/*" style={{ display: "none" }} onChange={() => handlePerformCheckin()} />
                                         </label>
                                     </div>
                                 </div>
@@ -321,10 +368,14 @@ function ClientLandmarks() {
 
                             <div className="checkin-stats-box">
                                 <div className="checkin-stats-text">
-                                    <span className="checkin-stats-label">ĐÃ CHECK-IN</span>
-                                    <span className="checkin-stats-value">1.284 lượt khách</span>
+                                    <span className="checkin-stats-label">TIẾN ĐỘ CHECK-IN</span>
+                                    <span className="checkin-stats-value">
+                                        {checkinData?.total_checkins
+                                            ? `${checkinData.total_checkins} lượt tích lũy`
+                                            : "Ghi nhận tức thì"}
+                                    </span>
                                 </div>
-                                <span className="badge-tag checkin-badge">Huy hiệu Huế</span>
+                                <span className="badge-tag checkin-badge">Huy hiệu AI</span>
                             </div>
                         </div>
 

@@ -13,6 +13,7 @@ import Statistics from "../pages/Statistics";
 import Gallery from "../pages/Gallery";
 import Favorites from "../pages/Favorites";
 import HistoryPage from "../pages/HistoryPage";
+import Notifications from "../pages/Notifications";
 import NotFound from "../pages/NotFound";
 
 export function AppRoutes() {
@@ -32,6 +33,7 @@ export function AppRoutes() {
             <Route path="/dashboard/favorites" element={<Favorites />} />
             <Route path="/dashboard/statistics" element={<Statistics />} />
             <Route path="/dashboard/profile" element={<Profile />} />
+            <Route path="/dashboard/notifications" element={<Notifications />} />
             <Route path="*" element={<NotFound />} />
         </Routes>
     );

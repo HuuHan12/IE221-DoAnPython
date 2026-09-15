@@ -49,8 +49,9 @@ def create_user_notification(
 
 
 # 1. Số thông báo chưa đọc
-@router.get(
+@router.api_route(
     "/unread-count",
+    methods=["GET", "POST"],
     response_model=UnreadCountResponse,
     summary="Đếm số lượng thông báo chưa đọc",
     description="Truy vấn số lượng thông báo chưa đọc của tài khoản để hiển thị badge đỏ trên Quả chuông ở Header.",

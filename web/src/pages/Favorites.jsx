@@ -125,7 +125,6 @@ function Favorites() {
                 <Header
                     title="Địa danh Yêu thích"
                     subtitle="Bộ sưu tập những địa danh bạn yêu thích"
-                    notificationCount={2}
                 />
 
                 <main className="favorites-body-padding">

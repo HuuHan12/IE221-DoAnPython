@@ -1,35 +1,25 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Info, ChevronDown, MapPin, Check, Search } from "lucide-react";
+import { Info, ChevronDown, MapPin, Check, Search, Loader2 } from "lucide-react";
 
-const initialLocationsData = [
-    { id: 1, name: "Nhà Thờ Lớn Hà Nội", count: 4568 },
-    { id: 2, name: "Văn Miếu - Quốc Tử Giám", count: 3789 },
-    { id: 3, name: "Chợ Bến Thành", count: 3456 },
-    { id: 4, name: "Phố Cổ Hội An", count: 3102 },
-    { id: 5, name: "Hoàng Thành Thăng Long", count: 2845 },
-    { id: 6, name: "Cầu Vàng - Bà Nà Hills", count: 2615 },
-    { id: 7, name: "Tháp Rùa", count: 2341 },
-    { id: 8, name: "Dinh Độc Lập", count: 2104 },
-    { id: 9, name: "Chùa Một Cột", count: 1978 },
-    { id: 10, name: "Bảo Tàng Chứng Tích Chiến Tranh", count: 1732 },
-];
-
-const MAX_COUNT = 5000;
-
-function TopLocationsChart({ apiLocationsData }) {
+function TopLocationsChart({ apiLocationsData, loading = false }) {
     const [selectedLandmark, setSelectedLandmark] = useState(null);
     const [isOpen, setIsOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
     const dropdownRef = useRef(null);
 
-    const locationsData =
-        apiLocationsData && apiLocationsData.length > 0
-            ? apiLocationsData.map((item, idx) => ({
-                id: idx + 1,
-                name: item.name || "Địa danh",
-                count: item.count || 100
-            }))
-            : initialLocationsData;
+    // Chuẩn hóa dữ liệu từ API TopPlaceItem (place_id, name, province, search_count)
+    const locationsData = (apiLocationsData || []).map((item, idx) => ({
+        id: item.place_id || idx + 1,
+        name: item.name || "Địa danh không xác định",
+        province: item.province,
+        count: item.search_count !== undefined ? item.search_count : (item.count || 0),
+    }));
+
+    // Tính toán mốc max tự động theo dữ liệu thực tế
+    const maxCount = Math.max(
+        ...locationsData.map((item) => item.count),
+        10
+    );
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -52,7 +42,8 @@ function TopLocationsChart({ apiLocationsData }) {
     };
 
     const filteredMenuLocations = locationsData.filter((loc) =>
-        loc.name.toLowerCase().includes(searchQuery.toLowerCase())
+        loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (loc.province && loc.province.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
     const buttonLabel = selectedLandmark
@@ -64,7 +55,10 @@ function TopLocationsChart({ apiLocationsData }) {
             <div className="chart-card-header">
                 <div className="chart-title-with-info">
                     <h3>Top 10 địa điểm được tìm kiếm nhiều nhất</h3>
-                    <Info size={16} className="info-icon" title="Thống kê top 10 địa danh được quét nhiều nhất" />
+                    <Info size={16} className="info-icon" title="Thống kê các địa danh có số lượt tìm kiếm cao nhất trong khoảng thời gian" />
+                    {loading && (
+                        <Loader2 size={16} className="animate-spin" color="#009080" style={{ marginLeft: 8 }} />
+                    )}
                 </div>
 
                 <div className="chart-filter-dropdown-wrapper" ref={dropdownRef}>
@@ -111,7 +105,10 @@ function TopLocationsChart({ apiLocationsData }) {
                                     >
                                         <div className="menu-landmark-info">
                                             <MapPin size={14} className="pin-icon" />
-                                            <span className="menu-landmark-name">{item.name}</span>
+                                            <span className="menu-landmark-name">
+                                                {item.name}
+                                                {item.province ? ` (${item.province})` : ""}
+                                            </span>
                                         </div>
                                         <span className="menu-landmark-count">
                                             {item.count.toLocaleString("vi-VN")}
@@ -129,42 +126,55 @@ function TopLocationsChart({ apiLocationsData }) {
             </div>
 
             <div className="top-locations-list">
-                {locationsData.map((item) => {
-                    const barWidthPercent = Math.min(100, (item.count / MAX_COUNT) * 100);
-                    const isSelected = selectedLandmark?.id === item.id;
+                {locationsData.length === 0 ? (
+                    <div style={{ padding: "32px 0", textAlign: "center", color: "#9CA3AF", fontSize: "14px" }}>
+                        Chưa có dữ liệu địa điểm trong khoảng thời gian đã chọn
+                    </div>
+                ) : (
+                    locationsData.map((item, idx) => {
+                        const barWidthPercent = Math.min(100, (item.count / maxCount) * 100);
+                        const isSelected = selectedLandmark?.id === item.id;
 
-                    return (
-                        <div
-                            key={item.id}
-                            className={`location-bar-row ${isSelected ? "highlighted-row" : ""}`}
-                            onClick={() => setSelectedLandmark(item)}
-                            title="Click để chọn xem địa điểm"
-                        >
-                            <span className="location-name">
-                                {isSelected && <MapPin size={14} color="#009080" style={{ marginRight: 4, display: "inline" }} />}
-                                {item.name}
-                            </span>
-                            <div className="bar-track">
-                                <div
-                                    className={`bar-fill ${isSelected ? "active-fill" : ""}`}
-                                    style={{ width: `${barWidthPercent}%` }}
-                                ></div>
-                                <span className="bar-count-val">
-                                    {item.count.toLocaleString("vi-VN")}
+                        return (
+                            <div
+                                key={item.id}
+                                className={`location-bar-row ${isSelected ? "highlighted-row" : ""}`}
+                                onClick={() => setSelectedLandmark(isSelected ? null : item)}
+                                title={`${item.name} - ${item.count} lượt tìm kiếm`}
+                            >
+                                <span className="location-name">
+                                    <span style={{ color: "#9CA3AF", fontSize: "12px", marginRight: "6px" }}>
+                                        #{idx + 1}
+                                    </span>
+                                    {isSelected && <MapPin size={14} color="#009080" style={{ marginRight: 4, display: "inline" }} />}
+                                    {item.name}
+                                    {item.province && (
+                                        <span style={{ fontSize: "11px", color: "#9CA3AF", marginLeft: "4px" }}>
+                                            • {item.province}
+                                        </span>
+                                    )}
                                 </span>
+                                <div className="bar-track">
+                                    <div
+                                        className={`bar-fill ${isSelected ? "active-fill" : ""}`}
+                                        style={{ width: `${Math.max(barWidthPercent, 2)}%` }}
+                                    ></div>
+                                    <span className="bar-count-val">
+                                        {item.count.toLocaleString("vi-VN")}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                    );
-                })}
+                        );
+                    })
+                )}
             </div>
 
             <div className="x-axis-scale-ticks">
                 <span>0</span>
-                <span>1.000</span>
-                <span>2.000</span>
-                <span>3.000</span>
-                <span>4.000</span>
-                <span>5.000</span>
+                <span>{Math.round(maxCount * 0.25).toLocaleString("vi-VN")}</span>
+                <span>{Math.round(maxCount * 0.5).toLocaleString("vi-VN")}</span>
+                <span>{Math.round(maxCount * 0.75).toLocaleString("vi-VN")}</span>
+                <span>{maxCount.toLocaleString("vi-VN")}</span>
             </div>
             <div className="x-axis-bottom-title">Lượt tìm kiếm</div>
         </div>

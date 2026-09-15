@@ -1,15 +1,84 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { Check, ChevronDown, Zap } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Check, ChevronDown, Zap, Sparkles, ShieldCheck, Loader2 } from "lucide-react";
 import ClientLayout from "../../components/client/ClientLayout";
+import PaymentQRModal from "../../components/payment/PaymentQRModal";
+import {
+    fetchPricingPlansApi,
+    createPaymentQRApi,
+    fetchMySubscriptionApi,
+} from "../../service/paymentService";
 import "../../css/Client.css";
 
 function ClientPricing() {
+    const navigate = useNavigate();
+
+    // API state
+    const [plans, setPlans] = useState([]);
+    const [mySubscription, setMySubscription] = useState(null);
+    const [loadingPlans, setLoadingPlans] = useState(true);
+
+    // Modal state
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [paymentData, setPaymentData] = useState(null);
+    const [isCreatingQR, setIsCreatingQR] = useState(false);
+    const [selectedDuration, setSelectedDuration] = useState(1); // 1 tháng mặc định
+
     // FAQ Accordion active state
     const [openFaq, setOpenFaq] = useState(null);
 
     const toggleFaq = (index) => {
         setOpenFaq(openFaq === index ? null : index);
+    };
+
+    // Tải danh sách gói cước và gói hiện tại của user từ API
+    useEffect(() => {
+        const loadPricingData = async () => {
+            try {
+                setLoadingPlans(true);
+                const [plansRes, subRes] = await Promise.allSettled([
+                    fetchPricingPlansApi(),
+                    fetchMySubscriptionApi(),
+                ]);
+
+                if (plansRes.status === "fulfilled" && plansRes.value?.data) {
+                    setPlans(plansRes.value.data);
+                }
+                if (subRes.status === "fulfilled" && subRes.value) {
+                    setMySubscription(subRes.value);
+                }
+            } catch (err) {
+                // Fallback nếu API gặp trục trặc
+            } finally {
+                setLoadingPlans(false);
+            }
+        };
+
+        loadPricingData();
+    }, []);
+
+    // Xử lý khi người dùng bấm "Nâng cấp Pro" hoặc đăng ký gói trả phí
+    const handleUpgradePlan = async (planCode = "pro") => {
+        try {
+            setIsCreatingQR(true);
+            const qrRes = await createPaymentQRApi(planCode, selectedDuration);
+            setPaymentData(qrRes);
+            setIsPaymentModalOpen(true);
+        } catch (error) {
+            alert(error.message || "Không thể khởi tạo mã thanh toán. Vui lòng thử lại.");
+        } finally {
+            setIsCreatingQR(false);
+        }
+    };
+
+    // Khi thanh toán hoàn tất thành công
+    const handlePaymentSuccess = async () => {
+        try {
+            const updatedSub = await fetchMySubscriptionApi();
+            setMySubscription(updatedSub);
+        } catch {
+            //
+        }
     };
 
     const faqItems = [
@@ -56,16 +125,49 @@ function ClientPricing() {
                     Mọi gói đều dùng cùng một mô hình nhận diện địa danh. Khác biệt nằm ở khối lượng xử lý, độ phân giải ảnh và các tính năng cá nhân hoá.
                 </p>
 
+                {/* Banner thông tin gói cước hiện tại của người dùng (từ API my-subscription) */}
+                {mySubscription && (
+                    <div
+                        style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            backgroundColor: "#ECFDF5",
+                            border: "1px solid #A7F3D0",
+                            padding: "8px 18px",
+                            borderRadius: "20px",
+                            color: "#065F46",
+                            fontSize: "13px",
+                            fontWeight: "600",
+                            marginTop: "16px",
+                        }}
+                    >
+                        <ShieldCheck size={16} color="#059669" />
+                        <span>
+                            Gói cước hiện tại của bạn: <strong>{mySubscription.plan_name}</strong>
+                            {mySubscription.days_remaining !== null && mySubscription.days_remaining !== undefined && (
+                                <> (Còn {mySubscription.days_remaining} ngày sử dụng)</>
+                            )}
+                        </span>
+                    </div>
+                )}
+
                 <div className="pricing-student-pill">
                     <Zap size={15} />
                     <span>Sinh viên nhận 3 tháng Pro miễn phí</span>
                 </div>
             </div>
 
-            {/* 3 PRICING CARDS */}
+            {/* 3 PRICING CARDS (Dynamic API data) */}
             <div className="pricing-cards-grid">
                 {/* FREE CARD */}
                 <div className="pricing-card-box">
+                    {mySubscription?.plan_code === "free" && (
+                        <div className="pricing-floating-badge" style={{ backgroundColor: "#64748B" }}>
+                            GÓI CỦA BẠN
+                        </div>
+                    )}
+
                     <h3 className="pricing-plan-title">Free</h3>
                     <p className="pricing-plan-tagline">Dành cho sinh viên trải nghiệm</p>
 
@@ -82,16 +184,19 @@ function ClientPricing() {
                         <li className="pricing-feature-item"><Check size={16} /> Bộ sưu tập yêu thích cơ bản</li>
                     </ul>
 
-                    <Link to="/dashboard" className="btn-pricing-action outline">
-                        Bắt đầu miễn phí
-                    </Link>
+                    <button
+                        type="button"
+                        className="btn-pricing-action outline"
+                        onClick={() => navigate("/dashboard")}
+                    >
+                        {mySubscription?.plan_code === "free" ? "Đang sử dụng" : "Bắt đầu miễn phí"}
+                    </button>
                 </div>
 
                 {/* PRO CARD (FEATURED / HIGHLIGHTED) */}
                 <div className="pricing-card-box pro-featured">
-                    {/* FLOATING BADGE - NO CLIPPING */}
                     <div className="pricing-floating-badge">
-                        PHỔ BIẾN NHẤT
+                        {mySubscription?.plan_code === "pro" ? "GÓI CỦA BẠN" : "PHỔ BIẾN NHẤT"}
                     </div>
 
                     <h3 className="pricing-plan-title">Pro</h3>
@@ -111,9 +216,23 @@ function ClientPricing() {
                         <li className="pricing-feature-item"><Check size={16} /> Thử thách check-in & huy hiệu</li>
                     </ul>
 
-                    <Link to="/dashboard" className="btn-pricing-action filled-teal">
-                        Nâng cấp Pro
-                    </Link>
+                    <button
+                        type="button"
+                        className="btn-pricing-action filled-teal"
+                        onClick={() => handleUpgradePlan("pro")}
+                        disabled={isCreatingQR}
+                    >
+                        {isCreatingQR ? (
+                            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                                <Loader2 size={16} className="animate-spin" />
+                                Đang tạo mã QR...
+                            </span>
+                        ) : mySubscription?.plan_code === "pro" ? (
+                            "Gia hạn gói Pro"
+                        ) : (
+                            "Nâng cấp Pro"
+                        )}
+                    </button>
                 </div>
 
                 {/* ENTERPRISE CARD */}
@@ -204,6 +323,14 @@ function ClientPricing() {
                     })}
                 </div>
             </div>
+
+            {/* POPUP MODAL THANH TOÁN VIETQR */}
+            <PaymentQRModal
+                isOpen={isPaymentModalOpen}
+                paymentData={paymentData}
+                onClose={() => setIsPaymentModalOpen(false)}
+                onSuccess={handlePaymentSuccess}
+            />
         </ClientLayout>
     );
 }
