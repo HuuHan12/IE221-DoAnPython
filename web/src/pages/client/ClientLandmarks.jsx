@@ -27,7 +27,7 @@ const landmarksList = [
         city: "Huế",
         coords: "16.4539° N, 107.5450° E",
         tags: ["Di tích lịch sử", "Thế kỷ 17", "Miền Trung"],
-        heroImg: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=1200&auto=format&fit=crop",
+        heroImg: "/images/landmarks/thien-mu.jpg",
         address: "Đường Nguyễn Phúc Nguyên, P. Hương Long, TP. Huế",
         hours: "06:00 - 18:00 hằng ngày",
         price: "Miễn phí tham quan",
@@ -36,15 +36,15 @@ const landmarksList = [
         scannedCount: "318",
         desc: "Chùa Thiên Mụ – còn gọi là Linh Mụ – toạ lạc trên đồi Hà Khê, tả ngạn sông Hương, cách trung tâm thành phố Huế khoảng 5 km về phía tây. Ngôi chùa được xem là biểu tượng tâm linh thần của vùng đất thần kinh.\n\nĐiểm nhấn kiến trúc là tháp Phước Duyên bảy tầng cao 21 m, mỗi tầng thờ một vị Phật, dựng năm 1844 dưới triều vua Thiệu Trị. Phía sau tháp là điện Đại Hùng, điện Địa Tạng, điện Quan Âm và khu vườn thông tĩnh lặng nơi đặt mộ tháp các vị hoà thượng.\n\nTừ sân trước chùa, tầm nhìn mở ra khúc uốn của sông Hương – khung hình quen thuộc trong tranh và thơ về Huế, và cũng là góc chụp mà mô hình AI của chúng tôi nhận diện với độ chính xác cao nhất.",
         gallery: [
-            "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=500&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=500&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1528127269322-539801943592?w=500&auto=format&fit=crop"
+            "/images/landmarks/thien-mu.jpg",
+            "/images/landmarks/cau-trang-tien.jpg",
+            "/images/landmarks/dai-noi-hue.jpg"
         ],
         mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3826.333249089201!2d107.54281137588725!3d16.45391698428268!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3141a052ff6b7e61%3A0xb36336e4f3a76356!2zQ2jDuWEgVGhpw6puIE3hu6U!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s",
         nearby: [
-            { name: "Đại Nội Huế", dist: "Cách 5.2 km", img: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=150&auto=format&fit=crop" },
-            { name: "Cầu Tràng Tiền", dist: "Cách 6.0 km", img: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=150&auto=format&fit=crop" },
-            { name: "Lăng Tự Đức", dist: "Cách 7.8 km", img: "https://images.unsplash.com/photo-1528127269322-539801943592?w=150&auto=format&fit=crop" }
+            { name: "Đại Nội Huế", dist: "Cách 5.2 km", img: "/images/landmarks/dai-noi-hue.jpg" },
+            { name: "Cầu Tràng Tiền", dist: "Cách 6.0 km", img: "/images/landmarks/cau-trang-tien.jpg" },
+            { name: "Lăng Tự Đức", dist: "Cách 7.8 km", img: "/images/landmarks/thien-mu.jpg" }
         ]
     },
     {
@@ -53,7 +53,7 @@ const landmarksList = [
         city: "Quảng Ninh",
         coords: "20.9500° N, 107.0833° E",
         tags: ["Kỳ quan thiên nhiên", "UNESCO", "Miền Bắc"],
-        heroImg: "https://images.unsplash.com/photo-1528127269322-539801943592?w=1200&auto=format&fit=crop",
+        heroImg: "/images/landmarks/ha-long.jpg",
         address: "Thành phố Hạ Long, Tỉnh Quảng Ninh",
         hours: "06:00 - 19:00 hằng ngày",
         price: "290.000 VNĐ / vé tuyến",
@@ -62,14 +62,14 @@ const landmarksList = [
         scannedCount: "542",
         desc: "Vịnh Hạ Long là di sản thiên nhiên thế giới UNESCO nổi tiếng với hàng ngàn hòn đảo đá vôi nhấp nhô trên vùng biển xanh ngọc bích.",
         gallery: [
-            "https://images.unsplash.com/photo-1528127269322-539801943592?w=500&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=500&auto=format&fit=crop",
-            "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=500&auto=format&fit=crop"
+            "/images/landmarks/ha-long.jpg",
+            "/images/landmarks/ha-long.jpg",
+            "/images/landmarks/ha-long.jpg"
         ],
         mapEmbed: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d119330.4355551322!2d107.03713025!3d20.950000000000003!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x314a5796a5861739%3A0xc665187e17420!2zVmluaCBIYSBMb25n!5e0!3m2!1svi!2s!4v1700000000000!5m2!1svi!2s",
         nearby: [
-            { name: "Đảo Ti Tốp", dist: "Cách 3.5 km", img: "https://images.unsplash.com/photo-1528127269322-539801943592?w=150&auto=format&fit=crop" },
-            { name: "Hang Sửng Sốt", dist: "Cách 4.8 km", img: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=150&auto=format&fit=crop" }
+            { name: "Đảo Ti Tốp", dist: "Cách 3.5 km", img: "/images/landmarks/ha-long.jpg" },
+            { name: "Hang Sửng Sốt", dist: "Cách 4.8 km", img: "/images/landmarks/ha-long.jpg" }
         ]
     }
 ];

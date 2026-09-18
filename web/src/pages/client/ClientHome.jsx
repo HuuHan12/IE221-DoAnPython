@@ -12,7 +12,7 @@ const initialArticles = [
         excerpt: "Từ Ô Quan Chưởng đến Nhà thờ Lớn, một vòng phố cổ đủ để hiểu nhịp sống thủ đô và bắt được ánh sáng đẹp nhất.",
         date: "05/08/2026",
         readTime: "6 phút",
-        image: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&auto=format&fit=crop",
+        image: "/images/landmarks/ho-guom.jpg",
         author: "Dư Hữu Hân",
         content: `Hà Nội 36 phố phường không chỉ là một khái niệm địa lý mà là cả một kho tàng lịch sử và văn hóa sống động. Để cảm nhận trọn vẹn nhịp đập thủ đô, một buổi sáng đi bộ từ phố cổ Ô Quan Chưởng, ghé qua chợ Đồng Xuân, thưởng thức một ly cà phê trứng bên đường Nguyễn Hữu Huân và kết thúc tại Nhà thờ Lớn là hành trình trải nghiệm tuyệt vời nhất.
 
@@ -25,7 +25,7 @@ Bài viết này cung cấp bản đồ đi bộ tối ưu, lịch trình chụp
         excerpt: "Giờ vàng, hướng nắng và những điểm neo thuyền cho khung hình núi đá vôi trong trẻo nhất giữa mùa hè.",
         date: "28/07/2026",
         readTime: "7 phút",
-        image: "https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop",
+        image: "/images/landmarks/ha-long.jpg",
         author: "Nguyễn Văn A",
         content: `Vịnh Hạ Long với hàng ngàn đảo đá vôi kỳ vĩ là niềm cảm hứng vô tận cho các nhiếp ảnh gia. Tuy nhiên, thời tiết và sương mờ trên biển ảnh hưởng rất lớn đến chất lượng ảnh chụp.
 
@@ -38,7 +38,7 @@ Khung giờ vàng từ 5:30 đến 7:00 sáng là lúc mặt trời mới ló r�
         excerpt: "Lịch mùa vụ của người Mông, cung đường Tả Van - Lao Chải và cách chuẩn bị cho một ngày trekking ẩm ướt.",
         date: "23/07/2026",
         readTime: "9 phút",
-        image: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=600&auto=format&fit=crop",
+        image: "/images/landmarks/ruong-bac-thang-sapa.jpg",
         author: "Dư Hữu Hân",
         content: `Tháng 5 và tháng 6 hằng năm là thời điểm mùa nước đổ tại các vùng cao Tây Bắc. Ruộng bậc thang Sa Pa lấp lánh như những tấm gương khổng lồ soi bóng mây trời.
 
@@ -51,7 +51,7 @@ Hành trình từ bản Cát Cát đến Tả Van mang lại góc nhìn hoang s�
         excerpt: "Vì sao phố cổ tắt đèn điện vào ngày rằm, và những góc ít người biết để ngắm đèn hoa đăng trôi.",
         date: "14/07/2026",
         readTime: "5 phút",
-        image: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop",
+        image: "/images/landmarks/hoi-an-ve-dem.jpg",
         author: "Trần Thị B",
         content: `Khi màn đêm buông xuống, Hội An khoác lên mình vẻ đẹp lung linh của hàng ngàn chiếc đèn lồng thủ công rực rỡ sắc màu.
 
@@ -64,7 +64,7 @@ Vào các đêm đêm rằm hàng tháng, phố cổ ngừng sử dụng ánh s�
         excerpt: "Tháp Phước Duyên bảy tầng, truyền thuyết bà lão áo đỏ và vị trí của ngôi chùa trong quy hoạch kinh thành Huế.",
         date: "02/07/2026",
         readTime: "10 phút",
-        image: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&auto=format&fit=crop",
+        image: "/images/landmarks/thien-mu.jpg",
         author: "Dư Hữu Hân",
         content: `Nằm trên ngọn đồi Hà Khê bên bờ sông Hương, Chùa Thiên Mụ là biểu tượng tâm linh và kiến trúc cổ kính của cố đô Huế. Tháp Phước Duyên cao 21m với 7 tầng tháp là mốc định danh trực quan rất đặc trưng trong bài toán nhận diện địa danh Việt Nam bằng Vision Transformers.`
     },
@@ -75,7 +75,7 @@ Vào các đêm đêm rằm hàng tháng, phố cổ ngừng sử dụng ánh s�
         excerpt: "Máy tính chia ảnh thành các ô nhỏ rồi 'đọc' chúng như một câu văn – và đó là lý do nó nhận ra được địa danh.",
         date: "25/06/2026",
         readTime: "12 phút",
-        image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&auto=format&fit=crop",
+        image: "/images/blog/vision-transformer.jpg",
         author: "Dư Hữu Hân",
         content: `Mô hình Vision Transformer (ViT) thay vì quét điểm ảnh theo cách truyền thống đã chia bức ảnh thành các 'patch' (mảnh nhỏ) rồi mã hóa không gian. Kết hợp với GeoCLIP, hệ thống hiểu được mối liên hệ giữa các điểm đặc trưng hình ảnh và tọa độ địa lý thực tế.`
     }
@@ -153,7 +153,7 @@ function ClientHome({ activeTab = "home" }) {
                 <div className="featured-article-card">
                     <div className="featured-image-wrapper">
                         <img
-                            src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1000&auto=format&fit=crop"
+                            src="/images/blog/ai-geolocation.jpg"
                             alt="Cách dùng AI để tìm ra nơi một bức ảnh được chụp"
                         />
                     </div>
@@ -194,7 +194,7 @@ function ClientHome({ activeTab = "home" }) {
                                         author: "Dư Hữu Hân",
                                         date: "12/08/2026",
                                         readTime: "8 phút",
-                                        image: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1000&auto=format&fit=crop",
+                                        image: "/images/blog/ai-geolocation.jpg",
                                         content: `Nhận diện vị trí địa danh tự động qua hình ảnh là bài toán tiên tiến của thị giác máy tính. Với mô hình GeoCLIP và Vision Transformers, bạn chỉ cần tải một bức ảnh phong cảnh bất kỳ, hệ thống sẽ phân tích các nét đặc trưng kiến trúc, địa hình núi sông để đưa ra tọa độ địa lý cùng mức độ tin cậy phần trăm.`
                                     })
                                 }

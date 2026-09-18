@@ -65,7 +65,7 @@ function ClientAbout() {
             <div className="about-banner-card">
                 <div className="about-banner-img-box">
                     <img
-                        src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=1200&auto=format&fit=crop"
+                        src="/images/blog/about-hero-vietnam.jpg"
                         alt="LandmarkAI Pagoda Landscape"
                     />
                 </div>

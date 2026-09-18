@@ -13,7 +13,7 @@ const initialFavoriteLandmarks = [
         name: "Vịnh Hạ Long",
         province: "Quảng Ninh",
         shortName: "Hạ Long",
-        url: "https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop",
+        url: "/images/landmarks/ha-long.jpg",
         coords: { lat: 20.9500, lng: 107.0833 },
         note: "Vịnh Hạ Long"
     },
@@ -22,7 +22,7 @@ const initialFavoriteLandmarks = [
         name: "Phố cổ Hội An",
         province: "Quảng Nam",
         shortName: "Hội An",
-        url: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop",
+        url: "/images/landmarks/hoi-an.jpg",
         coords: { lat: 15.8801, lng: 108.3380 },
         note: "Phố cổ Hội An"
     },
@@ -31,7 +31,7 @@ const initialFavoriteLandmarks = [
         name: "Hồ Hoàn Kiếm",
         province: "Hà Nội",
         shortName: "Hà Nội",
-        url: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&auto=format&fit=crop",
+        url: "/images/landmarks/ho-guom.jpg",
         coords: { lat: 21.0285, lng: 105.8542 },
         note: "Hồ Hoàn Kiếm"
     },
@@ -40,7 +40,7 @@ const initialFavoriteLandmarks = [
         name: "Bà Nà Hills",
         province: "Đà Nẵng",
         shortName: "Đà Nẵng",
-        url: "https://images.unsplash.com/photo-1533105079780-92b9be482077?w=600&auto=format&fit=crop",
+        url: "/images/landmarks/ba-na-hills.jpg",
         coords: { lat: 15.9988, lng: 107.9880 },
         note: "Bà Nà Hills"
     },
@@ -49,7 +49,7 @@ const initialFavoriteLandmarks = [
         name: "Nha Trang",
         province: "Khánh Hòa",
         shortName: "Nha Trang",
-        url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=600&auto=format&fit=crop",
+        url: "/images/landmarks/nha-trang.jpg",
         coords: { lat: 12.2388, lng: 109.1967 },
         note: "Nha Trang"
     },
@@ -58,7 +58,7 @@ const initialFavoriteLandmarks = [
         name: "Đà Lạt",
         province: "Lâm Đồng",
         shortName: "Đà Lạt",
-        url: "https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?w=600&auto=format&fit=crop",
+        url: "/images/landmarks/da-lat.jpg",
         coords: { lat: 11.9404, lng: 108.4583 },
         note: "Đà Lạt"
     }
