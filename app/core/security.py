@@ -14,11 +14,11 @@ def get_current_user(
     Xác thực người dùng từ:
         Authorization: Bearer <access_token>
     Sau khi token hợp lệ, trả về thông tin user từ Supabase Auth.
-    Nếu không có header nhưng có DEV_USER_ID cấu hình trong .env (môi trường dev),
-    fallback về dev user để tương thích với script test.
+    Chỉ fallback về dev user khi DEV_SKIP_SUPABASE_AUTH=true (dành riêng cho script test).
     """
+    skip_auth = os.getenv("DEV_SKIP_SUPABASE_AUTH", "false").lower() == "true"
     if not authorization:
-        if DEV_USER_ID:
+        if skip_auth and DEV_USER_ID:
             return SimpleNamespace(
                 id=DEV_USER_ID,
                 email="dev@landmark.local",
@@ -31,7 +31,7 @@ def get_current_user(
     parts = authorization.split()
 
     if len(parts) != 2 or parts[0].lower() != "bearer":
-        if DEV_USER_ID:
+        if skip_auth and DEV_USER_ID:
             return SimpleNamespace(id=DEV_USER_ID, email="dev@landmark.local")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -45,7 +45,7 @@ def get_current_user(
         response = client.auth.get_user(token)
 
         if response.user is None:
-            if DEV_USER_ID:
+            if skip_auth and DEV_USER_ID:
                 return SimpleNamespace(id=DEV_USER_ID, email="dev@landmark.local")
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -57,7 +57,7 @@ def get_current_user(
     except HTTPException:
         raise
     except Exception:
-        if DEV_USER_ID:
+        if skip_auth and DEV_USER_ID:
             return SimpleNamespace(id=DEV_USER_ID, email="dev@landmark.local")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -119,7 +119,74 @@ def get_current_user_with_plan(current_user=Depends(get_current_user)):
     return {
         "user": current_user,
         "user_id": user_id,
+        "is_guest": False,
         "plan_code": sub_info["plan_code"],
         "is_pro": sub_info["is_pro"],
         "scan_limit": sub_info["scan_limit"],
-    }
+    }
+
+
+def get_optional_user_with_plan(
+    authorization: Optional[str] = Header(None)
+) -> dict:
+    """
+    Dependency xác thực linh hoạt:
+    - Nếu có Bearer token hợp lệ: trả về thông tin user và gói cước (is_guest=False).
+    - Nếu không có token hoặc token không hợp lệ: trả về đối tượng Guest (is_guest=True, scan_limit=1).
+    """
+    if not authorization:
+        return {
+            "user": None,
+            "user_id": None,
+            "is_guest": True,
+            "plan_code": "guest",
+            "is_pro": False,
+            "scan_limit": 1,
+        }
+
+    parts = authorization.split()
+    if len(parts) != 2 or parts[0].lower() != "bearer":
+        return {
+            "user": None,
+            "user_id": None,
+            "is_guest": True,
+            "plan_code": "guest",
+            "is_pro": False,
+            "scan_limit": 1,
+        }
+
+    token = parts[1]
+    try:
+        client: Client = get_supabase_client()
+        response = client.auth.get_user(token)
+        if response.user is None:
+            return {
+                "user": None,
+                "user_id": None,
+                "is_guest": True,
+                "plan_code": "guest",
+                "is_pro": False,
+                "scan_limit": 1,
+            }
+
+        user = response.user
+        user_id = str(user.id)
+        sub_info = get_user_subscription_info(user_id)
+        return {
+            "user": user,
+            "user_id": user_id,
+            "is_guest": False,
+            "plan_code": sub_info["plan_code"],
+            "is_pro": sub_info["is_pro"],
+            "scan_limit": sub_info["scan_limit"],
+        }
+    except Exception:
+        return {
+            "user": None,
+            "user_id": None,
+            "is_guest": True,
+            "plan_code": "guest",
+            "is_pro": False,
+            "scan_limit": 1,
+        }
+

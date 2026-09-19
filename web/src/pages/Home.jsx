@@ -1,4 +1,6 @@
 import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Lock, Sparkles, LogIn, UserPlus } from "lucide-react";
 import Sidebar from "../components/Sidebar";
 import { usePredict } from "../hooks/usePredict";
 import GeoPredictionTab from "../components/GeoPredictionTab/GeoPredictionTab";
@@ -8,6 +10,7 @@ import { GlobeIcon, SparklesIcon, LayersIcon, RulerIcon } from "../components/co
 import "../css/Home.css";
 
 function Home() {
+    const navigate = useNavigate();
     const {
         fileInputRef,
         activeTab,
@@ -39,13 +42,41 @@ function Home() {
         handleRemove,
         handleShare,
         samplePresets,
+        isLoggedIn,
+        guestScanUsed,
+        showGuestLimitModal,
+        setShowGuestLimitModal,
     } = usePredict();
 
     return (
         <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#f8fafc" }}>
-            <Sidebar activeMenu="overview" />
+            <Sidebar activeMenu="scan" />
             <div style={{ flex: 1, padding: "24px", overflowY: "auto" }}>
                 <main className="dashboard-page-container">
+                    {/* BANNER THÔNG BÁO CHO KHÁCH VÃNG LAI */}
+                    {!isLoggedIn && (
+                        <div className={`guest-status-banner ${guestScanUsed ? "limit-reached" : "trial-mode"}`}>
+                            <div className="guest-banner-left">
+                                {guestScanUsed ? <Lock size={18} /> : <Sparkles size={18} />}
+                                <span>
+                                    {guestScanUsed
+                                        ? "Bạn đã sử dụng hết 1 lượt quét thử nghiệm miễn phí. Hãy đăng nhập để tiếp tục nhận diện không giới hạn!"
+                                        : "Chế độ trải nghiệm khách vãng lai: Bạn có 1 lượt quét ảnh thử nghiệm miễn phí."}
+                                </span>
+                            </div>
+                            <div className="guest-banner-actions">
+                                <Link to="/login" className="btn-guest-login">
+                                    <LogIn size={15} />
+                                    <span>Đăng nhập</span>
+                                </Link>
+                                <Link to="/register" className="btn-guest-register">
+                                    <UserPlus size={15} />
+                                    <span>Đăng ký</span>
+                                </Link>
+                            </div>
+                        </div>
+                    )}
+
             {/* Tiêu đề */}
             <header className="dashboard-hero-header">
                 <div className="title-row">
@@ -146,6 +177,46 @@ function Home() {
                     onSelectPrediction={handleSelectPrediction}
                 />
             ) : null}
+            {/* MODAL THÔNG BÁO HẾT LƯỢT QUÉT CHO KHÁCH VÃNG LAI */}
+            {showGuestLimitModal && (
+                <div className="guest-modal-overlay" onClick={() => setShowGuestLimitModal(false)}>
+                    <div className="guest-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="guest-modal-icon-badge">
+                            <Lock size={32} color="#0d9488" />
+                        </div>
+                        <h2 className="guest-modal-title">Hết Lượt Quét Thử Nghiệm</h2>
+                        <p className="guest-modal-description">
+                            Bạn đã sử dụng hết <strong>1 lượt quét ảnh miễn phí</strong> dành cho khách vãng lai.
+                            Để tiếp tục nhận diện địa danh Việt Nam, xem toạ độ bản đồ và lưu trữ lịch sử, vui lòng đăng nhập vào tài khoản của bạn.
+                        </p>
+                        <div className="guest-modal-actions">
+                            <button
+                                type="button"
+                                className="btn-modal-login"
+                                onClick={() => navigate("/login")}
+                            >
+                                <LogIn size={18} />
+                                <span>Đăng nhập ngay</span>
+                            </button>
+                            <button
+                                type="button"
+                                className="btn-modal-register"
+                                onClick={() => navigate("/register")}
+                            >
+                                <UserPlus size={18} />
+                                <span>Tạo tài khoản mới</span>
+                            </button>
+                        </div>
+                        <button
+                            type="button"
+                            className="btn-modal-close"
+                            onClick={() => setShowGuestLimitModal(false)}
+                        >
+                            Đóng cửa sổ
+                        </button>
+                    </div>
+                </div>
+            )}
         </main>
             </div>
         </div>

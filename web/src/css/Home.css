@@ -474,3 +474,210 @@
         font-size: 0.84rem;
     }
 }
+
+/* ==========================================================================
+   GUEST STATUS BANNER & GUEST LIMIT MODAL
+   ========================================================================== */
+.guest-status-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 20px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    font-weight: 500;
+    flex-wrap: wrap;
+    animation: fadeIn 0.3s ease;
+}
+
+.guest-status-banner.trial-mode {
+    background-color: #f0fdfa;
+    border: 1.5px solid #99f6e4;
+    color: #0f766e;
+}
+
+.guest-status-banner.limit-reached {
+    background-color: #fff1f2;
+    border: 1.5px solid #fecdd3;
+    color: #be123c;
+}
+
+.guest-banner-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+}
+
+.guest-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-guest-login {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: #0d9488;
+    color: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-guest-login:hover {
+    background: #0f766e;
+    transform: translateY(-1px);
+}
+
+.btn-guest-register {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.btn-guest-register:hover {
+    background: #f8fafc;
+    border-color: #94a3b8;
+}
+
+/* Guest Modal Overlay */
+.guest-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(6px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    animation: fadeIn 0.2s ease;
+}
+
+.guest-modal-card {
+    background: #ffffff;
+    width: 440px;
+    max-width: 100%;
+    border-radius: 24px;
+    padding: 32px 28px;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid #f1f5f9;
+    animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes scaleUp {
+    from {
+        opacity: 0;
+        transform: scale(0.92);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.guest-modal-icon-badge {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 8px 16px rgba(13, 148, 136, 0.15);
+}
+
+.guest-modal-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 10px 0;
+    letter-spacing: -0.02em;
+}
+
+.guest-modal-description {
+    font-size: 0.92rem;
+    color: #475569;
+    line-height: 1.55;
+    margin: 0 0 24px 0;
+}
+
+.guest-modal-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-modal-login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0d9488, #0f766e);
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25);
+}
+
+.btn-modal-login:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(13, 148, 136, 0.35);
+}
+
+.btn-modal-register {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    background: #f8fafc;
+    color: #0f172a;
+    border: 1.5px solid #e2e8f0;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-modal-register:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.btn-modal-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: color 0.15s ease;
+}
+
+.btn-modal-close:hover {
+    color: #64748b;
+}

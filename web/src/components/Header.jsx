@@ -92,6 +92,11 @@ function Header({
 
     // Load user profile
     const loadUserProfile = async () => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            setUserProfile(null);
+            return;
+        }
         try {
             const profile = await getUserProfileApi();
             if (profile) {
@@ -106,6 +111,17 @@ function Header({
     useEffect(() => {
         loadNotificationData();
         loadUserProfile();
+
+        const handleAuth = () => {
+            const token = localStorage.getItem("access_token");
+            if (!token) {
+                setUserProfile(null);
+            } else {
+                loadUserProfile();
+            }
+        };
+        window.addEventListener("authChange", handleAuth);
+        return () => window.removeEventListener("authChange", handleAuth);
     }, []);
 
     // Close calendar, export, notif, or user popup on outside click
@@ -130,9 +146,7 @@ function Header({
 
     const handleLogout = () => {
         clearAuthToken();
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("user_info");
-        navigate("/login");
+        navigate("/");
     };
 
     const handleToggleNotif = async () => {

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, ChangeEvent, DragEvent } from "react";
+import { useState, useRef, useCallback, useEffect, ChangeEvent, DragEvent } from "react";
 import { SAMPLE_PRESETS, LandmarkPreset } from "../mocks/mockLandmarks";
 import {
     predictLandmarkApi,
@@ -10,8 +10,53 @@ import {
 } from "../service/predictService";
 import { selectHistoryPrediction } from "../service/historyService";
 
+function getGuestSessionToken(): string {
+    if (typeof window === "undefined") return "";
+    let token = sessionStorage.getItem("guest_session_token");
+    if (!token) {
+        token = typeof crypto !== "undefined" && crypto.randomUUID
+            ? crypto.randomUUID()
+            : "gst_" + Math.random().toString(36).substring(2) + Date.now();
+        sessionStorage.setItem("guest_session_token", token);
+    }
+    return token;
+}
+
 export function usePredict() {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+    // Auth & Guest Scanning States
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => !!localStorage.getItem("access_token"));
+    const [guestScanUsed, setGuestScanUsed] = useState<boolean>(() => {
+        if (typeof window === "undefined") return false;
+        // Dọn sạch key cũ trong localStorage nếu còn để không bị block nhầm
+        try {
+            localStorage.removeItem("guest_scan_used");
+        } catch {
+            // ignore
+        }
+        return sessionStorage.getItem("guest_scan_used") === "true";
+    });
+    const [showGuestLimitModal, setShowGuestLimitModal] = useState<boolean>(false);
+
+    useEffect(() => {
+        const handleAuthChange = () => {
+            const hasToken = !!localStorage.getItem("access_token");
+            setIsLoggedIn(hasToken);
+            if (hasToken) {
+                setShowGuestLimitModal(false);
+            } else {
+                setGuestScanUsed(sessionStorage.getItem("guest_scan_used") === "true");
+            }
+        };
+
+        window.addEventListener("authChange", handleAuthChange);
+        window.addEventListener("storage", handleAuthChange);
+        return () => {
+            window.removeEventListener("authChange", handleAuthChange);
+            window.removeEventListener("storage", handleAuthChange);
+        };
+    }, []);
 
     // Navigation & Configuration States
     const [activeTab, setActiveTab] = useState<string>("predict");
@@ -122,6 +167,18 @@ export function usePredict() {
 
     // Perform Real AI Prediction via FastAPI Backend with Library GIS Error Metrics
     const handlePredict = useCallback(async () => {
+        const token = localStorage.getItem("access_token");
+
+        // Kiểm tra giới hạn khách vãng lai: chỉ được quét tối đa 1 lần / phiên
+        if (!token) {
+            const alreadyUsed = sessionStorage.getItem("guest_scan_used") === "true";
+            if (alreadyUsed) {
+                setError("Bạn đã sử dụng hết 1 lượt quét ảnh miễn phí dành cho khách vãng lai trong phiên này. Vui lòng đăng nhập tài khoản để tiếp tục khám phá!");
+                setShowGuestLimitModal(true);
+                return;
+            }
+        }
+
         if (!file && !preview) {
             setError("Vui lòng chọn hoặc tải lên một file ảnh trước.");
             return;
@@ -144,18 +201,30 @@ export function usePredict() {
             }
 
             const parsedTopK = typeof topK === "number" ? topK : parseInt(topK, 10) || 5;
+            const guestToken = !token ? getGuestSessionToken() : undefined;
 
             // Real AI Prediction & Geodesic Distance Error Call from Python
-            const data = await predictLandmarkApi(fileToSend, parsedTopK, dataSource, groundTruth);
+            const data = await predictLandmarkApi(fileToSend, parsedTopK, dataSource, groundTruth, guestToken);
             setResult(data);
             setSelectedPredictionIndex(0);
             setSelectedPrediction(data.prediction || null);
             setSelectedGisError(data.gis_error || null);
 
+            // Ghi nhận lượt quét thành công của khách vãng lai trong phiên
+            if (!token) {
+                sessionStorage.setItem("guest_scan_used", "true");
+                setGuestScanUsed(true);
+            }
+
         } catch (err: any) {
             console.error("[GeoCLIP AI Prediction Error]", err);
             const rawMsg = err?.message || "";
-            if (rawMsg.toLowerCase().includes("token") || rawMsg.toLowerCase().includes("hết hạn")) {
+            if (rawMsg.includes("khách vãng lai") || rawMsg.includes("hết 1 lượt") || rawMsg.includes("phiên này")) {
+                sessionStorage.setItem("guest_scan_used", "true");
+                setGuestScanUsed(true);
+                setError(rawMsg);
+                setShowGuestLimitModal(true);
+            } else if (rawMsg.toLowerCase().includes("token") || rawMsg.toLowerCase().includes("hết hạn")) {
                 setError("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.");
             } else {
                 setError(rawMsg || "Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra backend.");
@@ -261,5 +330,9 @@ export function usePredict() {
         handleRemove,
         handleShare,
         samplePresets: SAMPLE_PRESETS as LandmarkPreset[],
+        isLoggedIn,
+        guestScanUsed,
+        showGuestLimitModal,
+        setShowGuestLimitModal,
     };
 }

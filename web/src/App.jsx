@@ -13,6 +13,9 @@ import ClientContact from "./pages/client/ClientContact";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
+// Auth Guard
+import PrivateRoute from "./components/PrivateRoute";
+
 // Dashboard Pages
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
@@ -36,24 +39,27 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
-            {/* Dashboard Routes (Prefix /dashboard/) */}
-            <Route path="/dashboard" element={<Statistics />} />
+            {/* Scan Page (Cho phép cả khách vãng lai và người dùng đăng nhập) */}
             <Route path="/dashboard/scan" element={<Home />} />
-            <Route path="/dashboard/history" element={<HistoryPage />} />
-            <Route path="/dashboard/lich-su" element={<HistoryPage />} />
-            <Route path="/dashboard/gallery" element={<Gallery />} />
-            <Route path="/dashboard/kho-anh" element={<Gallery />} />
-            <Route path="/dashboard/favorites" element={<Favorites />} />
-            <Route path="/dashboard/yeu-thich" element={<Favorites />} />
-            <Route path="/dashboard/statistics" element={<Statistics />} />
-            <Route path="/dashboard/profile" element={<Profile />} />
+            <Route path="/scan" element={<Home />} />
+
+            {/* Dashboard Routes (Bảo vệ bằng PrivateRoute - yêu cầu đăng nhập) */}
+            <Route path="/dashboard" element={<PrivateRoute><Statistics /></PrivateRoute>} />
+            <Route path="/dashboard/history" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
+            <Route path="/dashboard/lich-su" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
+            <Route path="/dashboard/gallery" element={<PrivateRoute><Gallery /></PrivateRoute>} />
+            <Route path="/dashboard/kho-anh" element={<PrivateRoute><Gallery /></PrivateRoute>} />
+            <Route path="/dashboard/favorites" element={<PrivateRoute><Favorites /></PrivateRoute>} />
+            <Route path="/dashboard/yeu-thich" element={<PrivateRoute><Favorites /></PrivateRoute>} />
+            <Route path="/dashboard/statistics" element={<PrivateRoute><Statistics /></PrivateRoute>} />
+            <Route path="/dashboard/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
             {/* Backwards Compatibility Routes */}
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/statistics" element={<Statistics />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/favorites" element={<Favorites />} />
-            <Route path="/history" element={<HistoryPage />} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+            <Route path="/statistics" element={<PrivateRoute><Statistics /></PrivateRoute>} />
+            <Route path="/gallery" element={<PrivateRoute><Gallery /></PrivateRoute>} />
+            <Route path="/favorites" element={<PrivateRoute><Favorites /></PrivateRoute>} />
+            <Route path="/history" element={<PrivateRoute><HistoryPage /></PrivateRoute>} />
 
             {/* 404 Route */}
             <Route path="*" element={<NotFound />} />

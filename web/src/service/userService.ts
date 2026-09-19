@@ -67,11 +67,18 @@ export function getAuthToken(): string | null {
 
 export function setAuthToken(token: string): void {
     localStorage.setItem("access_token", token);
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("authChange"));
+    }
 }
 
 export function clearAuthToken(): void {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user_info");
+    localStorage.removeItem("auth_token");
+    if (typeof window !== "undefined") {
+        window.dispatchEvent(new Event("authChange"));
+    }
 }
 
 function getAuthHeaders(): HeadersInit {
@@ -221,7 +228,12 @@ export async function registerUserApi(payload: UserRegisterPayload): Promise<Reg
 /**
  * Lấy thông tin hồ sơ cá nhân từ API GET /users/me
  */
-export async function getUserProfileApi(): Promise<UserProfileResponse> {
+export async function getUserProfileApi(): Promise<UserProfileResponse | null> {
+    const token = getAuthToken();
+    if (!token) {
+        return null;
+    }
+
     try {
         const response = await fetch(`${API_BASE_URL}/users/me`, {
             method: "GET",

@@ -6,9 +6,9 @@ from datetime import date, datetime, time as d_time
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status, Request
 
-from app.core.security import get_current_user_with_plan
+from app.core.security import get_current_user_with_plan, get_optional_user_with_plan
 from app.database.supabase import (
     SUPABASE_BUCKET,
     SUPABASE_URL,
@@ -25,6 +25,15 @@ ALLOWED_CONTENT_TYPES = {
     "image/png",
     "image/webp",
 }
+
+# Theo dõi lượt quét của khách vãng lai (chưa đăng nhập) theo Session Token hoặc IP
+GUEST_SCAN_SESSIONS: dict = {}
+
+def _clean_expired_guest_sessions():
+    now = time.time()
+    expired_keys = [k for k, v in GUEST_SCAN_SESSIONS.items() if now - v > 86400]
+    for k in expired_keys:
+        GUEST_SCAN_SESSIONS.pop(k, None)
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
 
@@ -196,39 +205,59 @@ def _save_prediction_history(
 
 @router.post("/predict")
 async def predict(
+    request: Request,
     image: UploadFile = File(...),
     top_k: int = Form(5),
     scope: str = Form("iconic"),
     ground_truth_lat: Optional[str] = Form(None),
     ground_truth_lon: Optional[str] = Form(None),
-    user_with_plan=Depends(get_current_user_with_plan),
+    user_with_plan=Depends(get_optional_user_with_plan),
 ):
     """
     API endpoint nhận diện vị trí và địa danh Việt Nam từ ảnh bằng GeoCLIP AI model,
     trả về dữ liệu thực tế: thời gian xử lý, tổng số tọa độ trong gallery, danh sách Top-K và sai số GIS.
-    Kiểm tra giới hạn số lượt quét trong ngày đối với tài khoản Free.
+    Hỗ trợ cả khách vãng lai (tối đa 1 lượt quét thử nghiệm) và người dùng đã đăng nhập (theo gói cước).
     """
-    user_id = user_with_plan["user_id"]
-    is_pro = user_with_plan["is_pro"]
-    scan_limit = user_with_plan["scan_limit"]
+    is_guest = user_with_plan.get("is_guest", False)
+    user_id = user_with_plan.get("user_id")
+    is_pro = user_with_plan.get("is_pro", False)
+    scan_limit = user_with_plan.get("scan_limit", 1)
 
-    # Kiểm tra giới hạn lượt quét trong ngày đối với gói Free dựa trên bảng log bất biến
-    if not is_pro and scan_limit > 0:
-        today_start = datetime.combine(date.today(), d_time.min).isoformat()
-        client = get_supabase_admin_client()
-        today_scans = (
-            client.table("user_daily_scan_logs")
-            .select("id", count="exact")
-            .eq("user_id", user_id)
-            .gte("scanned_at", today_start)
-            .execute()
-        )
-        count_today = today_scans.count or 0
-        if count_today >= scan_limit:
+    # 1. Kiểm tra giới hạn quét cho Khách vãng lai (Chưa đăng nhập: tối đa 1 lần / phiên)
+    client_ip = request.client.host if request.client else "unknown"
+    guest_token = request.headers.get("X-Guest-Token") or request.headers.get("x-guest-token")
+
+    # Ưu tiên guest_token; nếu không có token và không phải localhost thì mới dùng IP
+    guest_key = guest_token
+    is_loopback = client_ip in ("127.0.0.1", "::1", "localhost", "testclient")
+    if not guest_key and not is_loopback:
+        guest_key = f"ip_{client_ip}"
+
+    if is_guest:
+        _clean_expired_guest_sessions()
+        if guest_key and guest_key in GUEST_SCAN_SESSIONS:
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail=f"Bạn đã sử dụng hết {scan_limit} lượt quét ảnh miễn phí hôm nay. Vui lòng nâng cấp tài khoản Pro để quét không giới hạn!",
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bạn đã sử dụng hết 1 lượt quét ảnh miễn phí dành cho khách vãng lai trong phiên này. Vui lòng đăng nhập hoặc tạo tài khoản để tiếp tục khám phá không giới hạn!",
             )
+    else:
+        # 2. Kiểm tra giới hạn lượt quét trong ngày đối với gói Free của user đã đăng nhập
+        if not is_pro and scan_limit > 0:
+            today_start = datetime.combine(date.today(), d_time.min).isoformat()
+            client = get_supabase_admin_client()
+            today_scans = (
+                client.table("user_daily_scan_logs")
+                .select("id", count="exact")
+                .eq("user_id", user_id)
+                .gte("scanned_at", today_start)
+                .execute()
+            )
+            count_today = today_scans.count or 0
+            if count_today >= scan_limit:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=f"Bạn đã sử dụng hết {scan_limit} lượt quét ảnh miễn phí hôm nay. Vui lòng nâng cấp tài khoản Pro để quét không giới hạn!",
+                )
 
     content_type = image.content_type or "image/jpeg"
     if content_type not in ALLOWED_CONTENT_TYPES:
@@ -296,34 +325,45 @@ async def predict(
             except Exception as e:
                 print(f"[GIS Error Warning] {e}")
 
-        history = _save_prediction_history(
-            image_data=image_data,
-            original_filename=image.filename or "upload.jpg",
-            content_type=content_type,
-            landmark=landmark,
-            confidence=confidence,
-            user_id=user_id,
-            predicted_name=best_prediction.get("name") or landmark,
-            predicted_province=best_prediction.get("province"),
-            predicted_lat=pred_lat,
-            predicted_lon=pred_lon,
-            all_predictions=predictions,
-        )
+        if is_guest:
+            # Ghi nhận khách vãng lai đã dùng hết lượt quét miễn phí cho phiên này
+            if guest_key:
+                GUEST_SCAN_SESSIONS[guest_key] = time.time()
+            history_id = None
+            input_media_id = None
+            place_id = None
+        else:
+            history = _save_prediction_history(
+                image_data=image_data,
+                original_filename=image.filename or "upload.jpg",
+                content_type=content_type,
+                landmark=landmark,
+                confidence=confidence,
+                user_id=user_id,
+                predicted_name=best_prediction.get("name") or landmark,
+                predicted_province=best_prediction.get("province"),
+                predicted_lat=pred_lat,
+                predicted_lon=pred_lon,
+                all_predictions=predictions,
+            )
+            history_id = history["history_id"]
+            input_media_id = history["input_media_id"]
+            place_id = history["place_id"]
 
-        # Ghi nhận lượt quét vào bảng log bất biến (không bị xóa khi user xóa lịch sử tìm kiếm)
-        try:
-            admin_client = get_supabase_admin_client()
-            admin_client.table("user_daily_scan_logs").insert({"user_id": user_id}).execute()
-        except Exception as scan_log_err:
-            print(f"[Scan Log Warning] Không thể ghi nhận user_daily_scan_logs: {scan_log_err}")
+            # Ghi nhận lượt quét vào bảng log bất biến (không bị xóa khi user xóa lịch sử tìm kiếm)
+            try:
+                admin_client = get_supabase_admin_client()
+                admin_client.table("user_daily_scan_logs").insert({"user_id": user_id}).execute()
+            except Exception as scan_log_err:
+                print(f"[Scan Log Warning] Không thể ghi nhận user_daily_scan_logs: {scan_log_err}")
 
         size_mb = size_bytes / (1024 * 1024)
 
         return {
-            "id": history["history_id"],
-            "history_id": history["history_id"],
-            "input_media_id": history["input_media_id"],
-            "place_id": history["place_id"],
+            "id": history_id or "guest_scan",
+            "history_id": history_id,
+            "input_media_id": input_media_id,
+            "place_id": place_id,
             "filename": image.filename or "upload.jpg",
             "content_type": content_type,
             "size_bytes": size_bytes,
@@ -337,6 +377,8 @@ async def predict(
             "gis_error": gis_error,
             "elapsed_seconds": elapsed_seconds,
             "total_gallery": total_gallery,
+            "is_guest": is_guest,
+            "guest_limit_reached": is_guest,
         }
 
     except HTTPException:

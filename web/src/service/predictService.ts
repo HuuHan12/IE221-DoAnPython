@@ -48,7 +48,8 @@ export async function predictLandmarkApi(
     file: File | Blob | any,
     topK: number = 5,
     scope: string = "iconic",
-    groundTruth: GroundTruthCoords | null = null
+    groundTruth: GroundTruthCoords | null = null,
+    guestToken?: string
 ): Promise<PredictResponse> {
     if (!file) {
         throw new Error("Vui lòng chọn một file ảnh hợp lệ.");
@@ -68,6 +69,8 @@ export async function predictLandmarkApi(
     const headers: Record<string, string> = {};
     if (token) {
         headers["Authorization"] = `Bearer ${token}`;
+    } else if (guestToken) {
+        headers["X-Guest-Token"] = guestToken;
     }
 
     const response = await fetch(`${API_BASE_URL}/predict`, {

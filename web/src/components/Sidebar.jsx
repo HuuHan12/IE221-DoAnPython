@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     LayoutDashboard,
@@ -9,6 +9,7 @@ import {
     User,
     MapPin,
     LogOut,
+    LogIn,
     ChevronLeft,
     ChevronRight,
     Home,
@@ -19,6 +20,36 @@ import "../css/Sidebar.css";
 function Sidebar({ activeMenu }) {
     const location = useLocation();
     const navigate = useNavigate();
+
+    const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem("access_token"));
+    const [userInfo, setUserInfo] = useState(() => {
+        try {
+            const raw = localStorage.getItem("user_info");
+            return raw ? JSON.parse(raw) : null;
+        } catch {
+            return null;
+        }
+    });
+
+    useEffect(() => {
+        const checkAuth = () => {
+            const token = localStorage.getItem("access_token");
+            setIsLoggedIn(!!token);
+            try {
+                const raw = localStorage.getItem("user_info");
+                setUserInfo(raw ? JSON.parse(raw) : null);
+            } catch {
+                setUserInfo(null);
+            }
+        };
+
+        window.addEventListener("authChange", checkAuth);
+        window.addEventListener("storage", checkAuth);
+        return () => {
+            window.removeEventListener("authChange", checkAuth);
+            window.removeEventListener("storage", checkAuth);
+        };
+    }, []);
 
     // State quản lý trạng thái thu gọn / mở rộng, lưu vào localStorage để ghi nhớ
     const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -41,29 +72,38 @@ function Sidebar({ activeMenu }) {
         });
     };
 
-    // Danh sách menu catalog cho người dùng (đã xóa trang thông báo và bảng thống kê theo yêu cầu)
-    const menuItems = [
-        { id: "overview", label: "Tổng quan", icon: LayoutDashboard, path: "/dashboard" },
-        { id: "scan", label: "Quét & Khám phá", icon: QrCode, path: "/dashboard/scan" },
-        { id: "history", label: "Lịch sử Tìm kiếm", icon: Clock, path: "/dashboard/history" },
-        { id: "favorites", label: "Địa điểm yêu thích", icon: Heart, path: "/dashboard/favorites" },
-        { id: "gallery", label: "Kho ảnh", icon: ImageIcon, path: "/dashboard/gallery" },
-        { id: "profile", label: "Hồ sơ", icon: User, path: "/dashboard/profile" },
-    ];
+    // Khi CHƯA đăng nhập: chỉ hiện mục "Quét & Khám phá"
+    // Khi ĐÃ đăng nhập: hiện đầy đủ thanh catalog
+    const menuItems = isLoggedIn
+        ? [
+            { id: "overview", label: "Tổng quan", icon: LayoutDashboard, path: "/dashboard" },
+            { id: "scan", label: "Quét & Khám phá", icon: QrCode, path: "/dashboard/scan" },
+            { id: "history", label: "Lịch sử Tìm kiếm", icon: Clock, path: "/dashboard/history" },
+            { id: "favorites", label: "Địa điểm yêu thích", icon: Heart, path: "/dashboard/favorites" },
+            { id: "gallery", label: "Kho ảnh", icon: ImageIcon, path: "/dashboard/gallery" },
+            { id: "profile", label: "Hồ sơ", icon: User, path: "/dashboard/profile" },
+        ]
+        : [
+            { id: "scan", label: "Quét & Khám phá", icon: QrCode, path: "/dashboard/scan" },
+        ];
 
     const currentPath = location.pathname;
 
     const handleLogout = () => {
         clearAuthToken();
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("user_info");
-        navigate("/login");
+        navigate("/");
     };
+
+    const displayName =
+        userInfo?.full_name ||
+        (userInfo?.email ? userInfo.email.split("@")[0] : "") ||
+        "Tài khoản";
+    const initialLetter = (displayName || "U")[0].toUpperCase();
 
     return (
         <aside className={`app-sidebar ${isCollapsed ? "collapsed" : ""}`}>
             <div className="sidebar-header">
-                <Link to="/dashboard" className="sidebar-brand" title="Travel AI - Khám phá Việt Nam">
+                <Link to={isLoggedIn ? "/dashboard" : "/dashboard/scan"} className="sidebar-brand" title="Travel AI - Khám phá Việt Nam">
                     <div className="brand-logo-icon">
                         <MapPin size={22} color="#FFFFFF" fill="#FFFFFF" />
                     </div>
@@ -110,6 +150,16 @@ function Sidebar({ activeMenu }) {
             </nav>
 
             <div className="sidebar-footer">
+                {isLoggedIn && !isCollapsed && (
+                    <div className="sidebar-user-brief">
+                        <div className="sidebar-user-avatar">{initialLetter}</div>
+                        <div className="sidebar-user-meta">
+                            <span className="sidebar-user-name">{displayName}</span>
+                            <span className="sidebar-user-email">{userInfo?.email || ""}</span>
+                        </div>
+                    </div>
+                )}
+
                 <Link
                     to="/"
                     className="home-nav-btn"
@@ -119,15 +169,26 @@ function Sidebar({ activeMenu }) {
                     {!isCollapsed && <span>Về trang chủ</span>}
                 </Link>
 
-                <button
-                    type="button"
-                    className="logout-btn"
-                    onClick={handleLogout}
-                    title="Đăng xuất khỏi hệ thống"
-                >
-                    <LogOut size={20} />
-                    {!isCollapsed && <span>Đăng xuất</span>}
-                </button>
+                {isLoggedIn ? (
+                    <button
+                        type="button"
+                        className="logout-btn"
+                        onClick={handleLogout}
+                        title="Đăng xuất khỏi hệ thống"
+                    >
+                        <LogOut size={20} />
+                        {!isCollapsed && <span>Đăng xuất</span>}
+                    </button>
+                ) : (
+                    <Link
+                        to="/login"
+                        className="login-nav-btn"
+                        title="Đăng nhập để mở khóa đầy đủ tính năng"
+                    >
+                        <LogIn size={20} />
+                        {!isCollapsed && <span>Đăng nhập</span>}
+                    </Link>
+                )}
             </div>
 
             {/* Pagoda landscape vector graphic at sidebar bottom */}
