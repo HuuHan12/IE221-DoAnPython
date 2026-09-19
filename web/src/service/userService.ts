@@ -121,7 +121,18 @@ function detailToMessage(detail: unknown): string | null {
 async function parseApiResponse<T>(response: Response, fallback: string): Promise<T> {
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-        const message = detailToMessage(data?.detail) || detailToMessage(data?.error) || fallback;
+        if (response.status === 401) {
+            clearAuthToken();
+            try {
+                localStorage.removeItem("user_info");
+            } catch {
+                // ignore
+            }
+        }
+        let message = detailToMessage(data?.detail) || detailToMessage(data?.error) || fallback;
+        if (typeof message === "string" && (message.toLowerCase().includes("token") || message.toLowerCase().includes("hết hạn"))) {
+            message = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.";
+        }
         throw new Error(message);
     }
     return data as T;
@@ -211,26 +222,29 @@ export async function registerUserApi(payload: UserRegisterPayload): Promise<Reg
  * Lấy thông tin hồ sơ cá nhân từ API GET /users/me
  */
 export async function getUserProfileApi(): Promise<UserProfileResponse> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
     try {
         const response = await fetch(`${API_BASE_URL}/users/me`, {
             method: "GET",
             headers: getAuthHeaders(),
-            signal: controller.signal,
         });
-        clearTimeout(timeoutId);
 
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(data.detail || "Không thể tải thông tin hồ sơ cá nhân.");
+            let detail = data.detail || "Không thể tải thông tin hồ sơ cá nhân.";
+            if (typeof detail === "string" && (detail.includes("WinError") || detail.includes("Failed to fetch") || detail.includes("NetworkError"))) {
+                detail = "Kết nối máy chủ tạm thời bị gián đoạn. Vui lòng thử lại.";
+            }
+            throw new Error(detail);
         }
 
         return data;
     } catch (err: any) {
-        clearTimeout(timeoutId);
-        throw err;
+        console.warn("Lỗi getUserProfileApi:", err);
+        let msg = err?.message || "Không thể tải thông tin hồ sơ cá nhân.";
+        if (typeof msg === "string" && (msg.includes("WinError") || msg.includes("Failed to fetch") || msg.includes("NetworkError"))) {
+            msg = "Kết nối máy chủ tạm thời bị gián đoạn. Vui lòng thử lại.";
+        }
+        throw new Error(msg);
     }
 }
 
@@ -238,27 +252,30 @@ export async function getUserProfileApi(): Promise<UserProfileResponse> {
  * Cập nhật thông tin hồ sơ từ API PUT /users/me
  */
 export async function updateUserProfileApi(payload: UserProfileUpdatePayload): Promise<any> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
-
     try {
         const response = await fetch(`${API_BASE_URL}/users/me`, {
             method: "PUT",
             headers: getAuthHeaders(),
             body: JSON.stringify(payload),
-            signal: controller.signal,
         });
-        clearTimeout(timeoutId);
 
         const data = await response.json().catch(() => ({}));
         if (!response.ok) {
-            throw new Error(data.detail || "Không thể cập nhật hồ sơ cá nhân.");
+            let detail = data.detail || "Không thể cập nhật hồ sơ cá nhân.";
+            if (typeof detail === "string" && (detail.includes("WinError") || detail.includes("Failed to fetch") || detail.includes("NetworkError"))) {
+                detail = "Kết nối máy chủ tạm thời bị gián đoạn. Vui lòng thử lại.";
+            }
+            throw new Error(detail);
         }
 
         return data;
     } catch (err: any) {
-        clearTimeout(timeoutId);
-        throw err;
+        console.warn("Lỗi updateUserProfileApi:", err);
+        let msg = err?.message || "Không thể cập nhật hồ sơ cá nhân.";
+        if (typeof msg === "string" && (msg.includes("WinError") || msg.includes("Failed to fetch") || msg.includes("NetworkError"))) {
+            msg = "Kết nối máy chủ tạm thời bị gián đoạn. Vui lòng thử lại.";
+        }
+        throw new Error(msg);
     }
 }
 

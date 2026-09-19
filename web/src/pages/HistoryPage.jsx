@@ -11,6 +11,11 @@ import {
     fetchHistory,
     fetchHistoryDetail,
 } from "../service/historyService";
+import {
+    fetchFavoritesApi,
+    addFavoriteApi,
+    removeFavoriteApi,
+} from "../service/favoriteService";
 import "../css/History.css";
 
 const ITEMS_PER_PAGE = 10;
@@ -41,8 +46,58 @@ function HistoryPage() {
     const [error, setError] = useState(null);
     const [detailItem, setDetailItem] = useState(null);
     const [itemToDelete, setItemToDelete] = useState(null);
+    const [favoritePlaceIds, setFavoritePlaceIds] = useState(new Set());
 
-    const loadHistory = useCallback(async () => {
+    // Tải danh sách place_id đã được yêu thích để đánh dấu tức thời trên từng dòng
+    useEffect(() => {
+        let isMounted = true;
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+
+        const loadFavs = async (retryCount = 0) => {
+            try {
+                const res = await fetchFavoritesApi();
+                if (isMounted && res && Array.isArray(res.items)) {
+                    const ids = new Set(res.items.map((it) => it.place_id));
+                    setFavoritePlaceIds(ids);
+                }
+            } catch (err) {
+                if (retryCount < 1 && isMounted) {
+                    setTimeout(() => loadFavs(retryCount + 1), 500);
+                } else {
+                    console.warn("Không thể tải danh sách yêu thích trong HistoryPage:", err);
+                }
+            }
+        };
+
+        loadFavs();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const handleToggleFavorite = async (placeId, mediaId = null) => {
+        if (!placeId) return;
+        const isFav = favoritePlaceIds.has(placeId);
+
+        try {
+            if (isFav) {
+                await removeFavoriteApi(placeId);
+                setFavoritePlaceIds((prev) => {
+                    const next = new Set(prev);
+                    next.delete(placeId);
+                    return next;
+                });
+            } else {
+                await addFavoriteApi(placeId, mediaId);
+                setFavoritePlaceIds((prev) => new Set(prev).add(placeId));
+            }
+        } catch (favErr) {
+            console.error("Lỗi cập nhật yêu thích:", favErr);
+        }
+    };
+
+    const loadHistory = useCallback(async (isMountedRef = { current: true }) => {
         setLoading(true);
         setError(null);
         try {
@@ -53,16 +108,47 @@ function HistoryPage() {
                 startDate: filters.startDate,
                 endDate: filters.endDate,
             });
-            setHistoryData(data);
+            if (isMountedRef.current) {
+                setHistoryData(data);
+            }
         } catch (loadError) {
-            setError(loadError.message || "Không thể tải lịch sử tìm kiếm.");
+            // Thử lại 1 lần nếu có trục trặc mạng tạm thời
+            try {
+                await new Promise((resolve) => setTimeout(resolve, 500));
+                if (!isMountedRef.current) return;
+                const retryData = await fetchHistory({
+                    page: currentPage,
+                    pageSize: ITEMS_PER_PAGE,
+                    search: filters.search,
+                    startDate: filters.startDate,
+                    endDate: filters.endDate,
+                });
+                if (isMountedRef.current) {
+                    setHistoryData(retryData);
+                    return;
+                }
+            } catch (retryError) {
+                if (isMountedRef.current) {
+                    let msg = retryError.message || loadError.message || "Không thể tải lịch sử tìm kiếm.";
+                    if (typeof msg === "string" && (msg.includes("WinError") || msg.includes("Failed to fetch") || msg.includes("NetworkError"))) {
+                        msg = "Kết nối máy chủ tạm thời bị gián đoạn. Vui lòng bấm 'Thử lại'.";
+                    }
+                    setError(msg);
+                }
+            }
         } finally {
-            setLoading(false);
+            if (isMountedRef.current) {
+                setLoading(false);
+            }
         }
     }, [currentPage, filters]);
 
     useEffect(() => {
-        loadHistory();
+        const isMountedRef = { current: true };
+        loadHistory(isMountedRef);
+        return () => {
+            isMountedRef.current = false;
+        };
     }, [loadHistory]);
 
     const handleFilter = ({ landmarkSearch, startDate, endDate }) => {
@@ -118,7 +204,12 @@ function HistoryPage() {
                 />
 
                 <main className="history-body-padding">
-                    <HistoryFilterCard onFilter={handleFilter} onReset={handleReset} />
+                    <HistoryFilterCard
+                        onFilter={handleFilter}
+                        onReset={handleReset}
+                        onRefresh={loadHistory}
+                        loading={loading}
+                    />
 
                     {error && (
                         <div className="dashboard-error-banner" role="alert">
@@ -139,6 +230,8 @@ function HistoryPage() {
                                 historyItems={historyData.items}
                                 onViewDetail={handleViewDetail}
                                 onDeleteItem={setItemToDelete}
+                                favoritePlaceIds={favoritePlaceIds}
+                                onToggleFavorite={handleToggleFavorite}
                             />
                         )}
 
@@ -236,6 +329,8 @@ function HistoryPage() {
             <HistoryDetailModal
                 isOpen={Boolean(detailItem)}
                 item={detailItem}
+                isFavorite={detailItem?.place_id ? favoritePlaceIds.has(detailItem.place_id) : false}
+                onToggleFavorite={handleToggleFavorite}
                 onClose={() => setDetailItem(null)}
             />
         </div>

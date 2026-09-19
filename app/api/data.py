@@ -166,3 +166,77 @@ def get_data_records(
         "records": records,
         "columns": list(df.columns),
     }
+
+
+@router.get("/places")
+def get_public_places() -> Dict[str, Any]:
+    """
+    API public trả về danh sách các địa danh có trong cơ sở dữ liệu Supabase (places)
+    để phục vụ hiển thị trên trang Khám phá Địa danh (/dia-danh) và Trang chủ.
+    """
+    try:
+        from app.database.supabase import get_supabase_admin_client
+        client = get_supabase_admin_client()
+        places_res = client.table("places").select(
+            "id, name, description, province, country, latitude, longitude, address"
+        ).order("created_at", desc=False).execute()
+
+        places_data = places_res.data or []
+        place_ids = [str(p["id"]) for p in places_data if p.get("id")]
+
+        media_url_by_place: Dict[str, str] = {}
+        if place_ids:
+            try:
+                images_res = client.table("place_images").select("place_id, media_id, is_primary").in_("place_id", place_ids).order("is_primary", desc=True).execute()
+                media_ids = []
+                temp_media_map = {}
+                for row in images_res.data or []:
+                    p_id = str(row["place_id"])
+                    if p_id not in temp_media_map:
+                        temp_media_map[p_id] = str(row["media_id"])
+                        media_ids.append(str(row["media_id"]))
+
+                if media_ids:
+                    media_res = client.table("media_files").select("id, file_url").in_("id", media_ids).execute()
+                    m_url_map = {str(m["id"]): m["file_url"] for m in (media_res.data or []) if m.get("file_url")}
+                    for p_id, m_id in temp_media_map.items():
+                        if m_id in m_url_map:
+                            media_url_by_place[p_id] = m_url_map[m_id]
+            except Exception as img_err:
+                print(f"[Warning] Failed to fetch place images: {img_err}")
+
+        fallback_images = {
+            "Chùa Một Cột": "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=800&auto=format&fit=crop",
+            "Dinh Độc Lập": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&auto=format&fit=crop",
+            "Cầu Vàng": "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=800&auto=format&fit=crop",
+            "Vịnh Hạ Long": "https://images.unsplash.com/photo-1528127269322-539801943592?w=800&auto=format&fit=crop",
+            "Đại Nội Huế": "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=800&auto=format&fit=crop",
+        }
+
+        items = []
+        for p in places_data:
+            p_id = str(p["id"])
+            p_name = p.get("name") or "Địa danh"
+            img_url = media_url_by_place.get(p_id) or fallback_images.get(p_name, "https://images.unsplash.com/photo-1528127269322-539801943592?w=800&auto=format&fit=crop")
+
+            lat = float(p["latitude"]) if p.get("latitude") is not None else 0.0
+            lng = float(p["longitude"]) if p.get("longitude") is not None else 0.0
+
+            items.append({
+                "id": p_id,
+                "name": p_name,
+                "description": p.get("description") or "",
+                "province": p.get("province") or "Việt Nam",
+                "country": p.get("country") or "Việt Nam",
+                "latitude": lat,
+                "longitude": lng,
+                "coords": f"{lat:.4f}° N, {lng:.4f}° E",
+                "address": p.get("address") or "",
+                "heroImg": img_url,
+            })
+
+        return {"items": items, "total": len(items)}
+    except Exception as e:
+        print(f"[Error] get_public_places: {e}")
+        return {"items": [], "total": 0, "error": str(e)}
+

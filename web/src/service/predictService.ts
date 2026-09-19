@@ -64,15 +64,35 @@ export async function predictLandmarkApi(
         formData.append("ground_truth_lon", String(groundTruth.lon));
     }
 
+    const token = localStorage.getItem("access_token");
+    const headers: Record<string, string> = {};
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const response = await fetch(`${API_BASE_URL}/predict`, {
         method: "POST",
+        headers: headers,
         body: formData,
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.detail || "Không thể nhận diện hình ảnh từ máy chủ AI.");
+        if (response.status === 401) {
+            localStorage.removeItem("access_token");
+            try {
+                localStorage.removeItem("user_info");
+            } catch {
+                // ignore
+            }
+            throw new Error("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.");
+        }
+        let detail = data?.detail;
+        if (typeof detail === "string" && (detail.toLowerCase().includes("token") || detail.toLowerCase().includes("hết hạn"))) {
+            detail = "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.";
+        }
+        throw new Error(detail || "Không thể nhận diện hình ảnh từ máy chủ AI.");
     }
 
     if (!data.predictions || data.predictions.length === 0) {

@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Search, Clock, ArrowUpRight, CheckCircle2, Sparkles, X } from "lucide-react";
+import { Search, Clock, ArrowUpRight, CheckCircle2, Sparkles, X, Heart, MapPin } from "lucide-react";
 import ClientLayout from "../../components/client/ClientLayout";
+import {
+    fetchFavoritesApi,
+    addFavoriteApi,
+    removeFavoriteApi,
+} from "../../service/favoriteService";
 import "../../css/Client.css";
 
 const initialArticles = [
@@ -81,12 +86,88 @@ Vào các đêm đêm rằm hàng tháng, phố cổ ngừng sử dụng ánh s�
     }
 ];
 
+const featuredLandmarks = [
+    {
+        id: "e29e8977-61f7-4512-bad9-61d4e8984487",
+        name: "Vịnh Hạ Long",
+        province: "Quảng Ninh",
+        tag: "Kỳ quan UNESCO",
+        image: "https://images.unsplash.com/photo-1528127269322-539801943592?w=600&auto=format&fit=crop",
+    },
+    {
+        id: "fd5dbe78-112e-403c-b2bb-9c56771b70e5",
+        name: "Đại Nội Huế",
+        province: "Thừa Thiên Huế",
+        tag: "Di tích cố đô",
+        image: "https://images.unsplash.com/photo-1583417319070-4a69db38a482?w=600&auto=format&fit=crop",
+    },
+    {
+        id: "3b6c9a60-0fc1-4018-a3af-f98d3883cee6",
+        name: "Cầu Vàng",
+        province: "Đà Nẵng",
+        tag: "Bà Nà Hills",
+        image: "https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?w=600&auto=format&fit=crop",
+    },
+    {
+        id: "bd4515c1-7dc4-4aa8-a22b-69b16903013e",
+        name: "Chùa Một Cột",
+        province: "Hà Nội",
+        tag: "Di tích ngàn năm",
+        image: "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?w=600&auto=format&fit=crop",
+    },
+];
+
 function ClientHome({ activeTab = "home" }) {
     const [selectedCategory, setSelectedCategory] = useState("Tất cả");
     const [searchQuery, setSearchQuery] = useState("");
     const [newsletterEmail, setNewsletterEmail] = useState("");
     const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
     const [activeArticle, setActiveArticle] = useState(null);
+    const [homeFavs, setHomeFavs] = useState(new Set());
+    const [homeFavNotice, setHomeFavNotice] = useState(null);
+
+    useEffect(() => {
+        const token = localStorage.getItem("access_token");
+        if (!token) return;
+        fetchFavoritesApi()
+            .then((res) => {
+                if (res && Array.isArray(res.items)) {
+                    setHomeFavs(new Set(res.items.map((it) => it.place_id)));
+                }
+            })
+            .catch(() => {});
+    }, []);
+
+    const handleToggleHomeFav = async (e, placeId, placeName) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            setHomeFavNotice("Vui lòng đăng nhập để lưu địa danh vào bộ sưu tập yêu thích!");
+            setTimeout(() => setHomeFavNotice(null), 3500);
+            return;
+        }
+
+        try {
+            if (homeFavs.has(placeId)) {
+                await removeFavoriteApi(placeId);
+                setHomeFavs((prev) => {
+                    const next = new Set(prev);
+                    next.delete(placeId);
+                    return next;
+                });
+                setHomeFavNotice("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                await addFavoriteApi(placeId);
+                setHomeFavs((prev) => new Set(prev).add(placeId));
+                setHomeFavNotice(`Đã lưu "${placeName}" vào danh sách yêu thích!`);
+            }
+        } catch {
+            setHomeFavNotice("Không thể cập nhật danh sách yêu thích.");
+        } finally {
+            setTimeout(() => setHomeFavNotice(null), 3500);
+        }
+    };
 
     const categories = ["Tất cả", "Cẩm nang AI", "Miền Bắc", "Miền Trung", "Miền Nam", "Văn hoá"];
 
@@ -207,6 +288,98 @@ function ClientHome({ activeTab = "home" }) {
                 </div>
             </section>
 
+            {/* FEATURED LANDMARKS SECTION */}
+            <section style={{ margin: "36px 0 28px 0" }}>
+                <div className="section-header-row">
+                    <div>
+                        <span className="client-hero-subtitle" style={{ fontSize: "0.75rem", marginBottom: "2px", display: "block" }}>KHÁM PHÁ TIÊU BIỂU</span>
+                        <h3 className="section-title" style={{ margin: 0 }}>Địa danh nổi bật của tuần</h3>
+                    </div>
+                    <Link to="/dia-danh" className="section-link" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                        <span>Khám phá tất cả</span>
+                        <ArrowUpRight size={15} />
+                    </Link>
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))", gap: "18px", marginTop: "16px" }}>
+                    {featuredLandmarks.map((lm) => {
+                        const isFav = homeFavs.has(lm.id);
+                        return (
+                            <div
+                                key={lm.id}
+                                style={{
+                                    backgroundColor: "#ffffff",
+                                    borderRadius: "16px",
+                                    overflow: "hidden",
+                                    border: "1px solid #e2e8f0",
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    position: "relative",
+                                }}
+                            >
+                                <div style={{ position: "relative", height: "160px", overflow: "hidden" }}>
+                                    <img src={lm.image} alt={lm.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                                    <span style={{ position: "absolute", top: "10px", left: "10px", backgroundColor: "rgba(15,23,42,0.75)", color: "#ffffff", padding: "3px 8px", borderRadius: "20px", fontSize: "0.72rem", fontWeight: 600 }}>
+                                        {lm.tag}
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => handleToggleHomeFav(e, lm.id, lm.name)}
+                                        title={isFav ? "Bỏ yêu thích" : "Lưu vào yêu thích"}
+                                        style={{
+                                            position: "absolute",
+                                            top: "10px",
+                                            right: "10px",
+                                            width: "32px",
+                                            height: "32px",
+                                            borderRadius: "50%",
+                                            backgroundColor: isFav ? "#ffffff" : "rgba(255,255,255,0.9)",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            boxShadow: "0 2px 6px rgba(0,0,0,0.15)",
+                                            transition: "all 0.2s ease",
+                                        }}
+                                    >
+                                        <Heart size={16} fill={isFav ? "#ef4444" : "none"} color={isFav ? "#ef4444" : "#64748b"} />
+                                    </button>
+                                </div>
+
+                                <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
+                                    <div>
+                                        <h4 style={{ margin: "0 0 6px 0", fontSize: "1.05rem", fontWeight: 700, color: "#0f172a" }}>{lm.name}</h4>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "4px", fontSize: "0.82rem", color: "#64748b" }}>
+                                            <MapPin size={13} color="#009080" />
+                                            <span>{lm.province}</span>
+                                        </div>
+                                    </div>
+
+                                    <Link
+                                        to="/dia-danh"
+                                        style={{
+                                            marginTop: "12px",
+                                            fontSize: "0.82rem",
+                                            fontWeight: 600,
+                                            color: "#009080",
+                                            display: "inline-flex",
+                                            alignItems: "center",
+                                            gap: "4px",
+                                            textDecoration: "none",
+                                        }}
+                                    >
+                                        <span>Xem chi tiết & cẩm nang</span>
+                                        <ArrowUpRight size={13} />
+                                    </Link>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </section>
+
             {/* ARTICLES GRID SECTION */}
             <section>
                 <div className="section-header-row">
@@ -320,6 +493,30 @@ function ClientHome({ activeTab = "home" }) {
                             {activeArticle.content}
                         </div>
                     </div>
+                </div>
+            )}
+
+            {/* FLOATING TOAST NOTIFICATION */}
+            {homeFavNotice && (
+                <div
+                    style={{
+                        position: "fixed",
+                        bottom: "28px",
+                        right: "28px",
+                        backgroundColor: "#0f172a",
+                        color: "#ffffff",
+                        padding: "12px 20px",
+                        borderRadius: "12px",
+                        boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                        zIndex: 9999,
+                        fontSize: "0.9rem",
+                    }}
+                >
+                    <Sparkles size={16} color="#2dd4bf" />
+                    <span>{homeFavNotice}</span>
                 </div>
             )}
         </ClientLayout>

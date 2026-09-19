@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
     Bell,
     Calendar,
@@ -14,6 +14,8 @@ import {
     Info,
     ExternalLink,
     Loader2,
+    User,
+    LogOut,
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -22,6 +24,7 @@ import {
     markNotificationAsReadApi,
     markAllNotificationsAsReadApi,
 } from "../service/notificationService";
+import { getUserProfileApi, clearAuthToken } from "../service/userService";
 import "../css/Header.css";
 
 function Header({
@@ -36,6 +39,7 @@ function Header({
     onExport,
     isExporting = false,
 }) {
+    const navigate = useNavigate();
     const [internalStartDate, setInternalStartDate] = useState(() => {
         const d = new Date();
         d.setDate(d.getDate() - 30);
@@ -45,6 +49,16 @@ function Header({
     const [isCalendarOpen, setIsCalendarOpen] = useState(false);
     const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
     const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+    // User profile state
+    const [userProfile, setUserProfile] = useState(() => {
+        try {
+            const cached = localStorage.getItem("user_info");
+            return cached ? JSON.parse(cached) : null;
+        } catch {
+            return null;
+        }
+    });
 
     // Notification dropdown state
     const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -61,6 +75,7 @@ function Header({
     const datePickerRef = useRef(null);
     const exportRef = useRef(null);
     const notifRef = useRef(null);
+    const userRef = useRef(null);
 
     // Load initial unread count & notifications
     const loadNotificationData = async () => {
@@ -75,11 +90,25 @@ function Header({
         }
     };
 
+    // Load user profile
+    const loadUserProfile = async () => {
+        try {
+            const profile = await getUserProfileApi();
+            if (profile) {
+                setUserProfile(profile);
+                localStorage.setItem("user_info", JSON.stringify(profile));
+            }
+        } catch (err) {
+            // Giữ lại dữ liệu cache nếu có
+        }
+    };
+
     useEffect(() => {
         loadNotificationData();
+        loadUserProfile();
     }, []);
 
-    // Close calendar, export, or notif popup on outside click
+    // Close calendar, export, notif, or user popup on outside click
     useEffect(() => {
         function handleClickOutside(event) {
             if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
@@ -91,10 +120,20 @@ function Header({
             if (notifRef.current && !notifRef.current.contains(event.target)) {
                 setIsNotifOpen(false);
             }
+            if (userRef.current && !userRef.current.contains(event.target)) {
+                setUserDropdownOpen(false);
+            }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const handleLogout = () => {
+        clearAuthToken();
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("user_info");
+        navigate("/login");
+    };
 
     const handleToggleNotif = async () => {
         const nextState = !isNotifOpen;
@@ -229,103 +268,136 @@ function Header({
             : startDate
             ? `${formatDate(startDate)} - Chọn ngày kết thúc`
             : "Chọn khoảng thời gian";
+    const formatDisplayDate = formatDate;
+    const handleDatePickerChange = handleDateChange;
+    const handleExportFormat = handleExportSelect;
+
+    const displayName =
+        userProfile?.profile?.full_name?.trim()
+        || userProfile?.full_name?.trim()
+        || (userProfile?.email ? userProfile.email.split("@")[0] : "")
+        || "Người dùng";
+
+    const avatarUrl =
+        userProfile?.profile?.avatar_url
+        || userProfile?.avatar_url
+        || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(displayName || "User")}&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`;
 
     return (
-        <header className="app-header">
+        <header className="app-header stats-top-header">
             <div className="header-titles">
                 <h1 className="header-main-title">{title}</h1>
                 {subtitle && <p className="header-subtitle">{subtitle}</p>}
             </div>
 
-            <div className="header-actions">
+            <div className="header-actions-group">
+                {/* 1. Bộ lọc khoảng ngày (Date Range Picker) */}
                 {showDateFilter && (
-                    <div className="date-filter-container" ref={datePickerRef}>
+                    <div className="date-filter-wrapper" ref={datePickerRef}>
                         <button
                             type="button"
-                            className={`date-filter-picker ${isCalendarOpen ? "active" : ""}`}
+                            className={`date-filter-btn ${isCalendarOpen ? "active" : ""}`}
                             onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+                            aria-label="Chọn khoảng thời gian lọc dữ liệu"
                         >
-                            <Calendar size={16} className="date-icon" />
-                            <span>{dateText}</span>
-                            <ChevronDown
-                                size={16}
-                                className={`chevron-icon ${isCalendarOpen ? "rotate" : ""}`}
-                            />
+                            <Calendar size={18} className="calendar-icon" />
+                            <span className="date-range-text">
+                                {formatDisplayDate(startDate)} – {formatDisplayDate(endDate)}
+                            </span>
+                            <ChevronDown size={16} className={`chevron-icon ${isCalendarOpen ? "open" : ""}`} />
                         </button>
 
                         {isCalendarOpen && (
-                            <div className="calendar-dropdown-popup">
+                            <div className="calendar-popup-container">
                                 <DatePicker
                                     selected={startDate}
-                                    onChange={handleDateChange}
+                                    onChange={handleDatePickerChange}
                                     startDate={startDate}
                                     endDate={endDate}
                                     selectsRange
                                     inline
+                                    maxDate={new Date()}
                                 />
                             </div>
                         )}
                     </div>
                 )}
 
+                {/* 2. Nút Xuất báo cáo (Export Menu) */}
                 {showExportBtn && (
-                    <div className="export-dropdown-container" ref={exportRef}>
+                    <div className="export-menu-wrapper" ref={exportRef}>
                         <button
                             type="button"
-                            className={`export-report-btn ${isExportMenuOpen ? "active" : ""}`}
-                            onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                            className="export-primary-btn"
                             disabled={isExporting}
+                            onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
                         >
-                            <Download size={16} />
-                            <span>{isExporting ? "Đang xuất..." : "Xuất báo cáo"}</span>
-                            <ChevronDown size={14} className={`chevron-icon ${isExportMenuOpen ? "rotate" : ""}`} />
+                            {isExporting ? (
+                                <>
+                                    <div className="export-spinner" />
+                                    <span>Đang xuất...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Download size={18} />
+                                    <span>Xuất báo cáo</span>
+                                    <ChevronDown size={14} />
+                                </>
+                            )}
                         </button>
 
-                        {isExportMenuOpen && (
-                            <div className="export-menu-popup">
+                        {isExportMenuOpen && !isExporting && (
+                            <div className="export-dropdown-menu">
                                 <button
                                     type="button"
-                                    className="export-menu-item"
-                                    onClick={() => handleExportSelect("xlsx")}
+                                    className="export-dropdown-item"
+                                    onClick={() => handleExportFormat("xlsx")}
                                 >
                                     <FileSpreadsheet size={16} color="#10B981" />
-                                    <span>Xuất Excel (.xlsx)</span>
+                                    <div className="export-item-text">
+                                        <span className="export-format-name">Xuất Excel (.xlsx)</span>
+                                        <span className="export-format-desc">Đầy đủ 4 Sheet thống kê</span>
+                                    </div>
                                 </button>
                                 <button
                                     type="button"
-                                    className="export-menu-item"
-                                    onClick={() => handleExportSelect("csv")}
+                                    className="export-dropdown-item"
+                                    onClick={() => handleExportFormat("csv")}
                                 >
                                     <FileText size={16} color="#3B82F6" />
-                                    <span>Xuất CSV (.csv)</span>
+                                    <div className="export-item-text">
+                                        <span className="export-format-name">Xuất CSV (.csv)</span>
+                                        <span className="export-format-desc">Dữ liệu tổng quan KPI</span>
+                                    </div>
                                 </button>
                             </div>
                         )}
                     </div>
                 )}
 
-                <div className="notification-bell-container" ref={notifRef}>
+                {/* 3. Chuông thông báo (Notification Bell with Dropdown) */}
+                <div className="notification-bell-wrapper" ref={notifRef}>
                     <button
                         type="button"
                         className={`notification-btn ${isNotifOpen ? "active" : ""}`}
-                        aria-label="Notifications"
+                        aria-label={`Thông báo (${unreadCount} chưa đọc)`}
+                        title={unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : "Thông báo"}
                         onClick={handleToggleNotif}
                     >
-                        <Bell size={20} color={isNotifOpen ? "#009080" : "#4B5563"} />
+                        <Bell size={21} className="header-bell-icon" />
                         {unreadCount > 0 && (
-                            <span className="bell-badge">
-                                {unreadCount > 99 ? "99+" : unreadCount}
-                            </span>
+                            <span className="notification-badge" aria-hidden="true" />
                         )}
                     </button>
 
+                    {/* Dropdown Popup Danh sách thông báo */}
                     {isNotifOpen && (
                         <div className="notification-dropdown-popup">
                             <div className="notif-popup-header">
                                 <div className="notif-header-title">
                                     <span className="notif-title-text">Thông báo</span>
                                     {unreadCount > 0 && (
-                                        <span className="notif-unread-pill">{unreadCount} mới</span>
+                                        <span className="notif-count-pill">{unreadCount} mới</span>
                                     )}
                                 </div>
                                 {unreadCount > 0 && (
@@ -336,28 +408,33 @@ function Header({
                                         disabled={isMarkingAll}
                                         title="Đánh dấu tất cả là đã đọc"
                                     >
-                                        <CheckCheck size={14} />
-                                        <span>{isMarkingAll ? "Đang xử lý..." : "Đọc tất cả"}</span>
+                                        {isMarkingAll ? (
+                                            <Loader2 size={13} className="spin-icon" />
+                                        ) : (
+                                            <CheckCheck size={13} />
+                                        )}
+                                        <span>Đọc tất cả</span>
                                     </button>
                                 )}
                             </div>
 
-                            <div className="notif-popup-list">
+                            <div className="notif-popup-body">
                                 {loadingNotifs ? (
-                                    <div className="notif-state-box">
-                                        <Loader2 size={20} className="notif-spin-icon" />
-                                        <p>Đang tải thông báo...</p>
+                                    <div className="notif-loading-state">
+                                        <Loader2 size={24} className="spin-icon text-teal" />
+                                        <span>Đang tải thông báo...</span>
                                     </div>
                                 ) : recentNotifications.length === 0 ? (
-                                    <div className="notif-state-box">
-                                        <Bell size={24} className="notif-empty-icon" />
-                                        <p>Không có thông báo nào</p>
+                                    <div className="notif-empty-state">
+                                        <Bell size={32} className="notif-empty-icon" />
+                                        <p className="notif-empty-title">Không có thông báo nào</p>
+                                        <p className="notif-empty-desc">Bạn đã xem hết các thông báo mới.</p>
                                     </div>
                                 ) : (
                                     recentNotifications.map((item) => (
                                         <div
                                             key={item.id}
-                                            className={`notif-item ${!item.is_read ? "unread" : ""}`}
+                                            className={`notif-item-row ${!item.is_read ? "unread" : ""}`}
                                             onClick={(e) => handleMarkOneRead(e, item)}
                                         >
                                             <div className={`notif-item-icon ${getNotifTypeClass(item.type)}`}>
@@ -394,24 +471,83 @@ function Header({
                     )}
                 </div>
 
-                <div className="user-profile-widget">
+                {/* 4. Hồ sơ người dùng (User Profile Widget) */}
+                <div className="user-profile-widget" ref={userRef}>
                     <div
                         className="user-info-trigger"
                         onClick={() => setUserDropdownOpen(!userDropdownOpen)}
                     >
                         <div className="user-avatar-mini">
                             <img
-                                src="https://api.dicebear.com/7.x/bottts/svg?seed=NguyenVanA"
-                                alt="Avatar"
+                                src={avatarUrl}
+                                alt={displayName}
                                 onError={(e) => {
                                     e.target.onerror = null;
                                     e.target.src = "https://cdn-icons-png.flaticon.com/512/4140/4140048.png";
                                 }}
                             />
                         </div>
-                        <span className="user-name-text">Nguyễn Văn A</span>
-                        <ChevronDown size={16} className="dropdown-arrow" />
+                        <span className="user-name-text">{displayName}</span>
+                        <ChevronDown size={16} className={`dropdown-arrow ${userDropdownOpen ? "open" : ""}`} />
                     </div>
+
+                    {userDropdownOpen && (
+                        <div className="user-dropdown-menu" style={{
+                            position: "absolute",
+                            top: "calc(100% + 8px)",
+                            right: 0,
+                            background: "#FFFFFF",
+                            borderRadius: "12px",
+                            boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                            border: "1px solid #E2E8F0",
+                            padding: "8px 0",
+                            minWidth: "190px",
+                            zIndex: 1000
+                        }}>
+                            <div style={{ padding: "8px 16px", borderBottom: "1px solid #F1F5F9" }}>
+                                <div style={{ fontWeight: 600, fontSize: "0.875rem", color: "#1E293B" }}>{displayName}</div>
+                                {userProfile?.email && (
+                                    <div style={{ fontSize: "0.75rem", color: "#64748B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userProfile.email}</div>
+                                )}
+                            </div>
+                            <Link
+                                to="/dashboard/profile"
+                                onClick={() => setUserDropdownOpen(false)}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    padding: "10px 16px",
+                                    color: "#334155",
+                                    textDecoration: "none",
+                                    fontSize: "0.875rem"
+                                }}
+                            >
+                                <User size={16} />
+                                <span>Hồ sơ cá nhân</span>
+                            </Link>
+                            <button
+                                type="button"
+                                onClick={handleLogout}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
+                                    width: "100%",
+                                    padding: "10px 16px",
+                                    color: "#EF4444",
+                                    background: "none",
+                                    border: "none",
+                                    textAlign: "left",
+                                    cursor: "pointer",
+                                    fontSize: "0.875rem"
+                                }}
+                            >
+                                <LogOut size={16} />
+                                <span>Đăng xuất</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </header>

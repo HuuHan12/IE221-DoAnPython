@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import HTTPException
@@ -78,7 +79,13 @@ if not SUPABASE_SERVICE_ROLE_KEY:
 
 _admin_client = create_client(
     SUPABASE_URL,
-    SUPABASE_SERVICE_ROLE_KEY
+    SUPABASE_SERVICE_ROLE_KEY,
+    options=ClientOptions(
+        auto_refresh_token=False,
+        persist_session=False,
+        postgrest_client_timeout=15,
+        storage_client_timeout=20,
+    ),
 )
 
 # Backward-compatible name
@@ -103,6 +110,8 @@ def get_supabase_client() -> Client:
         options=ClientOptions(
             auto_refresh_token=False,
             persist_session=False,
+            postgrest_client_timeout=15,
+            storage_client_timeout=20,
         ),
     )
 
@@ -120,24 +129,16 @@ def get_supabase_admin_client() -> Client:
 
 
 # ============================================================
-# DEVELOPMENT USER
+# AUTHENTICATED USER DEPENDENCY
 # ============================================================
 
-def get_current_user():
+from fastapi import Header
+
+def get_current_user(authorization: Optional[str] = Header(None)):
     """
-    Temporary development user.
-
-    Sử dụng trong giai đoạn phát triển khi
-    Bearer/JWT authentication chưa được hoàn thiện.
+    Dependency xác thực người dùng qua JWT Bearer token từ Supabase Auth,
+    với fallback sang DEV_USER_ID nếu không có header (môi trường dev).
     """
+    from app.core.security import get_current_user as _sec_get_current_user
+    return _sec_get_current_user(authorization=authorization)
 
-    if not DEV_USER_ID:
-        raise HTTPException(
-            status_code=500,
-            detail="DEV_USER_ID is not configured.",
-        )
-
-    return SimpleNamespace(
-        id=DEV_USER_ID,
-        email="dev@landmark.local",
-    )

@@ -118,7 +118,12 @@ function Statistics() {
             });
             showToast(`Đã xuất và tải file báo cáo thành công: ${filename}`, "success");
         } catch (error) {
-            showToast(error.message || "Lỗi khi xuất file báo cáo.", "error");
+            const rawMsg = error?.message || "Lỗi khi xuất file báo cáo.";
+            if (rawMsg.toLowerCase().includes("token") || rawMsg.toLowerCase().includes("hết hạn")) {
+                showToast("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.", "error");
+            } else {
+                showToast(rawMsg, "error");
+            }
         } finally {
             setIsExporting(false);
         }
@@ -126,11 +131,11 @@ function Statistics() {
 
     return (
         <div className="stats-page-container">
-            <Sidebar activeMenu="statistics" />
+            <Sidebar activeMenu="overview" />
             <div className="stats-main-content">
                 <Header
-                    title="Bảng Thống kê"
-                    subtitle="Theo dõi tổng quan hoạt động khám phá của người dùng trên LandmarkAI"
+                    title="Tổng quan hoạt động"
+                    subtitle="Theo dõi dữ liệu khám phá và số liệu thống kê cá nhân của bạn"
                     showDateFilter={true}
                     showExportBtn={true}
                     startDate={startDate}

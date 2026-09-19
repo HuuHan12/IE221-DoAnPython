@@ -37,7 +37,7 @@ function App() {
             <Route path="/register" element={<Register />} />
 
             {/* Dashboard Routes (Prefix /dashboard/) */}
-            <Route path="/dashboard" element={<Home />} />
+            <Route path="/dashboard" element={<Statistics />} />
             <Route path="/dashboard/scan" element={<Home />} />
             <Route path="/dashboard/history" element={<HistoryPage />} />
             <Route path="/dashboard/lich-su" element={<HistoryPage />} />

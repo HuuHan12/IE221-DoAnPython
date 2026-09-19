@@ -1,9 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, Calendar as CalendarIcon, RotateCcw, ChevronDown } from "lucide-react";
+import { Search, Calendar as CalendarIcon, RotateCcw, RefreshCw, ChevronDown } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-function HistoryFilterCard({ onFilter, onReset }) {
+function HistoryFilterCard({ onFilter, onReset, onRefresh, loading }) {
     const [landmarkSearch, setLandmarkSearch] = useState("");
     const [startDate, setStartDate] = useState(null);
     const [endDate, setEndDate] = useState(null);
@@ -112,6 +112,19 @@ function HistoryFilterCard({ onFilter, onReset }) {
                     <RotateCcw size={16} />
                     <span>Xóa bộ lọc</span>
                 </button>
+
+                {onRefresh && (
+                    <button
+                        type="button"
+                        className="btn-filter-refresh"
+                        onClick={onRefresh}
+                        disabled={loading}
+                        title="Tải lại danh sách lịch sử mới nhất"
+                    >
+                        <RefreshCw size={16} className={loading ? "spin-icon" : ""} />
+                        <span>Làm mới</span>
+                    </button>
+                )}
             </div>
         </form>
     );

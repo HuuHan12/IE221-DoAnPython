@@ -16,6 +16,11 @@ export interface HistoryItem {
     description?: string | null;
     input_media?: Record<string, unknown> | null;
     place?: Record<string, unknown> | null;
+    predicted_name?: string | null;
+    predicted_province?: string | null;
+    predicted_lat?: number | null;
+    predicted_lon?: number | null;
+    all_predictions?: Array<Record<string, any>> | null;
 }
 
 export interface HistoryListResponse {
@@ -73,45 +78,37 @@ export async function fetchHistory(
         params.set("end_date", filters.endDate);
     }
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
-
     try {
         const response = await fetch(`${API_BASE_URL}/history?${params.toString()}`, {
             headers: getAuthHeaders(),
-            signal: controller.signal,
         });
-        clearTimeout(timeoutId);
         return await parseResponse<HistoryListResponse>(response);
     } catch (err: any) {
-        clearTimeout(timeoutId);
-        return {
-            items: [],
-            page: Number(filters.page || 1),
-            page_size: Number(filters.pageSize || 10),
-            total_records: 0,
-            total_pages: 0,
-        };
+        console.warn("Lỗi fetchHistory:", err);
+        let msg = err?.message || "Không thể tải lịch sử tìm kiếm.";
+        if (typeof msg === "string" && (msg.includes("WinError") || msg.includes("Failed to fetch") || msg.includes("NetworkError"))) {
+            msg = "Kết nối máy chủ tạm thời bị gián đoạn. Vui lòng thử lại.";
+        }
+        throw new Error(msg);
     }
 }
 
 export async function fetchHistoryDetail(id: string): Promise<HistoryItem> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 6000);
-
     try {
         const response = await fetch(
             `${API_BASE_URL}/history/${encodeURIComponent(id)}`,
             {
                 headers: getAuthHeaders(),
-                signal: controller.signal,
             }
         );
-        clearTimeout(timeoutId);
         return await parseResponse<HistoryItem>(response);
     } catch (err: any) {
-        clearTimeout(timeoutId);
-        throw err;
+        console.warn("Lỗi fetchHistoryDetail:", err);
+        let msg = err?.message || "Không thể tải chi tiết lịch sử.";
+        if (typeof msg === "string" && (msg.includes("WinError") || msg.includes("Failed to fetch") || msg.includes("NetworkError"))) {
+            msg = "Kết nối máy chủ tạm thời bị gián đoạn. Vui lòng thử lại.";
+        }
+        throw new Error(msg);
     }
 }
 
@@ -127,3 +124,28 @@ export async function deleteHistory(
     );
     return parseResponse(response);
 }
+
+export interface SelectPredictionPayload {
+    name: string;
+    province?: string;
+    lat?: number;
+    lon?: number;
+    prob_percent?: number;
+    confidence?: number;
+}
+
+export async function selectHistoryPrediction(
+    historyId: string,
+    payload: SelectPredictionPayload,
+): Promise<any> {
+    const response = await fetch(
+        `${API_BASE_URL}/history/${encodeURIComponent(historyId)}/select-prediction`,
+        {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+        },
+    );
+    return parseResponse(response);
+}
+

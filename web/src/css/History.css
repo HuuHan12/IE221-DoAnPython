@@ -168,6 +168,46 @@
     background-color: var(--accent-lighter);
 }
 
+.btn-filter-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    color: #16A34A;
+    padding: 9px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-filter-refresh:hover:not(:disabled) {
+    background-color: #DCFCE7;
+    border-color: #86EFAC;
+    color: #15803D;
+    transform: translateY(-1px);
+}
+
+.btn-filter-refresh:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.spin-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 /* History Table Section Card - Compact & Tight Columns */
 .history-table-card-section {
     background-color: #FFFFFF;

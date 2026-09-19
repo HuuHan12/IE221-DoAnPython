@@ -63,8 +63,19 @@ function VietnamInteractiveMap({ landmarks, activeLandmark, onSelectLandmark }) 
 
             const marker = L.marker([item.coords.lat, item.coords.lng], { icon: customIcon }).addTo(map);
 
+            const popupHtml = `
+                <div style="font-family: inherit; width: 190px; text-align: left; padding: 2px;">
+                    <img src="${item.url || "https://images.unsplash.com/photo-1528127269322-539801943592?w=800&auto=format&fit=crop"}" alt="${item.name}" style="width: 100%; height: 95px; object-fit: cover; border-radius: 8px; margin-bottom: 6px;" onerror="this.src='https://images.unsplash.com/photo-1528127269322-539801943592?w=800&auto=format&fit=crop'" />
+                    <strong style="font-size: 13px; color: #0f172a; display: block; line-height: 1.3;">${item.name}</strong>
+                    <span style="font-size: 11px; color: #009080; display: block; margin-top: 3px; font-weight: 500;">📍 ${item.province || "Việt Nam"}</span>
+                    ${item.address ? `<span style="font-size: 10px; color: #94a3b8; display: block; margin-top: 2px;">${item.address}</span>` : ""}
+                </div>
+            `;
+            marker.bindPopup(popupHtml, { offset: [0, -35] });
+
             marker.on("click", () => {
                 onSelectLandmark(item);
+                marker.openPopup();
                 map.flyTo([item.coords.lat, item.coords.lng], 9, { duration: 1.2 });
             });
 
@@ -72,7 +83,7 @@ function VietnamInteractiveMap({ landmarks, activeLandmark, onSelectLandmark }) 
         });
     }, [landmarks, activeLandmark, onSelectLandmark]);
 
-    // Fly map to active landmark when changed via card click
+    // Fly map to active landmark when changed via card click and open popup
     useEffect(() => {
         if (activeLandmark?.coords && leafletInstanceRef.current) {
             leafletInstanceRef.current.flyTo(
@@ -80,6 +91,10 @@ function VietnamInteractiveMap({ landmarks, activeLandmark, onSelectLandmark }) 
                 9,
                 { duration: 1.2 }
             );
+            const targetMarker = markersRef.current[activeLandmark.id];
+            if (targetMarker) {
+                targetMarker.openPopup();
+            }
         }
     }, [activeLandmark]);
 

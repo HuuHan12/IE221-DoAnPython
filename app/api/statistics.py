@@ -2,9 +2,10 @@ import io
 from datetime import date, datetime, time, timedelta
 from typing import Optional, Tuple
 import pandas as pd
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 
+from app.core.security import get_current_user, get_current_user_with_plan
 from app.database.supabase import get_supabase_admin_client
 from app.schemas.statistics import (
     CategoryDistributionItem,
@@ -18,7 +19,7 @@ from app.schemas.statistics import (
     TopPlacesResponse,
 )
 
-router = APIRouter(prefix="/admin/statistics", tags=["Admin Statistics"])
+router = APIRouter(prefix="/statistics", tags=["Statistics"])
 
 
 # Hàm kiểm tra và chuẩn hóa khoảng thời gian
@@ -61,13 +62,12 @@ def _calculate_growth(curr: int, prev: int) -> Tuple[float, bool]:
     return round(abs(pct), 1), is_increase
 
 
-
-# 1. 4 thẻ số liệu tổng quan
+# 1. 4 thẻ số liệu tổng quan cá nhân
 @router.get(
     "/overview",
     response_model=StatisticsOverviewResponse,
-    summary="4 Thẻ số liệu tổng quan",
-    description="Tính toán 4 chỉ số KPI chính trong khoảng thời gian [from_date -> to_date] và % tăng/giảm so với kỳ trước."
+    summary="4 Thẻ số liệu tổng quan của người dùng",
+    description="Tính toán 4 chỉ số KPI của người dùng hiện tại trong khoảng thời gian [from_date -> to_date] và % tăng/giảm so với kỳ trước."
 )
 async def get_overview(
     from_date: Optional[date] = Query(
@@ -80,10 +80,12 @@ async def get_overview(
         description="Ngày kết thúc (Định dạng YYYY-MM-DD). Mặc định: Ngày hôm nay"
     ),
     to_date_hyphen: Optional[date] = Query(None, alias="to-date", include_in_schema=False),
+    current_user=Depends(get_current_user),
 ):
     from_date = from_date or from_date_hyphen
     to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
+    user_id = str(current_user.id)
 
     try:
         supabase = get_supabase_admin_client()
@@ -100,49 +102,53 @@ async def get_overview(
         prev_start_iso = prev_start_dt.isoformat()
         prev_end_iso = prev_end_dt.isoformat()
 
-        # Truy vấn số liệu
-        # 1. Tổng lượt quét
+        # Truy vấn số liệu theo user_id
+        # 1. Tổng lượt quét của user (tính từ bảng log tích lũy user_daily_scan_logs, không bị giảm khi xóa lịch sử)
         scans_curr = (
-            supabase.table("search_histories")
+            supabase.table("user_daily_scan_logs")
             .select("id", count="exact")
-            .gte("searched_at", curr_start_iso)
-            .lte("searched_at", curr_end_iso)
-            .or_("search_type.ilike.%scan%,input_media_id.not.is.null")
+            .eq("user_id", user_id)
+            .gte("scanned_at", curr_start_iso)
+            .lte("scanned_at", curr_end_iso)
             .execute()
         )
         scans_prev = (
-            supabase.table("search_histories")
+            supabase.table("user_daily_scan_logs")
             .select("id", count="exact")
-            .gte("searched_at", prev_start_iso)
-            .lte("searched_at", prev_end_iso)
-            .or_("search_type.ilike.%scan%,input_media_id.not.is.null")
+            .eq("user_id", user_id)
+            .gte("scanned_at", prev_start_iso)
+            .lte("scanned_at", prev_end_iso)
             .execute()
         )
         val_scans_curr = scans_curr.count or 0
         val_scans_prev = scans_prev.count or 0
 
-        # 2. Người dùng hoạt động
-        users_curr = (
+        # 2. Số ngày người dùng có hoạt động tìm kiếm
+        dates_curr = (
             supabase.table("search_histories")
-            .select("user_id")
+            .select("searched_at")
+            .eq("user_id", user_id)
             .gte("searched_at", curr_start_iso)
             .lte("searched_at", curr_end_iso)
             .execute()
         )
-        distinct_users_curr = len({row["user_id"] for row in users_curr.data if row.get("user_id")})
-        users_prev = (
+        distinct_users_curr = len({row["searched_at"][:10] for row in (dates_curr.data or []) if row.get("searched_at")})
+
+        dates_prev = (
             supabase.table("search_histories")
-            .select("user_id")
+            .select("searched_at")
+            .eq("user_id", user_id)
             .gte("searched_at", prev_start_iso)
             .lte("searched_at", prev_end_iso)
             .execute()
         )
-        distinct_users_prev = len({row["user_id"] for row in users_prev.data if row.get("user_id")})
+        distinct_users_prev = len({row["searched_at"][:10] for row in (dates_prev.data or []) if row.get("searched_at")})
 
-        # 3. Tổng số lượt tìm kiếm
+        # 3. Tổng số lượt tìm kiếm của user
         searches_curr = (
             supabase.table("search_histories")
             .select("id", count="exact")
+            .eq("user_id", user_id)
             .gte("searched_at", curr_start_iso)
             .lte("searched_at", curr_end_iso)
             .execute()
@@ -150,6 +156,7 @@ async def get_overview(
         searches_prev = (
             supabase.table("search_histories")
             .select("id", count="exact")
+            .eq("user_id", user_id)
             .gte("searched_at", prev_start_iso)
             .lte("searched_at", prev_end_iso)
             .execute()
@@ -157,10 +164,11 @@ async def get_overview(
         val_searches_curr = searches_curr.count or 0
         val_searches_prev = searches_prev.count or 0
 
-        # 4. Địa điểm yêu thích mới
+        # 4. Địa điểm yêu thích của user
         fav_curr = (
             supabase.table("user_favorites")
             .select("id", count="exact")
+            .eq("user_id", user_id)
             .gte("created_at", curr_start_iso)
             .lte("created_at", curr_end_iso)
             .execute()
@@ -168,6 +176,7 @@ async def get_overview(
         fav_prev = (
             supabase.table("user_favorites")
             .select("id", count="exact")
+            .eq("user_id", user_id)
             .gte("created_at", prev_start_iso)
             .lte("created_at", prev_end_iso)
             .execute()
@@ -216,13 +225,12 @@ async def get_overview(
         )
 
 
-
-# 2. Biểu đồ tần xuất tìm kiếm theo thời gian
+# 2. Biểu đồ tần suất tìm kiếm theo thời gian của user
 @router.get(
     "/search-trends",
     response_model=SearchTrendsResponse,
-    summary="Biểu đồ tần suất tìm kiếm theo thời gian",
-    description="Gom nhóm số lượng lượt tìm kiếm theo ngày, tuần hoặc tháng trong khoảng thời gian [from_date -> to_date]."
+    summary="Biểu đồ tần suất tìm kiếm của người dùng",
+    description="Gom nhóm số lượng lượt tìm kiếm của người dùng theo ngày, tuần hoặc tháng."
 )
 async def get_search_trends(
     from_date: Optional[date] = Query(
@@ -239,10 +247,12 @@ async def get_search_trends(
         "day",
         description="Kiểu gom nhóm thời gian: 'day' (theo ngày), 'week' (theo tuần), 'month' (theo tháng)"
     ),
+    current_user=Depends(get_current_user),
 ):
     from_date = from_date or from_date_hyphen
     to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
+    user_id = str(current_user.id)
 
     valid_groups = ["day", "week", "month"]
     if group_by not in valid_groups:
@@ -258,17 +268,17 @@ async def get_search_trends(
         curr_start_iso = curr_start_dt.isoformat()
         curr_end_iso = curr_end_dt.isoformat()
 
-        # Truy vấn danh sách searched_at từ search_histories
+        # Truy vấn danh sách searched_at từ search_histories của user
         res = (
             supabase.table("search_histories")
             .select("searched_at")
+            .eq("user_id", user_id)
             .gte("searched_at", curr_start_iso)
             .lte("searched_at", curr_end_iso)
             .execute()
         )
 
         rows = res.data or []
-        # Khởi tạo mốc thời gian liên tục
         counts_map = {}
         if group_by == "day":
             curr = from_date
@@ -294,7 +304,6 @@ async def get_search_trends(
                 next_year = curr.year if curr.month < 12 else curr.year + 1
                 curr = date(next_year, next_month, 1)
 
-        # Đếm số lượng record rơi vào từng mốc
         for row in rows:
             searched_at_raw = row.get("searched_at")
             if not searched_at_raw:
@@ -333,12 +342,12 @@ async def get_search_trends(
         )
 
 
-# 3. TOP 10 ĐỊA ĐIỂM ĐƯỢC TÌM KIẾM NHIỀU NHẤT
+# 3. TOP ĐỊA ĐIỂM NGƯỜI DÙNG TÌM KIẾM NHIỀU NHẤT
 @router.get(
     "/top-places",
     response_model=TopPlacesResponse,
-    summary="Top 10 địa điểm được tìm kiếm nhiều nhất",
-    description="Lấy danh sách các địa danh có lượt tìm kiếm cao nhất trong khoảng thời gian"
+    summary="Top địa điểm người dùng tìm kiếm nhiều nhất",
+    description="Lấy danh sách các địa danh có lượt tìm kiếm cao nhất của user trong khoảng thời gian"
 )
 async def get_top_places(
     from_date: Optional[date] = Query(
@@ -357,10 +366,12 @@ async def get_top_places(
         le=50,
         description="Số lượng địa điểm cần lấy (Mặc định: 10, tối đa: 50)"
     ),
+    current_user=Depends(get_current_user),
 ):
     from_date = from_date or from_date_hyphen
     to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
+    user_id = str(current_user.id)
 
     try:
         supabase = get_supabase_admin_client()
@@ -370,10 +381,11 @@ async def get_top_places(
         curr_start_iso = curr_start_dt.isoformat()
         curr_end_iso = curr_end_dt.isoformat()
 
-        # Truy vấn search_histories kết hợp places
+        # Truy vấn search_histories của riêng user kết hợp places
         res = (
             supabase.table("search_histories")
             .select("place_id, places(id, name, province)")
+            .eq("user_id", user_id)
             .not_.is_("place_id", "null")
             .gte("searched_at", curr_start_iso)
             .lte("searched_at", curr_end_iso)
@@ -382,7 +394,6 @@ async def get_top_places(
 
         rows = res.data or []
 
-        # Gom nhóm và đếm số lượt tìm kiếm cho từng địa điểm
         places_map = {}
         for row in rows:
             place_id = row.get("place_id")
@@ -425,13 +436,12 @@ async def get_top_places(
         )
 
 
-
-# 4. Cơ cấu lượt tìm kiếm theo doanh mục
+# 4. Cơ cấu lượt tìm kiếm theo danh mục của user
 @router.get(
     "/category-distribution",
     response_model=CategoryDistributionResponse,
-    summary="Cơ cấu lượt tìm kiếm theo danh mục",
-    description="Lấy tỷ lệ phần trăm và số lượng tìm kiếm phân bổ theo từng danh mục địa danh trong khoảng thời gian"
+    summary="Cơ cấu lượt tìm kiếm theo danh mục của người dùng",
+    description="Lấy tỷ lệ phần trăm và số lượng tìm kiếm phân bổ theo từng danh mục địa danh của user trong khoảng thời gian"
 )
 async def get_category_distribution(
     from_date: Optional[date] = Query(
@@ -444,10 +454,12 @@ async def get_category_distribution(
         description="Ngày kết thúc (Định dạng YYYY-MM-DD). Mặc định: Ngày hôm nay"
     ),
     to_date_hyphen: Optional[date] = Query(None, alias="to-date", include_in_schema=False),
+    current_user=Depends(get_current_user),
 ):
     from_date = from_date or from_date_hyphen
     to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
+    user_id = str(current_user.id)
 
     try:
         supabase = get_supabase_admin_client()
@@ -457,10 +469,11 @@ async def get_category_distribution(
         curr_start_iso = curr_start_dt.isoformat()
         curr_end_iso = curr_end_dt.isoformat()
 
-        # 1. Truy vấn search_histories kết hợp places để lấy category_id
+        # Truy vấn search_histories của riêng user
         res = (
             supabase.table("search_histories")
             .select("place_id, places(id, category_id)")
+            .eq("user_id", user_id)
             .not_.is_("place_id", "null")
             .gte("searched_at", curr_start_iso)
             .lte("searched_at", curr_end_iso)
@@ -469,7 +482,6 @@ async def get_category_distribution(
 
         rows = res.data or []
 
-        # 2. Thử truy vấn danh sách categories (với cơ chế an toàn nếu bảng bị khóa quyền)
         categories_dict = {}
         try:
             cat_res = supabase.table("categories").select("id, name").execute()
@@ -478,7 +490,6 @@ async def get_category_distribution(
         except Exception:
             pass
 
-        # 3. Gom nhóm theo từng danh mục
         categories_map = {}
         total_valid_searches = 0
 
@@ -499,7 +510,6 @@ async def get_category_distribution(
             categories_map[key]["count"] += 1
             total_valid_searches += 1
 
-        # 4. Tính toán tỷ lệ phần trăm
         dist_items = []
         for cat in categories_map.values():
             percentage = (
@@ -533,12 +543,11 @@ async def get_category_distribution(
         )
 
 
-
-# 5. Xuất báo cáo
+# 5. Xuất báo cáo (Role PRO được phép, FREE trả về 403 Forbidden)
 @router.get(
     "/export",
-    summary="Xuất báo cáo thống kê",
-    description="Gom toàn bộ dữ liệu tổng hợp theo khoảng thời gian đã chọn để kết xuất ra file Excel (.xlsx) hoặc CSV."
+    summary="Xuất báo cáo thống kê cá nhân (Chỉ dành cho tài khoản Pro)",
+    description="Gom toàn bộ dữ liệu tổng hợp cá nhân của user theo khoảng thời gian để kết xuất ra file Excel (.xlsx) hoặc CSV. Yêu cầu gói Pro."
 )
 async def export_statistics_report(
     from_date: Optional[date] = Query(
@@ -555,19 +564,27 @@ async def export_statistics_report(
         "xlsx",
         description="Định dạng xuất file: 'xlsx' (Excel 4 Sheet) hoặc 'csv'"
     ),
+    user_with_plan=Depends(get_current_user_with_plan),
 ):
+    # Kiểm tra phân quyền: Chỉ Pro mới được xuất báo cáo
+    if not user_with_plan.get("is_pro"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tính năng Xuất báo cáo (Export Excel/CSV) chỉ dành riêng cho tài khoản Pro. Vui lòng nâng cấp gói cước để sử dụng!"
+        )
+
     from_date = from_date or from_date_hyphen
     to_date = to_date or to_date_hyphen
     from_date, to_date = _validate_date_range(from_date, to_date)
+    current_user = user_with_plan["user"]
 
     try:
-        # 1. Thu thập dữ liệu từ các endpoint nghiệp vụ
-        overview_res = await get_overview(from_date=from_date, to_date=to_date)
-        trends_res = await get_search_trends(from_date=from_date, to_date=to_date, group_by="day")
-        places_res = await get_top_places(from_date=from_date, to_date=to_date, limit=20)
-        categories_res = await get_category_distribution(from_date=from_date, to_date=to_date)
+        # Thu thập dữ liệu của chính user
+        overview_res = await get_overview(from_date=from_date, to_date=to_date, current_user=current_user)
+        trends_res = await get_search_trends(from_date=from_date, to_date=to_date, group_by="day", current_user=current_user)
+        places_res = await get_top_places(from_date=from_date, to_date=to_date, limit=20, current_user=current_user)
+        categories_res = await get_category_distribution(from_date=from_date, to_date=to_date, current_user=current_user)
 
-        # 2. Chuẩn bị DataFrame cho từng Sheet
         kpi_data = overview_res.data
         df_overview = pd.DataFrame([
             {
@@ -577,7 +594,7 @@ async def export_statistics_report(
                 "Xu hướng": "Tăng trưởng" if kpi_data.total_scans.is_increase else "Sụt giảm"
             },
             {
-                "Chỉ số KPI": "Người dùng hoạt động",
+                "Chỉ số KPI": "Số ngày hoạt động",
                 "Giá trị": kpi_data.active_users.value,
                 "Tăng trưởng so với kỳ trước (%)": f"{'+' if kpi_data.active_users.is_increase else '-'}{kpi_data.active_users.growth_percentage}%",
                 "Xu hướng": "Tăng trưởng" if kpi_data.active_users.is_increase else "Sụt giảm"
@@ -589,7 +606,7 @@ async def export_statistics_report(
                 "Xu hướng": "Tăng trưởng" if kpi_data.total_searches.is_increase else "Sụt giảm"
             },
             {
-                "Chỉ số KPI": "Địa điểm yêu thích mới",
+                "Chỉ số KPI": "Địa điểm yêu thích",
                 "Giá trị": kpi_data.favorite_places.value,
                 "Tăng trưởng so với kỳ trước (%)": f"{'+' if kpi_data.favorite_places.is_increase else '-'}{kpi_data.favorite_places.growth_percentage}%",
                 "Xu hướng": "Tăng trưởng" if kpi_data.favorite_places.is_increase else "Sụt giảm"
@@ -623,13 +640,12 @@ async def export_statistics_report(
             for item in categories_res.data
         ])
 
-        # 3. Tạo file stream trong bộ nhớ RAM
         output = io.BytesIO()
 
         if format.lower() == "csv":
             df_overview.to_csv(output, index=False, encoding="utf-8-sig")
             output.seek(0)
-            filename = f"Bao_Cao_Thong_Ke_{from_date}_{to_date}.csv"
+            filename = f"Bao_Cao_Ca_Nhan_{from_date}_{to_date}.csv"
             media_type = "text/csv; charset=utf-8"
         else:
             try:
@@ -640,17 +656,15 @@ async def export_statistics_report(
                     df_categories.to_excel(writer, sheet_name="4. Cơ cấu danh mục", index=False)
 
                 output.seek(0)
-                filename = f"Bao_Cao_Thong_Ke_{from_date}_{to_date}.xlsx"
+                filename = f"Bao_Cao_Ca_Nhan_{from_date}_{to_date}.xlsx"
                 media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             except (ImportError, ModuleNotFoundError, Exception):
-                # Fallback an toàn sang định dạng CSV nếu môi trường máy chủ chưa cài openpyxl
                 output = io.BytesIO()
                 df_overview.to_csv(output, index=False, encoding="utf-8-sig")
                 output.seek(0)
-                filename = f"Bao_Cao_Thong_Ke_{from_date}_{to_date}.csv"
+                filename = f"Bao_Cao_Ca_Nhan_{from_date}_{to_date}.csv"
                 media_type = "text/csv; charset=utf-8"
 
-        # 4. Trả về stream file tải về
         headers = {
             "Content-Disposition": f'attachment; filename="{filename}"',
             "Access-Control-Expose-Headers": "Content-Disposition"

@@ -112,6 +112,8 @@ function ResultCard({
                     prediction={activePrediction}
                     groundTruth={groundTruth}
                     gisError={activeGisError}
+                    placeId={result?.place_id}
+                    mediaId={result?.input_media_id}
                 />
             ) : (
                 <div className="idle-notice-box">

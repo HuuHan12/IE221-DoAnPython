@@ -1,6 +1,12 @@
-import { MapPin, Eye, Trash2 } from "lucide-react";
+import { MapPin, Eye, Trash2, Heart } from "lucide-react";
 
-function HistoryTable({ historyItems, onViewDetail, onDeleteItem }) {
+function HistoryTable({
+    historyItems,
+    onViewDetail,
+    onDeleteItem,
+    favoritePlaceIds = new Set(),
+    onToggleFavorite = null,
+}) {
     return (
         <div className="history-table-container">
             <table className="history-table">
@@ -42,11 +48,15 @@ function HistoryTable({ historyItems, onViewDetail, onDeleteItem }) {
                             {/* Confidence Progress Bar */}
                             <td className="col-confidence">
                                 <div className="confidence-cell-wrapper">
-                                    <span className="confidence-num-text">{item.confidence}%</span>
+                                    <span className="confidence-num-text">
+                                        {item.confidence !== null && item.confidence !== undefined
+                                            ? `${item.confidence}%`
+                                            : "—"}
+                                    </span>
                                     <div className="confidence-bar-track">
                                         <div
                                             className="confidence-bar-fill"
-                                            style={{ width: `${item.confidence}%` }}
+                                            style={{ width: `${item.confidence || 0}%` }}
                                         ></div>
                                     </div>
                                 </div>
@@ -63,6 +73,32 @@ function HistoryTable({ historyItems, onViewDetail, onDeleteItem }) {
                             {/* Action Buttons */}
                             <td className="col-actions">
                                 <div className="table-actions-group">
+                                    {item.place_id && onToggleFavorite ? (
+                                        <button
+                                            type="button"
+                                            className={`action-table-btn fav-btn ${favoritePlaceIds.has(item.place_id) ? "active" : ""}`}
+                                            onClick={() => onToggleFavorite(item.place_id, item.input_media_id)}
+                                            title={favoritePlaceIds.has(item.place_id) ? "Bỏ yêu thích" : "Lưu vào yêu thích"}
+                                            style={{
+                                                backgroundColor: favoritePlaceIds.has(item.place_id) ? "#fef2f2" : "transparent",
+                                                border: "none",
+                                                cursor: "pointer",
+                                                padding: "4px 6px",
+                                                borderRadius: "8px",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                transition: "all 0.2s ease",
+                                            }}
+                                        >
+                                            <Heart
+                                                size={19}
+                                                fill={favoritePlaceIds.has(item.place_id) ? "#EF4444" : "none"}
+                                                color={favoritePlaceIds.has(item.place_id) ? "#EF4444" : "#9CA3AF"}
+                                            />
+                                        </button>
+                                    ) : null}
+
                                     <button
                                         type="button"
                                         className="action-table-btn view-btn"

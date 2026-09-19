@@ -65,6 +65,21 @@ class SearchHistoryItem(BaseModel):
     url: Optional[str] = None
     description: Optional[str] = None
 
+    predicted_name: Optional[str] = None
+    predicted_province: Optional[str] = None
+    predicted_lat: Optional[float] = None
+    predicted_lon: Optional[float] = None
+    all_predictions: Optional[list[dict]] = None
+
+
+class SelectPredictionRequest(BaseModel):
+    name: str
+    province: Optional[str] = None
+    lat: Optional[float] = None
+    lon: Optional[float] = None
+    prob_percent: Optional[float] = None
+    confidence: Optional[float] = None
+
 
 class SearchHistoryListResponse(BaseModel):
     items: list[SearchHistoryItem]

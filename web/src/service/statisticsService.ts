@@ -104,6 +104,23 @@ function buildQueryString(params: Record<string, string | number | undefined | n
     return qs ? `?${qs}` : "";
 }
 
+function handleStatisticsApiError(response: Response, result: any, defaultMessage: string): never {
+    if (response.status === 401) {
+        localStorage.removeItem("access_token");
+        try {
+            localStorage.removeItem("user_info");
+        } catch {
+            // ignore
+        }
+        throw new Error("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.");
+    }
+    let detail = result?.detail;
+    if (typeof detail === "string" && (detail.toLowerCase().includes("token") || detail.toLowerCase().includes("hết hạn"))) {
+        detail = "Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.";
+    }
+    throw new Error(detail || defaultMessage);
+}
+
 // ==========================================
 // 3. CORE STATISTICS API CLIENTS
 // ==========================================
@@ -120,14 +137,14 @@ export async function fetchStatisticsOverviewApi(
         to_date: params.to_date,
     });
 
-    const response = await fetch(`${API_BASE_URL}/admin/statistics/overview${query}`, {
+    const response = await fetch(`${API_BASE_URL}/statistics/overview${query}`, {
         method: "GET",
         headers: getAuthHeaders(),
     });
 
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(result.detail || "Không thể tải dữ liệu tổng quan thống kê.");
+        handleStatisticsApiError(response, result, "Không thể tải dữ liệu tổng quan thống kê.");
     }
 
     return result;
@@ -146,14 +163,14 @@ export async function fetchSearchTrendsApi(
         group_by: params.group_by || "day",
     });
 
-    const response = await fetch(`${API_BASE_URL}/admin/statistics/search-trends${query}`, {
+    const response = await fetch(`${API_BASE_URL}/statistics/search-trends${query}`, {
         method: "GET",
         headers: getAuthHeaders(),
     });
 
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(result.detail || "Không thể tải biểu đồ xu hướng tìm kiếm.");
+        handleStatisticsApiError(response, result, "Không thể tải biểu đồ xu hướng tìm kiếm.");
     }
 
     return result;
@@ -172,14 +189,14 @@ export async function fetchTopPlacesApi(
         limit: params.limit ?? 10,
     });
 
-    const response = await fetch(`${API_BASE_URL}/admin/statistics/top-places${query}`, {
+    const response = await fetch(`${API_BASE_URL}/statistics/top-places${query}`, {
         method: "GET",
         headers: getAuthHeaders(),
     });
 
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(result.detail || "Không thể tải danh sách Top địa danh.");
+        handleStatisticsApiError(response, result, "Không thể tải danh sách Top địa danh.");
     }
 
     return result;
@@ -197,22 +214,22 @@ export async function fetchCategoryDistributionApi(
         to_date: params.to_date,
     });
 
-    const response = await fetch(`${API_BASE_URL}/admin/statistics/category-distribution${query}`, {
+    const response = await fetch(`${API_BASE_URL}/statistics/category-distribution${query}`, {
         method: "GET",
         headers: getAuthHeaders(),
     });
 
     const result = await response.json().catch(() => ({}));
     if (!response.ok) {
-        throw new Error(result.detail || "Không thể tải cơ cấu danh mục tìm kiếm.");
+        handleStatisticsApiError(response, result, "Không thể tải cơ cấu danh mục tìm kiếm.");
     }
 
     return result;
 }
 
 /**
- * 5. Xuất báo cáo thống kê định dạng Excel (.xlsx) hoặc CSV (.csv)
- * GET /admin/statistics/export?from_date=...&to_date=...&format=...
+ * 5. Xuất báo cáo thống kê cá nhân (Excel hoặc CSV)
+ * GET /statistics/export?from_date=...&to_date=...&format=...
  * Tự động tạo thẻ download để lưu file về máy người dùng.
  */
 export async function exportStatisticsReportApi(
@@ -230,14 +247,14 @@ export async function exportStatisticsReportApi(
         headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_BASE_URL}/admin/statistics/export${query}`, {
+    const response = await fetch(`${API_BASE_URL}/statistics/export${query}`, {
         method: "GET",
         headers,
     });
 
     if (!response.ok) {
         const errorJson = await response.json().catch(() => ({}));
-        throw new Error(errorJson.detail || "Không thể xuất file báo cáo thống kê.");
+        handleStatisticsApiError(response, errorJson, "Không thể xuất file báo cáo thống kê.");
     }
 
     const blob = await response.blob();

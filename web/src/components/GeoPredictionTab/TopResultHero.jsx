@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
     MapPinIcon,
     TargetIcon,
@@ -8,15 +8,86 @@ import {
     RulerIcon,
     SparklesIcon,
 } from "../common/Icons";
+import { Heart, Loader2 } from "lucide-react";
+import {
+    checkIsFavoriteApi,
+    addFavoriteApi,
+    removeFavoriteApi,
+} from "../../service/favoriteService";
 import "../../css/TopResultHero.css";
 
 function TopResultHero({
     prediction = {},
     groundTruth = { lat: "", lon: "" },
     gisError = null,
+    placeId = null,
+    mediaId = null,
 }) {
     const [copiedAi, setCopiedAi] = useState(false);
     const [copiedGt, setCopiedGt] = useState(false);
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [favoriteId, setFavoriteId] = useState(null);
+    const [isFavLoading, setIsFavLoading] = useState(false);
+    const [favNotice, setFavNotice] = useState(null);
+
+    useEffect(() => {
+        let isMounted = true;
+        const token = localStorage.getItem("access_token");
+        if (!placeId || !token) {
+            setIsFavorite(false);
+            setFavoriteId(null);
+            return;
+        }
+
+        checkIsFavoriteApi(placeId)
+            .then((res) => {
+                if (isMounted) {
+                    setIsFavorite(Boolean(res.is_favorite));
+                    setFavoriteId(res.favorite_id || null);
+                }
+            })
+            .catch(() => {
+                if (isMounted) {
+                    setIsFavorite(false);
+                    setFavoriteId(null);
+                }
+            });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [placeId]);
+
+    const handleToggleFavorite = async () => {
+        const token = localStorage.getItem("access_token");
+        if (!token) {
+            setFavNotice("Vui lòng đăng nhập để lưu địa danh yêu thích!");
+            setTimeout(() => setFavNotice(null), 3000);
+            return;
+        }
+
+        if (!placeId) return;
+
+        setIsFavLoading(true);
+        try {
+            if (isFavorite) {
+                await removeFavoriteApi(favoriteId || placeId);
+                setIsFavorite(false);
+                setFavoriteId(null);
+                setFavNotice("Đã xóa khỏi danh sách yêu thích");
+            } else {
+                const res = await addFavoriteApi(placeId, mediaId);
+                setIsFavorite(true);
+                setFavoriteId(res.id || null);
+                setFavNotice("Đã lưu vào danh sách yêu thích!");
+            }
+        } catch (err) {
+            setFavNotice(err.message || "Không thể cập nhật yêu thích.");
+        } finally {
+            setIsFavLoading(false);
+            setTimeout(() => setFavNotice(null), 3000);
+        }
+    };
 
     if (!prediction || Object.keys(prediction).length === 0) {
         return null;
@@ -76,20 +147,76 @@ function TopResultHero({
 
     return (
         <div className="top-result-hero-card" aria-label="Kết Quả Dự Đoán Tốt Nhất">
-            {/* HÀNG 1: TÊN ĐỊA DANH & BADGE ĐỘ CHÍNH XÁC */}
+            {/* HÀNG 1: TÊN ĐỊA DANH & BADGE ĐỘ CHÍNH XÁC & NÚT YÊU THÍCH */}
             <div className="hero-name-row">
                 <div className="hero-title-group">
                     <span className="hero-rank-pill">#{rank}</span>
                     <h2 className="hero-landmark-name">{name}</h2>
                 </div>
 
-                {probPercent > 0 ? (
-                    <span className="hero-confidence-badge" title="Độ tin cậy của mô hình AI">
-                        <SparklesIcon size={14} className="badge-sparkle-icon" />
-                        <span>Độ chính xác: <strong>{probPercent.toFixed(1)}%</strong></span>
-                    </span>
-                ) : null}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+                    {placeId ? (
+                        <button
+                            type="button"
+                            className="hero-fav-action-btn"
+                            onClick={handleToggleFavorite}
+                            disabled={isFavLoading}
+                            title={isFavorite ? "Xóa khỏi danh sách yêu thích" : "Lưu vào địa điểm yêu thích"}
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "6px",
+                                padding: "6px 14px",
+                                borderRadius: "20px",
+                                border: isFavorite ? "1px solid #fca5a5" : "1px solid #cbd5e1",
+                                backgroundColor: isFavorite ? "#fef2f2" : "#ffffff",
+                                color: isFavorite ? "#ef4444" : "#475569",
+                                fontWeight: "600",
+                                fontSize: "0.82rem",
+                                cursor: isFavLoading ? "not-allowed" : "pointer",
+                                transition: "all 0.2s ease",
+                                boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+                            }}
+                        >
+                            {isFavLoading ? (
+                                <Loader2 size={14} className="spin-icon" />
+                            ) : (
+                                <Heart size={14} fill={isFavorite ? "#ef4444" : "none"} color="#ef4444" />
+                            )}
+                            <span>{isFavorite ? "Đã yêu thích" : "Lưu yêu thích"}</span>
+                        </button>
+                    ) : null}
+
+                    {probPercent > 0 ? (
+                        <span className="hero-confidence-badge" title="Độ tin cậy của mô hình AI">
+                            <SparklesIcon size={14} className="badge-sparkle-icon" />
+                            <span>Độ chính xác: <strong>{probPercent.toFixed(1)}%</strong></span>
+                        </span>
+                    ) : null}
+                </div>
             </div>
+
+            {/* THÔNG BÁO NHANH YÊU THÍCH */}
+            {favNotice ? (
+                <div
+                    style={{
+                        padding: "6px 12px",
+                        backgroundColor: "#f0fdf4",
+                        border: "1px solid #bbf7d0",
+                        color: "#15803d",
+                        borderRadius: "8px",
+                        fontSize: "0.82rem",
+                        fontWeight: 500,
+                        margin: "6px 0",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                    }}
+                >
+                    <span>✓</span>
+                    <span>{favNotice}</span>
+                </div>
+            ) : null}
 
             {/* HÀNG 2: TỈNH THÀNH & LOẠI HÌNH */}
             <div className="hero-meta-row">

@@ -4,7 +4,8 @@ import time
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from app.core.security import get_current_user
 from app.database.supabase import SUPABASE_URL, get_supabase_admin_client
 from app.utils.geoclip import predict_image
 
@@ -25,16 +26,9 @@ MAX_FILE_SIZE = 10 * 1024 * 1024
 SIGNED_URL_EXPIRES_IN = 3600
 
 SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "uploads")
-DEV_USER_ID = os.getenv("DEV_USER_ID")
 
 
 def get_db():
-    if not DEV_USER_ID:
-        raise HTTPException(
-            status_code=500,
-            detail="DEV_USER_ID is not configured",
-        )
-
     return get_supabase_admin_client()
 
 
@@ -84,8 +78,8 @@ def sanitize_filename(filename: str | None) -> str:
     return f"{uuid.uuid4().hex}{extension}"
 
 
-def build_storage_path(filename: str) -> str:
-    return f"{DEV_USER_ID}/{int(time.time())}_{filename}"
+def build_storage_path(filename: str, user_id: str) -> str:
+    return f"{user_id}/{int(time.time())}_{filename}"
 
 
 def _storage_response_value(response, *keys: str):
@@ -216,7 +210,7 @@ def remove_storage_file(client, bucket: str, storage_path: str):
         pass
 
 
-def remove_media_record(client, media_id: str):
+def remove_media_record(client, media_id: str, user_id: str):
     """Best-effort cleanup that never hides the original upload error."""
 
     try:
@@ -224,7 +218,7 @@ def remove_media_record(client, media_id: str):
             client.table("media_files")
             .delete()
             .eq("id", media_id)
-            .eq("user_id", DEV_USER_ID)
+            .eq("user_id", user_id)
             .execute()
         )
     except Exception:
@@ -314,8 +308,9 @@ def recognize_place(
 # ============================================================
 
 @router.get("/")
-def list_media():
+def list_media(current_user=Depends(get_current_user)):
     client = get_db()
+    user_id = str(current_user.id)
 
     try:
         bucket_public = get_bucket_public(client, SUPABASE_BUCKET)
@@ -341,7 +336,7 @@ def list_media():
                 )
                 """
             )
-            .eq("user_id", DEV_USER_ID)
+            .eq("user_id", user_id)
             .order("created_at", desc=True)
             .execute()
         )
@@ -406,8 +401,10 @@ async def upload_media(
     note: str | None = Form(None),
     scope: str = Form("iconic"),
     recognize: bool = Form(False),
+    current_user=Depends(get_current_user),
 ):
     client = get_db()
+    user_id = str(current_user.id)
 
     data = await file.read()
     content_type = validate_file(file, data)
@@ -421,7 +418,7 @@ async def upload_media(
         )
 
     filename = sanitize_filename(file.filename)
-    storage_path = build_storage_path(filename)
+    storage_path = build_storage_path(filename, user_id)
 
     storage_uploaded = False
     media_id = None
@@ -455,7 +452,7 @@ async def upload_media(
         # ----------------------------------------------------
 
         media_insert = {
-            "user_id": DEV_USER_ID,
+            "user_id": user_id,
             "file_name": file.filename or filename,
             # Signed URLs expire; derive them from storage_path for private
             # buckets instead of persisting them in media_files.
@@ -485,7 +482,7 @@ async def upload_media(
         # ----------------------------------------------------
 
         gallery_insert = {
-            "user_id": DEV_USER_ID,
+            "user_id": user_id,
             "media_id": media_id,
             "place_id": recognition["place_id"] if recognition else None,
             "note": note,
@@ -516,7 +513,7 @@ async def upload_media(
 
     except HTTPException:
         if media_id:
-            remove_media_record(client, media_id)
+            remove_media_record(client, media_id, user_id)
         if storage_uploaded:
             remove_storage_file(
                 client,
@@ -528,7 +525,7 @@ async def upload_media(
     except Exception as exc:
         # DB failed after Storage succeeded. Remove both potential orphans.
         if media_id:
-            remove_media_record(client, media_id)
+            remove_media_record(client, media_id, user_id)
         if storage_uploaded:
             remove_storage_file(
                 client,
@@ -550,6 +547,7 @@ async def upload_media(
 def update_media_note(
     media_id: str,
     note: str | None = Form(None),
+    current_user=Depends(get_current_user),
 ):
     if note is None:
         raise HTTPException(
@@ -558,15 +556,16 @@ def update_media_note(
         )
 
     client = get_db()
+    user_id = str(current_user.id)
 
     try:
-        # Verify that this media belongs to DEV_USER_ID
+        # Verify that this media belongs to user_id
         gallery_response = (
             client
             .table("gallery_items")
             .select("id, media_id")
             .eq("media_id", media_id)
-            .eq("user_id", DEV_USER_ID)
+            .eq("user_id", user_id)
             .maybe_single()
             .execute()
         )
@@ -588,7 +587,7 @@ def update_media_note(
                 }
             )
             .eq("id", gallery_id)
-            .eq("user_id", DEV_USER_ID)
+            .eq("user_id", user_id)
             .execute()
         )
 
@@ -617,8 +616,9 @@ def update_media_note(
 # ============================================================
 
 @router.delete("/{media_id}")
-def delete_media(media_id: str):
+def delete_media(media_id: str, current_user=Depends(get_current_user)):
     client = get_db()
+    user_id = str(current_user.id)
 
     try:
         # ----------------------------------------------------
@@ -630,7 +630,7 @@ def delete_media(media_id: str):
             .table("media_files")
             .select("id, storage_path")
             .eq("id", media_id)
-            .eq("user_id", DEV_USER_ID)
+            .eq("user_id", user_id)
             .maybe_single()
             .execute()
         )
@@ -653,7 +653,7 @@ def delete_media(media_id: str):
             .table("gallery_items")
             .delete()
             .eq("media_id", media_id)
-            .eq("user_id", DEV_USER_ID)
+            .eq("user_id", user_id)
             .execute()
         )
 
@@ -666,7 +666,7 @@ def delete_media(media_id: str):
             .table("media_files")
             .delete()
             .eq("id", media_id)
-            .eq("user_id", DEV_USER_ID)
+            .eq("user_id", user_id)
             .execute()
         )
 
@@ -700,8 +700,9 @@ def delete_media(media_id: str):
 # ============================================================
 
 @router.get("/{media_id}/download")
-def download_media(media_id: str):
+def download_media(media_id: str, current_user=Depends(get_current_user)):
     client = get_db()
+    user_id = str(current_user.id)
 
     try:
         media_response = (
@@ -709,7 +710,7 @@ def download_media(media_id: str):
             .table("media_files")
             .select("id, storage_path, file_name")
             .eq("id", media_id)
-            .eq("user_id", DEV_USER_ID)
+            .eq("user_id", user_id)
             .maybe_single()
             .execute()
         )
@@ -764,3 +765,4 @@ def download_media(media_id: str):
             status_code=500,
             detail=f"Download failed: {exc}",
         )
+

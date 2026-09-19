@@ -2,15 +2,16 @@ import os
 import time
 import tempfile
 import uuid
+from datetime import date, datetime, time as d_time
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException, status
 
+from app.core.security import get_current_user_with_plan
 from app.database.supabase import (
     SUPABASE_BUCKET,
     SUPABASE_URL,
-    get_current_user,
     get_supabase_admin_client,
 )
 from app.utils.geoclip import predict_image, compute_gis_error, get_geoclip_service
@@ -43,26 +44,56 @@ def _get_public_url(client, storage_path: str) -> str:
     return f"{SUPABASE_URL}/storage/v1/object/public/{SUPABASE_BUCKET}/{storage_path}"
 
 
-def _find_place_id(client, landmark: str) -> str | None:
+def _find_or_create_place_id(
+    client,
+    landmark: str,
+    province: Optional[str] = None,
+    lat: Optional[float] = None,
+    lon: Optional[float] = None,
+) -> str | None:
+    clean_name = landmark.strip()
+    if not clean_name:
+        return None
+
+    # 1. Tìm kiếm chính xác
     exact_response = (
         client.table("places")
         .select("id")
-        .ilike("name", landmark)
+        .ilike("name", clean_name)
         .limit(1)
         .execute()
     )
     if exact_response.data:
         return str(exact_response.data[0]["id"])
 
+    # 2. Tìm kiếm gần đúng
     partial_response = (
         client.table("places")
         .select("id")
-        .ilike("name", f"%{landmark}%")
+        .ilike("name", f"%{clean_name}%")
         .limit(1)
         .execute()
     )
     if partial_response.data:
         return str(partial_response.data[0]["id"])
+
+    # 3. Tự động khởi tạo địa danh mới vào bảng places nếu chưa có
+    try:
+        new_place = {
+            "name": clean_name,
+            "province": province or "Việt Nam",
+            "country": "Việt Nam",
+            "latitude": lat if lat is not None else 0.0,
+            "longitude": lon if lon is not None else 0.0,
+            "description": f"Địa danh {clean_name} tại {province or 'Việt Nam'}.",
+            "category_id": "0fd20aa7-7958-42e6-823e-49bbe92c3741",  # Check-in nổi tiếng
+        }
+        create_res = client.table("places").insert(new_place).execute()
+        if create_res.data:
+            return str(create_res.data[0]["id"])
+    except Exception as create_err:
+        print(f"[Auto-create Place Warning] Không thể tạo tự động địa danh '{clean_name}': {create_err}")
+
     return None
 
 
@@ -73,6 +104,11 @@ def _save_prediction_history(
     landmark: str,
     confidence: float,
     user_id: str,
+    predicted_name: Optional[str] = None,
+    predicted_province: Optional[str] = None,
+    predicted_lat: Optional[float] = None,
+    predicted_lon: Optional[float] = None,
+    all_predictions: Optional[list] = None,
 ) -> dict:
     client = get_supabase_admin_client()
     extension = Path(original_filename).suffix.lower()
@@ -111,7 +147,13 @@ def _save_prediction_history(
             raise RuntimeError("media_files insert returned no data")
         media_id = str(media_response.data[0]["id"])
 
-        place_id = _find_place_id(client, landmark)
+        place_id = _find_or_create_place_id(
+            client=client,
+            landmark=predicted_name or landmark,
+            province=predicted_province,
+            lat=predicted_lat,
+            lon=predicted_lon,
+        )
         history_response = (
             client.table("search_histories")
             .insert(
@@ -121,6 +163,11 @@ def _save_prediction_history(
                     "place_id": place_id,
                     "confidence": confidence,
                     "search_type": "image",
+                    "predicted_name": predicted_name or landmark,
+                    "predicted_province": predicted_province,
+                    "predicted_lat": predicted_lat,
+                    "predicted_lon": predicted_lon,
+                    "all_predictions": all_predictions,
                 }
             )
             .execute()
@@ -154,12 +201,35 @@ async def predict(
     scope: str = Form("iconic"),
     ground_truth_lat: Optional[str] = Form(None),
     ground_truth_lon: Optional[str] = Form(None),
-    current_user=Depends(get_current_user),
+    user_with_plan=Depends(get_current_user_with_plan),
 ):
     """
     API endpoint nhận diện vị trí và địa danh Việt Nam từ ảnh bằng GeoCLIP AI model,
     trả về dữ liệu thực tế: thời gian xử lý, tổng số tọa độ trong gallery, danh sách Top-K và sai số GIS.
+    Kiểm tra giới hạn số lượt quét trong ngày đối với tài khoản Free.
     """
+    user_id = user_with_plan["user_id"]
+    is_pro = user_with_plan["is_pro"]
+    scan_limit = user_with_plan["scan_limit"]
+
+    # Kiểm tra giới hạn lượt quét trong ngày đối với gói Free dựa trên bảng log bất biến
+    if not is_pro and scan_limit > 0:
+        today_start = datetime.combine(date.today(), d_time.min).isoformat()
+        client = get_supabase_admin_client()
+        today_scans = (
+            client.table("user_daily_scan_logs")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .gte("scanned_at", today_start)
+            .execute()
+        )
+        count_today = today_scans.count or 0
+        if count_today >= scan_limit:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Bạn đã sử dụng hết {scan_limit} lượt quét ảnh miễn phí hôm nay. Vui lòng nâng cấp tài khoản Pro để quét không giới hạn!",
+            )
+
     content_type = image.content_type or "image/jpeg"
     if content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(
@@ -232,8 +302,20 @@ async def predict(
             content_type=content_type,
             landmark=landmark,
             confidence=confidence,
-            user_id=str(current_user.id),
+            user_id=user_id,
+            predicted_name=best_prediction.get("name") or landmark,
+            predicted_province=best_prediction.get("province"),
+            predicted_lat=pred_lat,
+            predicted_lon=pred_lon,
+            all_predictions=predictions,
         )
+
+        # Ghi nhận lượt quét vào bảng log bất biến (không bị xóa khi user xóa lịch sử tìm kiếm)
+        try:
+            admin_client = get_supabase_admin_client()
+            admin_client.table("user_daily_scan_logs").insert({"user_id": user_id}).execute()
+        except Exception as scan_log_err:
+            print(f"[Scan Log Warning] Không thể ghi nhận user_daily_scan_logs: {scan_log_err}")
 
         size_mb = size_bytes / (1024 * 1024)
 

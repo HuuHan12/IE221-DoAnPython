@@ -1,6 +1,6 @@
-import { X, MapPin, Calendar, Clock, Award, ExternalLink } from "lucide-react";
+import { X, MapPin, Calendar, Clock, Award, ExternalLink, Heart } from "lucide-react";
 
-function HistoryDetailModal({ isOpen, item, onClose }) {
+function HistoryDetailModal({ isOpen, item, isFavorite = false, onToggleFavorite = null, onClose }) {
     if (!isOpen || !item) return null;
 
     return (
@@ -25,7 +25,32 @@ function HistoryDetailModal({ isOpen, item, onClose }) {
                     </div>
 
                     <div className="detail-info-content">
-                        <h2 className="detail-landmark-title">{item.name}</h2>
+                        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px", flexWrap: "wrap" }}>
+                            <h2 className="detail-landmark-title" style={{ margin: 0 }}>{item.name}</h2>
+                            {item.place_id && onToggleFavorite ? (
+                                <button
+                                    type="button"
+                                    onClick={() => onToggleFavorite(item.place_id, item.input_media_id)}
+                                    style={{
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        gap: "6px",
+                                        padding: "6px 14px",
+                                        borderRadius: "20px",
+                                        border: isFavorite ? "1px solid #fca5a5" : "1px solid #cbd5e1",
+                                        backgroundColor: isFavorite ? "#fef2f2" : "#ffffff",
+                                        color: isFavorite ? "#ef4444" : "#475569",
+                                        fontWeight: "600",
+                                        fontSize: "0.82rem",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                >
+                                    <Heart size={15} fill={isFavorite ? "#ef4444" : "none"} color="#ef4444" />
+                                    <span>{isFavorite ? "Đã lưu yêu thích" : "Lưu yêu thích"}</span>
+                                </button>
+                            ) : null}
+                        </div>
                         
                         <div className="detail-meta-row">
                             <MapPin size={16} color="#009080" />

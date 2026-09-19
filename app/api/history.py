@@ -6,12 +6,14 @@ from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.database.supabase import get_current_user, get_supabase_admin_client
+from app.core.security import get_current_user
+from app.database.supabase import SUPABASE_BUCKET, get_supabase_admin_client
 from app.schemas.history import (
     CreateSearchHistoryRequest,
     DeleteSearchHistoryResponse,
     SearchHistoryItem,
     SearchHistoryListResponse,
+    SelectPredictionRequest,
 )
 
 
@@ -44,6 +46,18 @@ def _location_text(place: dict[str, Any] | None) -> str:
     return ", ".join(parts) or place.get("address") or "Không xác định"
 
 
+def _safe_execute(query, max_retries: int = 2, delay: float = 0.2):
+    """Thực thi truy vấn Supabase PostgREST an toàn với cơ chế tự động retry khi gặp sự cố socket/mạng."""
+    import time
+    for attempt in range(max_retries):
+        try:
+            return query.execute()
+        except Exception as err:
+            if attempt == max_retries - 1:
+                raise
+            time.sleep(delay)
+
+
 def _load_related_data(client, history_rows: list[dict[str, Any]]):
     place_ids = {row["place_id"] for row in history_rows if row.get("place_id")}
     input_media_ids = {
@@ -55,25 +69,23 @@ def _load_related_data(client, history_rows: list[dict[str, Any]]):
     place_image_media_id: dict[str, str] = {}
 
     if place_ids:
-        places_response = (
+        places_response = _safe_execute(
             client.table("places")
             .select(
                 "id,name,description,province,country,latitude,longitude,address"
             )
             .in_("id", list(place_ids))
-            .execute()
         )
         places_by_id = {
             str(row["id"]): row for row in (places_response.data or [])
         }
 
-        images_response = (
+        images_response = _safe_execute(
             client.table("place_images")
             .select("place_id,media_id,is_primary,display_order")
             .in_("place_id", list(place_ids))
             .order("is_primary", desc=True)
             .order("display_order")
-            .execute()
         )
         for row in images_response.data or []:
             place_image_media_id.setdefault(
@@ -82,13 +94,12 @@ def _load_related_data(client, history_rows: list[dict[str, Any]]):
 
     all_media_ids = input_media_ids | set(place_image_media_id.values())
     if all_media_ids:
-        media_response = (
+        media_response = _safe_execute(
             client.table("media_files")
             .select(
                 "id,file_name,file_url,mime_type,file_size,storage_path,created_at"
             )
             .in_("id", list(all_media_ids))
-            .execute()
         )
         media_by_id = {
             str(row["id"]): row for row in (media_response.data or [])
@@ -125,6 +136,23 @@ def _build_history_items(client, rows: list[dict[str, Any]]) -> list[dict[str, A
             float(row["confidence"]) if row.get("confidence") is not None else None
         )
 
+        display_name = (
+            row.get("predicted_name")
+            or (place.get("name") if place else None)
+            or (input_media.get("file_name") if input_media else None)
+            or "Địa danh không xác định"
+        )
+        display_location = (
+            row.get("predicted_province")
+            or _location_text(place)
+        )
+
+        description = place.get("description") if place else None
+        if not description and row.get("all_predictions"):
+            preds = row.get("all_predictions")
+            if isinstance(preds, list) and len(preds) > 0 and isinstance(preds[0], dict):
+                description = preds[0].get("description")
+
         items.append(
             {
                 "id": row["id"],
@@ -135,8 +163,8 @@ def _build_history_items(client, rows: list[dict[str, Any]]) -> list[dict[str, A
                 "searched_at": searched_at,
                 "input_media": input_media,
                 "place": place,
-                "name": place.get("name") if place else "Địa danh không xác định",
-                "location": _location_text(place),
+                "name": display_name,
+                "location": display_location,
                 "confidence": (
                     round(confidence_value * 100, 2)
                     if confidence_value is not None
@@ -149,7 +177,12 @@ def _build_history_items(client, rows: list[dict[str, Any]]) -> list[dict[str, A
                     if input_media and input_media.get("file_url")
                     else place.get("image_url") if place else None
                 ),
-                "description": place.get("description") if place else None,
+                "description": description,
+                "predicted_name": row.get("predicted_name"),
+                "predicted_province": row.get("predicted_province"),
+                "predicted_lat": row.get("predicted_lat"),
+                "predicted_lon": row.get("predicted_lon"),
+                "all_predictions": row.get("all_predictions"),
             }
         )
 
@@ -158,14 +191,13 @@ def _build_history_items(client, rows: list[dict[str, Any]]) -> list[dict[str, A
 
 def _find_place_ids(client, search: str) -> list[str]:
     escaped = search.replace(",", "\\,")
-    response = (
+    response = _safe_execute(
         client.table("places")
         .select("id")
         .or_(
             f"name.ilike.%{escaped}%,province.ilike.%{escaped}%,"
             f"country.ilike.%{escaped}%,address.ilike.%{escaped}%"
         )
-        .execute()
     )
     return [str(row["id"]) for row in (response.data or [])]
 
@@ -173,6 +205,7 @@ def _find_place_ids(client, search: str) -> list[str]:
 def _history_query(
     client,
     user_id: str,
+    search: str | None,
     place_ids: list[str] | None,
     start_date: date | None,
     end_date: date | None,
@@ -180,14 +213,22 @@ def _history_query(
     query = (
         client.table("search_histories")
         .select(
-            "id,input_media_id,place_id,confidence,search_type,searched_at",
+            "id,input_media_id,place_id,confidence,search_type,searched_at,predicted_name,predicted_province,predicted_lat,predicted_lon,all_predictions",
             count="exact",
         )
         .eq("user_id", user_id)
+        .eq("is_deleted", False)
     )
 
-    if place_ids is not None:
-        query = query.in_("place_id", place_ids)
+    if search and search.strip():
+        term = search.strip().replace(",", "\\,")
+        or_clauses = [
+            f"predicted_name.ilike.%{term}%",
+            f"predicted_province.ilike.%{term}%",
+        ]
+        if place_ids:
+            or_clauses.append(f"place_id.in.({','.join(place_ids)})")
+        query = query.or_(",".join(or_clauses))
 
     if start_date is not None:
         start = datetime.combine(start_date, time.min, tzinfo=HISTORY_TIMEZONE)
@@ -226,22 +267,13 @@ def list_search_history(
         place_ids = None
         if search and search.strip():
             place_ids = _find_place_ids(client, search.strip())
-            if not place_ids:
-                return {
-                    "items": [],
-                    "page": page,
-                    "page_size": page_size,
-                    "total_records": 0,
-                    "total_pages": 0,
-                }
 
         start = (page - 1) * page_size
         end = start + page_size - 1
-        response = (
-            _history_query(client, user_id, place_ids, start_date, end_date)
+        response = _safe_execute(
+            _history_query(client, user_id, search, place_ids, start_date, end_date)
             .order("searched_at", desc=True)
             .range(start, end)
-            .execute()
         )
 
         total_records = response.count or 0
@@ -250,7 +282,7 @@ def list_search_history(
             "page": page,
             "page_size": page_size,
             "total_records": total_records,
-            "total_pages": math.ceil(total_records / page_size),
+            "total_pages": math.ceil(total_records / page_size) if total_records > 0 else 0,
         }
     except HTTPException:
         raise
@@ -271,9 +303,12 @@ def get_search_history(
     try:
         response = (
             client.table("search_histories")
-            .select("id,input_media_id,place_id,confidence,search_type,searched_at")
+            .select(
+                "id,input_media_id,place_id,confidence,search_type,searched_at,predicted_name,predicted_province,predicted_lat,predicted_lon,all_predictions"
+            )
             .eq("id", str(history_id))
             .eq("user_id", str(current_user.id))
+            .eq("is_deleted", False)
             .maybe_single()
             .execute()
         )
@@ -290,6 +325,81 @@ def get_search_history(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get search history: {error}",
         )
+
+
+@router.patch("/{history_id}/select-prediction")
+def select_history_prediction(
+    history_id: UUID,
+    payload: SelectPredictionRequest,
+    current_user=Depends(get_current_user),
+):
+    """
+    Cập nhật vị trí được người dùng lựa chọn trong Top-K dự đoán vào lịch sử tìm kiếm.
+    """
+    client = get_supabase_admin_client()
+    user_id = str(current_user.id)
+
+    # 1. Kiểm tra bản ghi tồn tại, thuộc về current_user và chưa bị xóa mềm
+    existing = (
+        client.table("search_histories")
+        .select("id,user_id,all_predictions")
+        .eq("id", str(history_id))
+        .eq("user_id", user_id)
+        .eq("is_deleted", False)
+        .maybe_single()
+        .execute()
+    )
+    if not existing or not existing.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy lịch sử tìm kiếm hoặc bạn không có quyền cập nhật.",
+        )
+
+    confidence = payload.confidence
+    if confidence is None and payload.prob_percent is not None:
+        confidence = round(payload.prob_percent / 100.0, 4)
+
+    update_data: dict[str, Any] = {
+        "predicted_name": payload.name,
+        "predicted_province": payload.province,
+        "predicted_lat": payload.lat,
+        "predicted_lon": payload.lon,
+    }
+    if confidence is not None:
+        update_data["confidence"] = confidence
+
+    # Thử tìm place_id tương ứng nếu có
+    if payload.name:
+        exact_place = (
+            client.table("places")
+            .select("id")
+            .ilike("name", payload.name)
+            .limit(1)
+            .execute()
+        )
+        if exact_place.data:
+            update_data["place_id"] = str(exact_place.data[0]["id"])
+
+    response = (
+        client.table("search_histories")
+        .update(update_data)
+        .eq("id", str(history_id))
+        .eq("user_id", user_id)
+        .execute()
+    )
+
+    if not response.data:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Không thể cập nhật địa điểm cho lịch sử tìm kiếm.",
+        )
+
+    updated_item = _build_history_items(client, response.data)[0]
+    return {
+        "success": True,
+        "message": "Đã cập nhật vị trí trong lịch sử tìm kiếm thành công.",
+        "item": updated_item,
+    }
 
 
 @router.post(
@@ -364,13 +474,36 @@ def delete_search_history(
     current_user=Depends(get_current_user),
 ):
     client = get_supabase_admin_client()
+    user_id = str(current_user.id)
 
     try:
+        # 1. Kiểm tra bản ghi lịch sử tồn tại, thuộc về user và chưa bị xóa mềm
+        target = (
+            client.table("search_histories")
+            .select("id")
+            .eq("id", str(history_id))
+            .eq("user_id", user_id)
+            .eq("is_deleted", False)
+            .maybe_single()
+            .execute()
+        )
+        if not target or not target.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Search history not found",
+            )
+
+        # 2. Xóa mềm (Soft Delete): Cập nhật is_deleted = True và deleted_at = now()
+        # Toàn bộ dữ liệu trong search_histories, media_files và file ảnh Storage vẫn được lưu giữ nguyên vẹn trong DB
+        now_iso = datetime.now(timezone.utc).isoformat()
         response = (
             client.table("search_histories")
-            .delete()
+            .update({
+                "is_deleted": True,
+                "deleted_at": now_iso,
+            })
             .eq("id", str(history_id))
-            .eq("user_id", str(current_user.id))
+            .eq("user_id", user_id)
             .execute()
         )
         if not response.data:
@@ -378,6 +511,7 @@ def delete_search_history(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Search history not found",
             )
+
         return {"deleted": True, "history_id": history_id}
     except HTTPException:
         raise

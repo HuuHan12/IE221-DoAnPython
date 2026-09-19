@@ -8,6 +8,7 @@ import {
     GroundTruthCoords,
     PredictResponse,
 } from "../service/predictService";
+import { selectHistoryPrediction } from "../service/historyService";
 
 export function usePredict() {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -153,7 +154,12 @@ export function usePredict() {
 
         } catch (err: any) {
             console.error("[GeoCLIP AI Prediction Error]", err);
-            setError(err.message || "Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra backend.");
+            const rawMsg = err?.message || "";
+            if (rawMsg.toLowerCase().includes("token") || rawMsg.toLowerCase().includes("hết hạn")) {
+                setError("Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại để tiếp tục.");
+            } else {
+                setError(rawMsg || "Không thể kết nối đến máy chủ AI. Vui lòng kiểm tra backend.");
+            }
         } finally {
             setLoading(false);
         }
@@ -170,6 +176,18 @@ export function usePredict() {
             const data = await selectLocationApi(item, groundTruth);
             setSelectedPrediction(data.prediction);
             setSelectedGisError(data.gis_error);
+
+            // Tự động cập nhật lại vị trí trong Lịch sử tìm kiếm (search_histories)
+            const historyId = result.history_id || result.id;
+            if (historyId) {
+                await selectHistoryPrediction(historyId, {
+                    name: item.name || "",
+                    province: item.province || "",
+                    lat: item.lat,
+                    lon: item.lon,
+                    prob_percent: item.prob_percent,
+                });
+            }
         } catch (err: any) {
             console.error("[Select Location Error]", err);
             // Fallback to client item if server fails
