@@ -64,11 +64,22 @@ class PaymentQRResponse(BaseModel):
 class PaymentStatusResponse(BaseModel):
     status: str = Field(default="success")
     order_code: str = Field(..., description="Mã đơn hàng")
-    order_status: str = Field(..., description="Trạng thái: pending, completed, expired, cancelled")
+    order_status: str = Field(..., description="Trạng thái: pending, pending_verification, completed, expired, cancelled")
     plan_code: str = Field(..., description="Mã gói cước")
     amount: int = Field(..., description="Số tiền thanh toán")
     is_completed: bool = Field(..., description="True nếu đã thanh toán thành công")
     completed_at: Optional[str] = Field(default=None, description="Thời điểm hoàn tất thanh toán")
+    transaction_ref: Optional[str] = Field(default=None, description="Mã giao dịch ngân hàng do người dùng cung cấp")
+    message: Optional[str] = Field(default=None, description="Thông báo phản hồi")
+
+
+class SubmitTransferRequest(BaseModel):
+    order_code: str = Field(..., description="Mã đơn hàng")
+    transaction_ref: str = Field(..., min_length=4, max_length=64, description="Mã giao dịch đối soát từ ứng dụng ngân hàng")
+
+
+class AdminApproveRequest(BaseModel):
+    order_code: str = Field(..., description="Mã đơn hàng cần duyệt kích hoạt gói")
 
 
 class SimulatePaymentRequest(BaseModel):
@@ -86,3 +97,4 @@ class UserSubscriptionResponse(BaseModel):
     end_date: Optional[str] = Field(default=None, description="Ngày hết hạn gói")
     days_remaining: Optional[int] = Field(default=None, description="Số ngày sử dụng còn lại")
     is_active: bool = Field(default=True, description="Gói còn hiệu lực hay không")
+

@@ -1004,6 +1004,25 @@
   box-shadow: 0 6px 18px rgba(13, 148, 136, 0.4);
 }
 
+.btn-pricing-action.current-active {
+  background-color: #ECFDF5;
+  color: #059669;
+  border: 1.5px solid #10B981;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.15);
+}
+
+.btn-pricing-action.current-active:hover {
+  background-color: #D1FAE5;
+  color: #047857;
+  border-color: #059669;
+}
+
+
 .btn-pricing-action.filled-dark {
   background-color: #0f172a;
   color: #ffffff;

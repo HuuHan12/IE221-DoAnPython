@@ -55,12 +55,15 @@ export interface PaymentQRResponse {
 export interface PaymentStatusResponse {
     status: string;
     order_code: string;
-    order_status: "pending" | "completed" | "expired" | "cancelled" | string;
+    order_status: "pending" | "pending_verification" | "completed" | "expired" | "cancelled" | string;
     plan_code: string;
     amount: number;
     is_completed: boolean;
     completed_at?: string | null;
+    transaction_ref?: string | null;
+    message?: string | null;
 }
+
 
 export interface UserSubscriptionResponse {
     status: string;
@@ -194,3 +197,48 @@ export async function fetchMySubscriptionApi(): Promise<UserSubscriptionResponse
 
     return result;
 }
+
+/**
+ * 6. Người dùng gửi mã đối soát giao dịch ngân hàng
+ * POST /payments/submit-transfer
+ */
+export async function submitTransferApi(
+    order_code: string,
+    transaction_ref: string
+): Promise<PaymentStatusResponse> {
+    const response = await fetch(`${API_BASE_URL}/payments/submit-transfer`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            order_code,
+            transaction_ref: transaction_ref.trim(),
+        }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.detail || "Không thể gửi xác nhận chuyển khoản.");
+    }
+
+    return result;
+}
+
+/**
+ * 7. Quản trị viên phê duyệt đơn hàng
+ * POST /payments/admin-approve
+ */
+export async function adminApproveApi(order_code: string): Promise<PaymentStatusResponse> {
+    const response = await fetch(`${API_BASE_URL}/payments/admin-approve`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ order_code }),
+    });
+
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+        throw new Error(result.detail || "Không thể duyệt đơn hàng.");
+    }
+
+    return result;
+}
+

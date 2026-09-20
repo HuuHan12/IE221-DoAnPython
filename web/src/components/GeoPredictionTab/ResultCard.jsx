@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import TopResultHero from "./TopResultHero";
 import LeafletMap from "./LeafletMap";
-import RankedResultList from "./RankedResultList";
-import { ShareIcon, CheckIcon, GlobeIcon, SparklesIcon } from "../common/Icons";
-import { MapPin, Loader2, Trophy } from "lucide-react";
+import { ShareIcon, CheckIcon, GlobeIcon } from "../common/Icons";
 import { calculateHaversineDistance } from "../../libs/geoUtils";
 import { recordCheckinApi } from "../../service/achievementService";
 import "../../css/ResultCard.css";
@@ -135,76 +133,28 @@ function ResultCard({
                 selectedPrediction={activePrediction}
             />
 
-            {/* Bảng xếp hạng */}
+            {/* Các nút thao tác kết quả */}
             {result && predictions.length > 0 ? (
-                <>
-                    <RankedResultList
-                        predictions={predictions}
-                        topK={topK}
-                        selectedIndex={selectedPredictionIndex}
-                        onSelectPrediction={onSelectPrediction}
-                    />
-
-                    <div className="result-bottom-actions">
-                        <button
-                            type="button"
-                            className={`action-btn checkin-btn ${checkinSuccess ? "success" : ""}`}
-                            onClick={handleCheckinClick}
-                            disabled={isCheckingIn || checkinSuccess}
-                            title="Ghi nhận lượt check-in địa danh này vào hồ sơ thành tích"
-                            style={{
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "6px",
-                                backgroundColor: checkinSuccess ? "#10B981" : "#009080",
-                                color: "#FFFFFF",
-                                border: "none",
-                                padding: "9px 16px",
-                                borderRadius: "10px",
-                                fontSize: "13px",
-                                fontWeight: 600,
-                                cursor: checkinSuccess ? "default" : "pointer",
-                                transition: "all 0.2s ease",
-                            }}
-                        >
-                            {isCheckingIn ? (
-                                <>
-                                    <Loader2 size={15} className="spin-icon" />
-                                    <span>Đang ghi nhận...</span>
-                                </>
-                            ) : checkinSuccess ? (
-                                <>
-                                    <CheckIcon size={15} />
-                                    <span>{checkinMessage || "Check-in thành công!"}</span>
-                                </>
-                            ) : (
-                                <>
-                                    <MapPin size={15} />
-                                    <span>Check-in địa danh này</span>
-                                </>
-                            )}
-                        </button>
-
-                        <button
-                            type="button"
-                            className={`action-btn share-btn ${copiedShare ? "copied" : ""}`}
-                            onClick={handleShareClick}
-                            title="Chia sẻ thông tin và liên kết Google Maps của địa danh"
-                        >
-                            {copiedShare ? (
-                                <>
-                                    <CheckIcon size={16} />
-                                    <span>Đã sao chép liên kết!</span>
-                                </>
-                            ) : (
-                                <>
-                                    <ShareIcon size={16} />
-                                    <span>Chia sẻ kết quả</span>
-                                </>
-                            )}
-                        </button>
-                    </div>
-                </>
+                <div className="result-bottom-actions">
+                    <button
+                        type="button"
+                        className={`action-btn share-btn ${copiedShare ? "copied" : ""}`}
+                        onClick={handleShareClick}
+                        title="Chia sẻ thông tin và liên kết Google Maps của địa danh"
+                    >
+                        {copiedShare ? (
+                            <>
+                                <CheckIcon size={16} />
+                                <span>Đã sao chép liên kết!</span>
+                            </>
+                        ) : (
+                            <>
+                                <ShareIcon size={16} />
+                                <span>Chia sẻ kết quả</span>
+                            </>
+                        )}
+                    </button>
+                </div>
             ) : null}
         </section>
     );

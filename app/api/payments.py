@@ -5,10 +5,11 @@ import urllib.parse
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 
 from app.database.supabase import get_current_user, get_supabase_admin_client
 from app.schemas.payment import (
+    AdminApproveRequest,
     BankInfo,
     CreatePaymentQRRequest,
     PaymentQRResponse,
@@ -16,10 +17,22 @@ from app.schemas.payment import (
     PricingPlanItem,
     PricingPlansResponse,
     SimulatePaymentRequest,
+    SubmitTransferRequest,
     UserSubscriptionResponse,
 )
 
 router = APIRouter(prefix="/payments", tags=["Payments & Pricing"])
+
+# Cấu hình danh sách email admin có quyền phê duyệt đơn hàng
+ADMIN_EMAILS = {
+    "admin@landmark.local",
+    "dev@landmark.local",
+    "dnhan.a7.c3tqcap@gmail.com",
+    "thuthao@gmail.com",
+    "namle12122003@gmail.com",
+    "baothang@gmail.com",
+    "huynq201104@gmail.com",
+}
 
 # Cấu hình thông tin ngân hàng thụ hưởng (TPBank)
 BANK_ID = os.getenv("BANK_ID", "TPB")
@@ -27,6 +40,7 @@ BANK_NAME = os.getenv("BANK_NAME", "Ngân hàng TMCP Tiên Phong (TPBank)")
 BANK_ACCOUNT_NO = os.getenv("BANK_ACCOUNT_NO", "87971498888")
 BANK_ACCOUNT_NAME = os.getenv("BANK_ACCOUNT_NAME", "DOAN HUU HAN")
 VIETQR_TEMPLATE = os.getenv("VIETQR_TEMPLATE", "compact2")
+
 
 
 def _generate_order_code(plan_code: str = "PRO") -> str:
@@ -129,13 +143,14 @@ def create_payment_qr(
         payload = CreatePaymentQRRequest()
 
     # Hỗ trợ ghi đè từ URL query parameters nếu có
-    if plan_code:
+    if isinstance(plan_code, str) and plan_code:
         payload.plan_code = plan_code
-    if duration_months:
+    if isinstance(duration_months, int) and duration_months:
         payload.duration_months = duration_months
 
     supabase = get_supabase_admin_client()
-    plan_code = payload.plan_code.lower()
+    plan_code = str(payload.plan_code).lower()
+
 
     # 1. Kiểm tra gói cước trong Supabase
     try:
@@ -269,7 +284,7 @@ def check_payment_status(order_code: str):
     order = res.data
     order_status = order.get("status", "pending")
 
-    # Kiểm tra quá hạn 15 phút nếu vẫn đang pending
+    # Kiểm tra quá hạn 15 phút nếu vẫn đang pending (chưa submit)
     if order_status == "pending":
         expires_at_raw = order.get("expires_at")
         if expires_at_raw:
@@ -288,7 +303,253 @@ def check_payment_status(order_code: str):
         amount=int(order["amount"]),
         is_completed=(order_status == "completed"),
         completed_at=order.get("completed_at"),
+        transaction_ref=order.get("transaction_ref"),
+        message=(
+            "Đã thanh toán thành công!" if order_status == "completed"
+            else "Đang chờ quản trị viên đối soát giao dịch ngân hàng." if order_status == "pending_verification"
+            else "Đang chờ thanh toán chuyển khoản." if order_status == "pending"
+            else "Đơn hàng đã hết hạn hoặc bị huỷ."
+        ),
     )
+
+
+# 4. Người dùng gửi mã đối soát giao dịch ngân hàng (Chống khai báo khống)
+@router.post(
+    "/submit-transfer",
+    response_model=PaymentStatusResponse,
+    summary="Gửi mã đối soát giao dịch ngân hàng",
+    description="Người dùng xác nhận đã chuyển khoản và cung cấp mã giao dịch từ ngân hàng. Hệ thống chuyển trạng thái sang pending_verification để quản trị viên kiểm tra.",
+)
+def submit_transfer(
+    payload: SubmitTransferRequest,
+    background_tasks: BackgroundTasks,
+    current_user=Depends(get_current_user),
+):
+    target_code = payload.order_code.strip()
+    clean_ref = payload.transaction_ref.strip()
+
+    if not clean_ref or len(clean_ref) < 4:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mã giao dịch ngân hàng không hợp lệ. Vui lòng nhập tối thiểu 4 ký tự.",
+        )
+
+    supabase = get_supabase_admin_client()
+    user_id_str = str(current_user.id)
+
+    # 1. Tìm đơn hàng
+    try:
+        order_res = (
+            supabase.table("payment_orders")
+            .select("*")
+            .eq("order_code", target_code)
+            .maybe_single()
+            .execute()
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi kết nối Supabase: {str(e)}",
+        )
+
+    if not order_res or not order_res.data:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Không tìm thấy đơn hàng với mã: {target_code}",
+        )
+
+    order = order_res.data
+
+    # 2. Kiểm tra quyền sở hữu đơn hàng
+    if str(order.get("user_id")) != user_id_str:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền gửi xác nhận cho đơn hàng này.",
+        )
+
+    # 3. Kiểm tra nếu đơn hàng đã hoàn tất
+    if order.get("status") == "completed":
+        return PaymentStatusResponse(
+            status="success",
+            order_code=target_code,
+            order_status="completed",
+            plan_code=order["plan_code"],
+            amount=int(order["amount"]),
+            is_completed=True,
+            completed_at=order.get("completed_at"),
+            transaction_ref=order.get("transaction_ref"),
+            message="Đơn hàng này đã được kích hoạt thành công.",
+        )
+
+    # 4. Kiểm tra hết hạn (nếu chưa từng submit)
+    if order.get("status") == "pending":
+        expires_at_raw = order.get("expires_at")
+        if expires_at_raw:
+            try:
+                exp_dt = datetime.fromisoformat(expires_at_raw.replace("Z", "+00:00"))
+                if datetime.now(timezone.utc) > exp_dt:
+                    supabase.table("payment_orders").update({"status": "expired"}).eq("order_code", target_code).execute()
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Đơn hàng đã hết hạn thanh toán (quá 15 phút). Vui lòng tạo mã QR mới.",
+                    )
+            except HTTPException:
+                raise
+            except Exception:
+                pass
+
+    # 5. Cập nhật trạng thái pending_verification (KHÔNG kích hoạt ngay)
+    now_iso = datetime.now(timezone.utc).isoformat()
+    try:
+        supabase.table("payment_orders").update({
+            "status": "pending_verification",
+            "transaction_ref": clean_ref,
+            "submitted_at": now_iso,
+            "updated_at": now_iso,
+        }).eq("order_code", target_code).execute()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi khi cập nhật trạng thái đơn hàng: {str(e)}",
+        )
+
+    # 6. Gửi thông báo trong hệ thống cho người dùng
+    try:
+        from app.api.notifications import create_user_notification
+        create_user_notification(
+            user_id=user_id_str,
+            notif_type="payment",
+            title="Đã tiếp nhận thông tin chuyển khoản",
+            content=f"Đơn hàng {target_code} với mã giao dịch {clean_ref} đã được gửi đến ban quản trị để đối soát.",
+        )
+    except Exception:
+        pass
+
+    # 7. Gửi thông báo kèm nút duyệt tới Telegram Bot của Admin
+    try:
+        from app.services.telegram_bot import send_payment_approval_request
+        user_email = getattr(current_user, "email", "") or "Khách hàng"
+        amount = int(order.get("amount", 99000))
+        formatted_amount = f"{amount:,} đ".replace(",", ".")
+        plan_name = order.get("plan_code", "pro").upper()
+        background_tasks.add_task(
+            send_payment_approval_request,
+            order_code=target_code,
+            user_email=user_email,
+            amount=amount,
+            formatted_amount=formatted_amount,
+            plan_name=plan_name,
+            transaction_ref=clean_ref,
+            user_id=user_id_str,
+        )
+    except Exception:
+        pass
+
+    return PaymentStatusResponse(
+        status="success",
+        order_code=target_code,
+        order_status="pending_verification",
+        plan_code=order["plan_code"],
+        amount=int(order["amount"]),
+        is_completed=False,
+        completed_at=None,
+        transaction_ref=clean_ref,
+        message="Thông tin chuyển khoản đã được ghi nhận. Vui lòng chờ quản trị viên đối soát giao dịch.",
+    )
+
+
+# 5. Phê duyệt đơn hàng (dùng nội bộ hoặc API bảo mật)
+@router.post(
+    "/admin-approve",
+    response_model=PaymentStatusResponse,
+    summary="Phê duyệt kích hoạt gói cước",
+    description="Kiểm tra giao dịch trên ngân hàng và phê duyệt đơn hàng. Gói cước Pro sẽ được kích hoạt ngay.",
+)
+def admin_approve(
+    payload: AdminApproveRequest,
+    current_user=Depends(get_current_user),
+):
+    caller_email = getattr(current_user, "email", "") or ""
+    is_admin = (
+        caller_email.lower() in ADMIN_EMAILS
+        or caller_email.lower().endswith("@landmark.local")
+        or getattr(current_user, "is_admin", False)
+    )
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền quản trị viên để phê duyệt đơn hàng này.",
+        )
+
+    target_code = payload.order_code.strip()
+    from app.services.telegram_bot import execute_admin_approval
+
+    res = execute_admin_approval(target_code)
+    if not res.get("success"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=res.get("message", "Không thể phê duyệt đơn hàng."),
+        )
+
+    supabase = get_supabase_admin_client()
+    order_res = (
+        supabase.table("payment_orders")
+        .select("*")
+        .eq("order_code", target_code)
+        .maybe_single()
+        .execute()
+    )
+    order = order_res.data if order_res else {}
+
+    return PaymentStatusResponse(
+        status="success",
+        order_code=target_code,
+        order_status="completed",
+        plan_code=order.get("plan_code", "pro"),
+        amount=int(order.get("amount", 99000)),
+        is_completed=True,
+        completed_at=order.get("completed_at"),
+        transaction_ref=order.get("transaction_ref"),
+        message=f"Đã duyệt thành công đơn hàng {target_code}.",
+    )
+
+
+
+# 6. Danh sách đơn hàng chờ duyệt
+@router.get(
+    "/admin/pending-orders",
+    summary="Danh sách đơn hàng chờ đối soát (Admin)",
+    description="Lấy danh sách các đơn hàng ở trạng thái pending_verification để quản trị viên kiểm tra.",
+)
+def get_pending_orders(current_user=Depends(get_current_user)):
+    caller_email = getattr(current_user, "email", "") or ""
+    is_admin = (
+        caller_email.lower() in ADMIN_EMAILS
+        or caller_email.lower().endswith("@landmark.local")
+        or getattr(current_user, "is_admin", False)
+    )
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Chỉ quản trị viên mới có quyền xem danh sách này.",
+        )
+
+    supabase = get_supabase_admin_client()
+    try:
+        res = (
+            supabase.table("payment_orders")
+            .select("*")
+            .eq("status", "pending_verification")
+            .order("submitted_at", desc=True)
+            .execute()
+        )
+        return {"status": "success", "data": res.data or []}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Lỗi truy vấn Supabase: {str(e)}",
+        )
+
 
 
 

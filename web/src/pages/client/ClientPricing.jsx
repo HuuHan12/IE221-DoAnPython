@@ -26,6 +26,7 @@ function ClientPricing() {
 
     // FAQ Accordion active state
     const [openFaq, setOpenFaq] = useState(null);
+    const [successBanner, setSuccessBanner] = useState("");
 
     const toggleFaq = (index) => {
         setOpenFaq(openFaq === index ? null : index);
@@ -72,14 +73,18 @@ function ClientPricing() {
     };
 
     // Khi thanh toán hoàn tất thành công
-    const handlePaymentSuccess = async () => {
+    const handlePaymentSuccess = async (res) => {
         try {
             const updatedSub = await fetchMySubscriptionApi();
             setMySubscription(updatedSub);
+            setSuccessBanner(
+                res?.message || "🎉 Chúc mừng bạn đã kích hoạt thành công gói Pro! Bạn có 500 lượt scan/ngày và mở khóa toàn bộ tính năng cao cấp."
+            );
         } catch {
             //
         }
     };
+
 
     const faqItems = [
         {
@@ -113,10 +118,37 @@ function ClientPricing() {
         { feature: "Hỗ trợ ưu tiên", free: "—", pro: "—", enterprise: "✓" }
     ];
 
+    const isProActive = mySubscription?.plan_code === "pro" && mySubscription?.is_active;
+    const isExpiringSoon = isProActive && mySubscription?.days_remaining !== null && mySubscription?.days_remaining <= 3;
+
     return (
         <ClientLayout activeTab="pricing">
             {/* HERO SECTION */}
             <div className="pricing-hero-container">
+                {successBanner && (
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: "10px",
+                            backgroundColor: "#F0FDF4",
+                            border: "1.5px solid #86EFAC",
+                            padding: "12px 24px",
+                            borderRadius: "14px",
+                            color: "#166534",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            maxWidth: "680px",
+                            margin: "0 auto 20px auto",
+                            boxShadow: "0 4px 15px rgba(22, 101, 52, 0.08)",
+                        }}
+                    >
+                        <Sparkles size={18} color="#16A34A" />
+                        <span>{successBanner}</span>
+                    </div>
+                )}
+
                 <span className="client-hero-subtitle">PRICING</span>
                 <h1 className="client-hero-title">
                     Chọn gói phù hợp cho <span className="highlight-text">hành trình</span> của bạn
@@ -124,6 +156,7 @@ function ClientPricing() {
                 <p style={{ color: "#64748b", maxWidth: "640px", margin: "12px auto 0 auto", fontSize: "0.98rem", lineHeight: "1.6" }}>
                     Mọi gói đều dùng cùng một mô hình nhận diện địa danh. Khác biệt nằm ở khối lượng xử lý, độ phân giải ảnh và các tính năng cá nhân hoá.
                 </p>
+
 
                 {/* Banner thông tin gói cước hiện tại của người dùng (từ API my-subscription) */}
                 {mySubscription && (
@@ -146,7 +179,7 @@ function ClientPricing() {
                         <span>
                             Gói cước hiện tại của bạn: <strong>{mySubscription.plan_name}</strong>
                             {mySubscription.days_remaining !== null && mySubscription.days_remaining !== undefined && (
-                                <> (Còn {mySubscription.days_remaining} ngày sử dụng)</>
+                                <> (Còn {mySubscription.days_remaining} ngày sử dụng — 500 lượt scan/ngày)</>
                             )}
                         </span>
                     </div>
@@ -188,15 +221,16 @@ function ClientPricing() {
                         type="button"
                         className="btn-pricing-action outline"
                         onClick={() => navigate("/dashboard")}
+                        style={isProActive ? { opacity: 0.6, cursor: "default" } : {}}
                     >
-                        {mySubscription?.plan_code === "free" ? "Đang sử dụng" : "Bắt đầu miễn phí"}
+                        {isProActive ? "Gói cơ bản" : mySubscription?.plan_code === "free" ? "Đang sử dụng" : "Bắt đầu miễn phí"}
                     </button>
                 </div>
 
                 {/* PRO CARD (FEATURED / HIGHLIGHTED) */}
                 <div className="pricing-card-box pro-featured">
                     <div className="pricing-floating-badge">
-                        {mySubscription?.plan_code === "pro" ? "GÓI CỦA BẠN" : "PHỔ BIẾN NHẤT"}
+                        {isProActive ? "GÓI CỦA BẠN" : "PHỔ BIẾN NHẤT"}
                     </div>
 
                     <h3 className="pricing-plan-title">Pro</h3>
@@ -216,24 +250,41 @@ function ClientPricing() {
                         <li className="pricing-feature-item"><Check size={16} /> Thử thách check-in & huy hiệu</li>
                     </ul>
 
-                    <button
-                        type="button"
-                        className="btn-pricing-action filled-teal"
-                        onClick={() => handleUpgradePlan("pro")}
-                        disabled={isCreatingQR}
-                    >
-                        {isCreatingQR ? (
-                            <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                                <Loader2 size={16} className="animate-spin" />
-                                Đang tạo mã QR...
-                            </span>
-                        ) : mySubscription?.plan_code === "pro" ? (
-                            "Gia hạn gói Pro"
-                        ) : (
-                            "Nâng cấp Pro"
-                        )}
-                    </button>
+                    {isProActive && !isExpiringSoon ? (
+                        <>
+                            <button
+                                type="button"
+                                className="btn-pricing-action current-active"
+                                onClick={() => navigate("/dashboard")}
+                            >
+                                <Check size={18} color="#059669" />
+                                <span>Đang sử dụng</span>
+                            </button>
+                            <div style={{ fontSize: "12.5px", color: "#64748B", marginTop: "8px", textAlign: "center", lineHeight: "1.4" }}>
+                                Gói Pro còn <strong>{mySubscription.days_remaining} ngày</strong> sử dụng
+                            </div>
+                        </>
+                    ) : (
+                        <button
+                            type="button"
+                            className="btn-pricing-action filled-teal"
+                            onClick={() => handleUpgradePlan("pro")}
+                            disabled={isCreatingQR}
+                        >
+                            {isCreatingQR ? (
+                                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                                    <Loader2 size={16} className="animate-spin" />
+                                    Đang tạo mã QR...
+                                </span>
+                            ) : isExpiringSoon ? (
+                                "Gia hạn gói Pro (Sắp hết hạn)"
+                            ) : (
+                                "Nâng cấp Pro"
+                            )}
+                        </button>
+                    )}
                 </div>
+
 
                 {/* ENTERPRISE CARD */}
                 <div className="pricing-card-box">

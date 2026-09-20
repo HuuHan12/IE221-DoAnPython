@@ -306,28 +306,78 @@
     padding: 6px 0;
 }
 
-/* Modal Footer & Demo Simulation */
-.payment-modal-footer {
+/* Confirmation Form & Bank Ref Input (Chống khai báo khống) */
+.payment-confirmation-box {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background-color: #F8FAFC;
-    border: 1px dashed #CBD5E1;
-    border-radius: 12px;
-    padding: 14px;
+    background: linear-gradient(135deg, #F0FDF4 0%, #F8FAFC 100%);
+    border: 1.5px solid #86EFAC;
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-top: 6px;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08);
+}
+
+.confirmation-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.confirmation-header h4 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #065F46;
+}
+
+.confirmation-desc {
+    margin: 0;
+    font-size: 12.5px;
+    color: #475569;
+    line-height: 1.45;
+}
+
+.confirmation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     margin-top: 4px;
 }
 
-.demo-notice-text {
+.ref-input-wrapper {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #475569;
+    gap: 10px;
 }
 
-.btn-simulate-payment {
-    display: flex;
+.ref-input {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1.5px solid #CBD5E1;
+    background-color: #FFFFFF;
+    font-size: 13.5px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    color: #0F172A;
+    font-weight: 600;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.ref-input:focus {
+    border-color: #009080;
+    box-shadow: 0 0 0 3px rgba(0, 144, 128, 0.15);
+}
+
+.ref-input::placeholder {
+    font-family: inherit;
+    font-weight: 400;
+    color: #94A3B8;
+}
+
+.btn-submit-ref {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
@@ -335,25 +385,168 @@
     color: #FFFFFF;
     border: none;
     border-radius: 10px;
-    padding: 10px 18px;
-    font-size: 14px;
-    font-weight: 600;
+    padding: 10px 20px;
+    font-size: 13.5px;
+    font-weight: 700;
     cursor: pointer;
+    white-space: nowrap;
     box-shadow: 0 4px 12px rgba(0, 144, 128, 0.25);
     transition: all 0.2s ease;
 }
 
-.btn-simulate-payment:hover:not(:disabled) {
+.btn-submit-ref:hover:not(:disabled) {
     background-color: #007A6D;
     transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 144, 128, 0.3);
 }
 
-.btn-simulate-payment:disabled {
-    opacity: 0.6;
+.btn-submit-ref:disabled {
+    opacity: 0.55;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
+.ref-error-msg {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #DC2626;
+    font-weight: 500;
+}
+
+/* Pending Verification View */
+.payment-pending-view {
+    padding: 44px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+.pending-icon-pulse {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background-color: #FEF3C7;
+    border: 3px solid #FCD34D;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulseRing 2s infinite;
+}
+
+@keyframes pulseRing {
+    0% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 16px rgba(245, 158, 11, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+    }
+}
+
+.pending-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: #FFFBEB;
+    border: 1px solid #FDE68A;
+    color: #D97706;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.pending-main-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0F172A;
+    margin: 0;
+}
+
+.pending-desc {
+    font-size: 14px;
+    color: #64748B;
+    max-width: 440px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.pending-details-card {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 16px 24px;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 4px 0;
+}
+
+.pending-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #64748B;
+}
+
+.pending-row strong {
+    color: #0F172A;
+}
+
+.pending-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background-color: #FEF3C7;
+    color: #92400E;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.pending-actions-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 420px;
+    margin-top: 6px;
+}
+
+.btn-close-pending {
+    width: 100%;
+    background-color: #F1F5F9;
+    color: #334155;
+    border: 1px solid #CBD5E1;
+    border-radius: 10px;
+    padding: 11px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.btn-close-pending:hover {
+    background-color: #E2E8F0;
+    color: #0F172A;
+}
 /* Success View */
+
 .payment-success-view {
     padding: 48px 32px;
     display: flex;

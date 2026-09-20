@@ -12,7 +12,6 @@ import {
     Award,
     Sparkles,
     Info,
-    ExternalLink,
     Loader2,
     User,
     LogOut,
@@ -469,17 +468,6 @@ function Header({
                                         </div>
                                     ))
                                 )}
-                            </div>
-
-                            <div className="notif-popup-footer">
-                                <Link
-                                    to="/dashboard/notifications"
-                                    className="notif-view-all-link"
-                                    onClick={() => setIsNotifOpen(false)}
-                                >
-                                    <span>Xem tất cả thông báo</span>
-                                    <ExternalLink size={13} />
-                                </Link>
                             </div>
                         </div>
                     )}

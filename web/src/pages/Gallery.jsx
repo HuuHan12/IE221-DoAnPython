@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, ChevronLeft, ChevronRight, Image as ImageIcon, RefreshCw, Upload } from "lucide-react";
 import Sidebar from "../components/Sidebar";
-import StorageProgressBar from "../components/gallery/StorageProgressBar";
 import PhotoCard from "../components/gallery/PhotoCard";
 import ConfirmDeleteModal from "../components/gallery/ConfirmDeleteModal";
 import {
@@ -139,8 +138,6 @@ function Gallery() {
     const uploadDisabled = busy || Boolean(loadError);
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     const currentPhotos = photos.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-    const totalBytes = photos.reduce((sum, photo) => sum + normalizeFileSize(photo.file_size), 0);
-    const usedGB = Number((totalBytes / (1024 * 1024 * 1024)).toFixed(3)) || 0;
 
     useEffect(() => {
         setCurrentPage((page) => Math.min(page, totalPages));
@@ -277,8 +274,6 @@ function Gallery() {
                 </div>
 
                 <main className="gallery-body-padding">
-                    <StorageProgressBar usedGB={usedGB} totalGB={10} />
-
                     {actionError && (
                         <div className="gallery-alert gallery-alert-error" role="alert">
                             <AlertCircle size={18} />

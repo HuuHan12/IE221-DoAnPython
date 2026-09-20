@@ -19,13 +19,36 @@ from app.api import contact
 from app.api import notifications
 from app.api import achievements
 from app.api import favorites
+import asyncio
+from contextlib import asynccontextmanager
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    bot_task = None
+    try:
+        from app.services.telegram_bot import start_telegram_bot_listener
+        bot_task = asyncio.create_task(start_telegram_bot_listener())
+    except Exception as e:
+        print(f"Không thể khởi động Telegram Bot listener: {e}")
+
+    yield
+
+    if bot_task:
+        bot_task.cancel()
+        try:
+            await bot_task
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(
     title="Vietnam Landmark Recognition API",
     description="AI-based Vietnamese landmark recognition system",
     version="1.0.0",
+    lifespan=lifespan,
 )
+
 
 
 def custom_openapi():

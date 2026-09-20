@@ -4,27 +4,43 @@ import {
     Copy,
     Check,
     Clock,
-    Sparkles,
     AlertCircle,
     CheckCircle2,
     Loader2,
     ShieldCheck,
-    Zap,
-    ExternalLink
+    Send,
+    Hourglass
 } from "lucide-react";
-import { checkPaymentStatusApi, simulatePaymentSuccessApi } from "../../service/paymentService";
+import {
+    checkPaymentStatusApi,
+    submitTransferApi
+} from "../../service/paymentService";
 import "../../css/PaymentModal.css";
 
 function PaymentQRModal({ isOpen, paymentData, onClose, onSuccess }) {
     const [copiedContent, setCopiedContent] = useState(false);
     const [copiedAccount, setCopiedAccount] = useState(false);
     const [timeLeft, setTimeLeft] = useState(900); // 15 phút
-    const [isSimulating, setIsSimulating] = useState(false);
+    const [transactionRef, setTransactionRef] = useState("");
+    const [submittedRef, setSubmittedRef] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isPendingVerification, setIsPendingVerification] = useState(false);
     const [isCompleted, setIsCompleted] = useState(false);
     const [statusError, setStatusError] = useState("");
 
     const orderCode = paymentData?.order_code;
     const pollingTimerRef = useRef(null);
+
+    // Reset state khi modal mở với đơn hàng mới
+    useEffect(() => {
+        if (isOpen) {
+            setIsCompleted(false);
+            setIsPendingVerification(false);
+            setTransactionRef("");
+            setSubmittedRef("");
+            setStatusError("");
+        }
+    }, [isOpen, paymentData?.order_code]);
 
     // Đồng hồ đếm ngược
     useEffect(() => {
@@ -53,8 +69,14 @@ function PaymentQRModal({ isOpen, paymentData, onClose, onSuccess }) {
                 const res = await checkPaymentStatusApi(orderCode);
                 if (res.is_completed || res.order_status === "completed") {
                     setIsCompleted(true);
+                    setIsPendingVerification(false);
                     if (onSuccess) {
                         onSuccess(res);
+                    }
+                } else if (res.order_status === "pending_verification") {
+                    setIsPendingVerification(true);
+                    if (res.transaction_ref) {
+                        setSubmittedRef(res.transaction_ref);
                     }
                 }
             } catch (err) {
@@ -93,21 +115,27 @@ function PaymentQRModal({ isOpen, paymentData, onClose, onSuccess }) {
         }
     };
 
-    // Xử lý nút Giả lập thanh toán thành công (Phục vụ Demo kiểm thử)
-    const handleSimulateSuccess = async () => {
-        if (!orderCode || isSimulating) return;
+    // Xử lý gửi mã giao dịch ngân hàng (Chống khai báo khống)
+    const handleSubmitTransfer = async (e) => {
+        if (e) e.preventDefault();
+        if (!orderCode || isSubmitting) return;
+
+        const cleanRef = transactionRef.trim();
+        if (!cleanRef || cleanRef.length < 4) {
+            setStatusError("Vui lòng nhập mã giao dịch hợp lệ từ ứng dụng ngân hàng (tối thiểu 4 ký tự).");
+            return;
+        }
+
         try {
-            setIsSimulating(true);
+            setIsSubmitting(true);
             setStatusError("");
-            const res = await simulatePaymentSuccessApi(orderCode);
-            setIsCompleted(true);
-            if (onSuccess) {
-                onSuccess(res);
-            }
+            const res = await submitTransferApi(orderCode, cleanRef);
+            setSubmittedRef(cleanRef);
+            setIsPendingVerification(true);
         } catch (err) {
-            setStatusError(err.message || "Không thể giả lập thanh toán.");
+            setStatusError(err.message || "Không thể gửi xác nhận chuyển khoản. Vui lòng thử lại.");
         } finally {
-            setIsSimulating(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -130,15 +158,15 @@ function PaymentQRModal({ isOpen, paymentData, onClose, onSuccess }) {
                     </button>
                 </div>
 
+                {/* 1. Màn hình thanh toán thành công */}
                 {isCompleted ? (
-                    /* Màn hình thanh toán thành công */
                     <div className="payment-success-view">
                         <div className="success-icon-bounce">
                             <CheckCircle2 size={64} color="#10B981" />
                         </div>
-                        <h2 className="success-main-title">Thanh toán thành công!</h2>
+                        <h2 className="success-main-title">Kích hoạt thành công!</h2>
                         <p className="success-desc">
-                            Gói cước <strong>{paymentData.plan_name}</strong> của bạn đã được kích hoạt thành công trên hệ thống.
+                            Gói cước <strong>{paymentData.plan_name}</strong> của bạn đã được phê duyệt và kích hoạt thành công trên hệ thống.
                         </p>
 
                         <div className="success-details-card">
@@ -147,7 +175,7 @@ function PaymentQRModal({ isOpen, paymentData, onClose, onSuccess }) {
                                 <strong>{paymentData.order_code}</strong>
                             </div>
                             <div className="success-row">
-                                <span>Số tiền đã thanh toán:</span>
+                                <span>Số tiền thanh toán:</span>
                                 <strong>{paymentData.formatted_amount}</strong>
                             </div>
                             <div className="success-row">
@@ -164,8 +192,62 @@ function PaymentQRModal({ isOpen, paymentData, onClose, onSuccess }) {
                             Bắt đầu khám phá ngay
                         </button>
                     </div>
+                ) : isPendingVerification ? (
+                    /* 2. Màn hình chờ đối soát xác minh */
+                    <div className="payment-pending-view">
+                        <div className="pending-icon-pulse">
+                            <Hourglass size={36} color="#D97706" />
+                        </div>
+                        <div className="pending-badge">
+                            <Clock size={13} />
+                            <span>ĐANG CHỜ ĐỐI SOÁT</span>
+                        </div>
+                        <h2 className="pending-main-title">Đã tiếp nhận thông tin chuyển khoản</h2>
+                        <p className="pending-desc">
+                            Thông tin giao dịch của bạn đã được gửi đến ban quản trị để đối soát với tài khoản ngân hàng. Gói cước Pro sẽ được kích hoạt ngay khi xác nhận thành công.
+                        </p>
+
+                        <div className="pending-details-card">
+                            <div className="pending-row">
+                                <span>Mã đơn hàng:</span>
+                                <strong>{paymentData.order_code}</strong>
+                            </div>
+                            <div className="pending-row">
+                                <span>Mã GD ngân hàng:</span>
+                                <strong style={{ color: "#009080", fontFamily: "monospace" }}>
+                                    {submittedRef || transactionRef}
+                                </strong>
+                            </div>
+                            <div className="pending-row">
+                                <span>Số tiền cần đối soát:</span>
+                                <strong>{paymentData.formatted_amount}</strong>
+                            </div>
+                            <div className="pending-row">
+                                <span>Trạng thái:</span>
+                                <span className="pending-status-badge">
+                                    <Loader2 size={12} className="animate-spin" />
+                                    Chờ quản trị viên duyệt
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="auto-polling-indicator">
+                            <Loader2 size={16} className="animate-spin" color="#009080" />
+                            <span>Hệ thống đang tự động lắng nghe kết quả phê duyệt...</span>
+                        </div>
+
+                        <div className="pending-actions-row">
+                            <button
+                                type="button"
+                                className="btn-close-pending"
+                                onClick={onClose}
+                            >
+                                Đóng và tiếp tục trải nghiệm
+                            </button>
+                        </div>
+                    </div>
                 ) : (
-                    /* Màn hình quét mã QR chuyển khoản */
+                    /* 3. Màn hình quét mã QR chuyển khoản và nhập mã đối soát */
                     <div className="payment-modal-body">
                         {statusError && (
                             <div className="payment-alert-error">
@@ -189,7 +271,7 @@ function PaymentQRModal({ isOpen, paymentData, onClose, onSuccess }) {
                                     <span>Hết hạn sau: <strong>{formatCountdown(timeLeft)}</strong></span>
                                 </div>
                                 <div className="qr-hint-text">
-                                    Mở ứng dụng Ngân hàng (TPBank, Vietcombank, MB, Momo...) chọn <strong>Quét mã QR</strong>
+                                    Mở ứng dụng Ngân hàng (TPBank, Vietcombank, MB, Momo...) quét mã để chuyển đúng số tiền và nội dung.
                                 </div>
                             </div>
 
@@ -248,35 +330,52 @@ function PaymentQRModal({ isOpen, paymentData, onClose, onSuccess }) {
 
                                 <div className="auto-polling-indicator">
                                     <Loader2 size={16} className="animate-spin" color="#009080" />
-                                    <span>Hệ thống đang tự động kiểm tra giao dịch...</span>
+                                    <span>Hệ thống tự động kiểm tra giao dịch mỗi 3s...</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Nút hành động bổ trợ: Giả lập thanh toán thành công (Phục vụ Demo) */}
-                        <div className="payment-modal-footer">
-                            <div className="demo-notice-text">
-                                <Zap size={14} color="#009080" />
-                                <span>Chế độ Demo: Bạn có thể giả lập hoàn tất chuyển khoản để kích hoạt gói ngay mà không cần chuyển tiền.</span>
+                        {/* Form xác nhận đã chuyển khoản (Chống khai báo khống) */}
+                        <div className="payment-confirmation-box">
+                            <div className="confirmation-header">
+                                <Send size={16} color="#009080" />
+                                <h4>Xác nhận đã chuyển khoản</h4>
                             </div>
-                            <button
-                                type="button"
-                                className="btn-simulate-payment"
-                                onClick={handleSimulateSuccess}
-                                disabled={isSimulating}
-                            >
-                                {isSimulating ? (
-                                    <>
-                                        <Loader2 size={16} className="animate-spin" />
-                                        <span>Đang kích hoạt gói cước...</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Sparkles size={16} />
-                                        <span>Giả lập thanh toán thành công (Demo)</span>
-                                    </>
-                                )}
-                            </button>
+                            <p className="confirmation-desc">
+                                Sau khi chuyển khoản thành công trên app ngân hàng, vui lòng nhập <strong>Mã giao dịch / Số tham chiếu</strong> (VD: FT26263..., 0879...) để quản trị viên đối soát:
+                            </p>
+                            <form onSubmit={handleSubmitTransfer} className="confirmation-form">
+                                <div className="ref-input-wrapper">
+                                    <input
+                                        type="text"
+                                        placeholder="Nhập mã giao dịch ngân hàng..."
+                                        value={transactionRef}
+                                        onChange={(e) => {
+                                            setTransactionRef(e.target.value);
+                                            if (statusError) setStatusError("");
+                                        }}
+                                        className="ref-input"
+                                        disabled={isSubmitting}
+                                    />
+                                    <button
+                                        type="submit"
+                                        className="btn-submit-ref"
+                                        disabled={isSubmitting || !transactionRef.trim()}
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 size={16} className="animate-spin" />
+                                                <span>Đang gửi...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Send size={15} />
+                                                <span>Tôi đã chuyển khoản</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
                         </div>
                     </div>
                 )}
