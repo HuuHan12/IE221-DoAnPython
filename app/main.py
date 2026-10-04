@@ -28,9 +28,20 @@ async def lifespan(app: FastAPI):
     bot_task = None
     try:
         from app.services.telegram_bot import start_telegram_bot_listener
-        bot_task = asyncio.create_task(start_telegram_bot_listener())
+
+        async def _telegram_supervisor():
+            while True:
+                try:
+                    await start_telegram_bot_listener()
+                except asyncio.CancelledError:
+                    break
+                except Exception as e:
+                    print(f"[Telegram Bot] Supervisor ghi nhận ngoại lệ: {e}. Khởi động lại sau 5s...")
+                    await asyncio.sleep(5)
+
+        bot_task = asyncio.create_task(_telegram_supervisor())
     except Exception as e:
-        print(f"Không thể khởi động Telegram Bot listener: {e}")
+        print(f"Không thể khởi động Telegram Bot listener supervisor: {e}")
 
     yield
 

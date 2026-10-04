@@ -1,5 +1,6 @@
 import asyncio
 import html
+import json
 import logging
 import os
 from datetime import datetime, timedelta, timezone
@@ -225,26 +226,43 @@ async def start_telegram_bot_listener():
     từ Telegram Bot của Admin thông qua cơ chế Long Polling (getUpdates).
     Chạy trực tiếp trên localhost, không cần cấu hình webhook hay domain công khai.
     """
-    token = os.getenv("TELEGRAM_BOT_TOKEN", TELEGRAM_BOT_TOKEN)
-    admin_chat_id = os.getenv("TELEGRAM_CHAT_ID", TELEGRAM_CHAT_ID)
+    token = str(os.getenv("TELEGRAM_BOT_TOKEN", TELEGRAM_BOT_TOKEN) or "").strip()
+    admin_chat_id = str(os.getenv("TELEGRAM_CHAT_ID", TELEGRAM_CHAT_ID) or "").strip()
 
     if not token or not admin_chat_id:
-        logger.info("Telegram Bot chưa cấu hình đầy đủ token và chat_id. Listener sẽ không khởi chạy.")
+        print("[Telegram Bot] Chưa cấu hình đầy đủ TELEGRAM_BOT_TOKEN hoặc TELEGRAM_CHAT_ID. Listener sẽ không khởi chạy.")
         return
 
     base_url = f"https://api.telegram.org/bot{token}"
-    logger.info("Khởi động Telegram Bot Long Polling Listener...")
+    print(f"[Telegram Bot] Khởi động Telegram Long Polling Listener cho Admin ID: {admin_chat_id}...")
+
+    # Xóa cấu hình webhook cũ để Telegram mở toàn bộ kênh updates (bao gồm callback_query)
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as init_client:
+            del_res = await init_client.post(
+                f"{base_url}/deleteWebhook",
+                json={"drop_pending_updates": False}
+            )
+            print(f"[Telegram Bot] Đồng bộ kênh nhận tin Telegram: HTTP {del_res.status_code}")
+    except Exception as e:
+        print(f"[Telegram Bot] Cảnh báo khi reset webhook: {e}")
+
     offset = None
 
     async with httpx.AsyncClient(timeout=35.0) as client:
         while True:
             try:
-                params = {"timeout": 20}
+                # Luôn khai báo rõ ràng allowed_updates để Telegram gửi sự kiện bấm nút (callback_query)
+                params = {
+                    "timeout": 20,
+                    "allowed_updates": ["message", "callback_query"]
+                }
                 if offset:
                     params["offset"] = offset
 
-                res = await client.get(f"{base_url}/getUpdates", params=params)
+                res = await client.post(f"{base_url}/getUpdates", json=params)
                 if res.status_code != 200:
+                    print(f"[Telegram Bot] getUpdates trả về HTTP {res.status_code}: {res.text[:100]}")
                     await asyncio.sleep(3)
                     continue
 
@@ -257,82 +275,115 @@ async def start_telegram_bot_listener():
                     # Xử lý khi Admin bấm nút inline (Callback Query)
                     if "callback_query" in update:
                         cb = update["callback_query"]
-                        cb_id = cb["id"]
-                        from_user_id = str(cb.get("from", {}).get("id"))
+                        cb_id = cb.get("id")
+                        from_user = cb.get("from", {})
+                        from_user_id = str(from_user.get("id", "")).strip()
                         cb_data = cb.get("data", "")
                         msg = cb.get("message", {})
                         msg_id = msg.get("message_id")
-                        msg_chat_id = msg.get("chat", {}).get("id")
+                        msg_chat_id = str(msg.get("chat", {}).get("id", "")).strip()
                         orig_text = msg.get("text", "")
 
+                        print(f"[Telegram Bot] Nhận callback '{cb_data}' từ User: {from_user_id} (Chat: {msg_chat_id})")
+
                         # Bảo mật: Chỉ Admin sở hữu TELEGRAM_CHAT_ID mới được quyền bấm duyệt
-                        if str(from_user_id) != str(admin_chat_id) and str(msg_chat_id) != str(admin_chat_id):
-                            await client.post(f"{base_url}/answerCallbackQuery", json={
-                                "callback_query_id": cb_id,
-                                "text": "⛔ Bạn không có quyền quản trị viên!",
-                                "show_alert": True,
-                            })
+                        if from_user_id != admin_chat_id and msg_chat_id != admin_chat_id:
+                            print(f"[Telegram Bot] Từ chối quyền duyệt: from={from_user_id}, chat={msg_chat_id} != admin={admin_chat_id}")
+                            try:
+                                await client.post(f"{base_url}/answerCallbackQuery", json={
+                                    "callback_query_id": cb_id,
+                                    "text": "⛔ Bạn không có quyền quản trị viên!",
+                                    "show_alert": True,
+                                })
+                            except Exception as e:
+                                logger.error(f"Lỗi answerCallbackQuery: {e}")
                             continue
 
                         now_vn = datetime.now(timezone(timedelta(hours=7))).strftime("%d/%m/%Y %H:%M:%S")
 
                         if cb_data.startswith("approve:"):
                             order_code = cb_data.split(":", 1)[1].strip()
-                            result = execute_admin_approval(order_code)
+                            print(f"[Telegram Bot] Đang thực thi phê duyệt đơn hàng: {order_code}...")
+                            result = await asyncio.to_thread(execute_admin_approval, order_code)
+                            print(f"[Telegram Bot] Kết quả phê duyệt {order_code}: {result}")
 
                             alert_text = (
                                 f"✅ Đã phê duyệt đơn {order_code} thành công!"
-                                if result["success"]
-                                else f"Lỗi: {result['message']}"
+                                if result.get("success")
+                                else f"Lỗi: {result.get('message')}"
                             )
 
-                            await client.post(f"{base_url}/answerCallbackQuery", json={
-                                "callback_query_id": cb_id,
-                                "text": alert_text,
-                                "show_alert": True,
-                            })
+                            try:
+                                await client.post(f"{base_url}/answerCallbackQuery", json={
+                                    "callback_query_id": cb_id,
+                                    "text": alert_text,
+                                    "show_alert": True,
+                                })
+                            except Exception as e:
+                                print(f"[Telegram Bot] Lỗi answerCallbackQuery: {e}")
 
-                            if result["success"]:
+                            if result.get("success"):
+                                escaped_orig = html.escape(orig_text)
                                 new_text = (
-                                    f"{orig_text}\n\n"
+                                    f"{escaped_orig}\n\n"
                                     f"✅ <b>ĐÃ ĐƯỢC PHÊ DUYỆT BỞI ADMIN</b>\n"
                                     f"⏰ <i>Thời gian duyệt: {now_vn}</i>"
                                 )
-                                # Sửa tin nhắn và gỡ bỏ 2 nút bấm để không bấm trùng
+                                try:
+                                    # Sửa tin nhắn và gỡ bỏ 2 nút bấm để không bấm trùng
+                                    chat_target = int(msg_chat_id) if msg_chat_id.lstrip("-").isdigit() else msg_chat_id
+                                    await client.post(f"{base_url}/editMessageText", json={
+                                        "chat_id": chat_target,
+                                        "message_id": msg_id,
+                                        "text": new_text,
+                                        "parse_mode": "HTML",
+                                        "reply_markup": {"inline_keyboard": []},
+                                    })
+                                except Exception as e:
+                                    print(f"[Telegram Bot] Lỗi editMessageText: {e}")
+
+                        elif cb_data.startswith("reject:"):
+                            order_code = cb_data.split(":", 1)[1].strip()
+                            print(f"[Telegram Bot] Đang thực thi từ chối đơn hàng: {order_code}...")
+                            result = await asyncio.to_thread(execute_admin_rejection, order_code)
+                            print(f"[Telegram Bot] Kết quả từ chối {order_code}: {result}")
+
+                            try:
+                                await client.post(f"{base_url}/answerCallbackQuery", json={
+                                    "callback_query_id": cb_id,
+                                    "text": f"❌ Đã từ chối đơn hàng {order_code}.",
+                                    "show_alert": True,
+                                })
+                            except Exception as e:
+                                print(f"[Telegram Bot] Lỗi answerCallbackQuery: {e}")
+
+                            escaped_orig = html.escape(orig_text)
+                            new_text = (
+                                f"{escaped_orig}\n\n"
+                                f"❌ <b>ĐÃ TỪ CHỐI BỞI ADMIN</b>\n"
+                                f"⏰ <i>Thời gian từ chối: {now_vn}</i>"
+                            )
+                            try:
+                                chat_target = int(msg_chat_id) if msg_chat_id.lstrip("-").isdigit() else msg_chat_id
                                 await client.post(f"{base_url}/editMessageText", json={
-                                    "chat_id": msg_chat_id,
+                                    "chat_id": chat_target,
                                     "message_id": msg_id,
                                     "text": new_text,
                                     "parse_mode": "HTML",
                                     "reply_markup": {"inline_keyboard": []},
                                 })
-
-                        elif cb_data.startswith("reject:"):
-                            order_code = cb_data.split(":", 1)[1].strip()
-                            result = execute_admin_rejection(order_code)
-
-                            await client.post(f"{base_url}/answerCallbackQuery", json={
-                                "callback_query_id": cb_id,
-                                "text": f"❌ Đã từ chối đơn hàng {order_code}.",
-                                "show_alert": True,
-                            })
-
-                            new_text = (
-                                f"{orig_text}\n\n"
-                                f"❌ <b>ĐÃ TỪ CHỐI BỞI ADMIN</b>\n"
-                                f"⏰ <i>Thời gian từ chối: {now_vn}</i>"
-                            )
-                            await client.post(f"{base_url}/editMessageText", json={
-                                "chat_id": msg_chat_id,
-                                "message_id": msg_id,
-                                "text": new_text,
-                                "parse_mode": "HTML",
-                                "reply_markup": {"inline_keyboard": []},
-                            })
+                            except Exception as e:
+                                print(f"[Telegram Bot] Lỗi editMessageText: {e}")
 
             except asyncio.CancelledError:
-                logger.info("Telegram Bot listener nhận tín hiệu dừng.")
+                print("[Telegram Bot] Listener nhận tín hiệu dừng.")
                 break
+            except httpx.TimeoutException:
+                # Long polling timeout tự nhiên khi không có update mới
+                continue
+            except httpx.NetworkError as ne:
+                print(f"[Telegram Bot] Gián đoạn mạng tới Telegram API: {ne}. Thử lại sau 3s...")
+                await asyncio.sleep(3)
             except Exception as e:
-                logger.error(f"Lỗi trong vòng lặp Telegram listener: {e}")
-                await asyncio.sleep(5)
+                print(f"[Telegram Bot] Ngoại lệ trong vòng lặp Telegram listener: {e}")
+                await asyncio.sleep(3)

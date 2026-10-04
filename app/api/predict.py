@@ -357,6 +357,13 @@ async def predict(
             except Exception as scan_log_err:
                 print(f"[Scan Log Warning] Không thể ghi nhận user_daily_scan_logs: {scan_log_err}")
 
+            # Tự động đồng bộ và cộng dồn tiến độ thành tích cho người dùng
+            try:
+                from app.api.achievements import sync_user_achievements
+                sync_user_achievements(user_id=user_id, supabase=admin_client)
+            except Exception as ach_sync_err:
+                print(f"[Achievements Warning] Không thể tự động đồng bộ thành tích: {ach_sync_err}")
+
         size_mb = size_bytes / (1024 * 1024)
 
         return {
